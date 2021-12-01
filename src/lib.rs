@@ -23,7 +23,7 @@ pub mod prelude {
         command::CommandResult,
         context::SlashContext,
         framework::Framework,
-        parse::{Parse, SlashParseError},
+        parse::{Parse, ParseError},
         waiter::WaiterReceiver,
     };
     pub use async_trait::async_trait;

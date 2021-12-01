@@ -12,14 +12,14 @@ pub trait Parse<T: Send + Sync + 'static>: Sized {
         http_client: &Client,
         data: &T,
         iterator: &mut DataIterator,
-    ) -> Result<Self, SlashParseError> {
+    ) -> Result<Self, ParseError> {
         let out = iterator.get(|s| s.name == name);
 
         if let Some(o) = out {
             Self::parse(http_client, data, Some(&o.value)).await
         } else {
             if Self::is_required() {
-                Err(SlashParseError::StructureMismatch(format!(
+                Err(ParseError::StructureMismatch(format!(
                     "{} not found",
                     name
                 )))
@@ -40,7 +40,7 @@ pub trait Parse<T: Send + Sync + 'static>: Sized {
         _http_client: &Client,
         _data: &T,
         _value: Option<&CommandOptionValue>,
-    ) -> Result<Self, SlashParseError>;
+    ) -> Result<Self, ParseError>;
 
     /// Sets if the argument is required, by default is true.
     fn is_required() -> bool {
@@ -53,12 +53,12 @@ pub trait Parse<T: Send + Sync + 'static>: Sized {
 
 /// The errors which can be returned from [Parse](self::Parse) [parse](self::Parse::parse) function.
 #[derive(Debug)]
-pub enum SlashParseError {
+pub enum ParseError {
     StructureMismatch(String),
     Parse(Box<dyn Error + Send + Sync>),
 }
 
-impl std::fmt::Display for SlashParseError {
+impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::StructureMismatch(why) => write!(f, "Structure mismatch: {}", why),
@@ -66,15 +66,15 @@ impl std::fmt::Display for SlashParseError {
         }
     }
 }
-impl Error for SlashParseError {}
+impl Error for ParseError {}
 
-impl From<Box<dyn Error + Send + Sync>> for SlashParseError {
+impl From<Box<dyn Error + Send + Sync>> for ParseError {
     fn from(e: Box<dyn Error + Send + Sync>) -> Self {
         Self::Parse(e)
     }
 }
 
-impl From<&'static str> for SlashParseError {
+impl From<&'static str> for ParseError {
     fn from(why: &'static str) -> Self {
         Self::StructureMismatch(why.to_string())
     }

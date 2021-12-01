@@ -119,7 +119,7 @@ pub fn parse_arguments<'a>(
 
             if __options.len() > 0 {
                 return Err(
-                    Box::new(::zephyrus::prelude::SlashParseError::StructureMismatch("Too many arguments received".to_string()))
+                    Box::new(::zephyrus::prelude::ParseError::StructureMismatch("Too many arguments received".to_string()))
                     as Box<dyn std::error::Error + Sync + std::marker::Send>
                 );
             }

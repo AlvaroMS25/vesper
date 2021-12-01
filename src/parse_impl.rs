@@ -7,7 +7,7 @@ impl<T: Send + Sync + 'static> Parse<T> for String {
         _: &Client,
         _: &T,
         value: Option<&CommandOptionValue>,
-    ) -> Result<Self, SlashParseError> {
+    ) -> Result<Self, ParseError> {
         if let Some(kind) = value {
             if let CommandOptionValue::String(s) = kind {
                 return Ok(s.to_owned());
@@ -27,7 +27,7 @@ impl<T: Send + Sync + 'static> Parse<T> for i64 {
         _: &Client,
         _: &T,
         value: Option<&CommandOptionValue>,
-    ) -> Result<Self, SlashParseError> {
+    ) -> Result<Self, ParseError> {
         if let Some(kind) = value {
             if let CommandOptionValue::Integer(i) = kind {
                 return Ok(*i);
@@ -47,7 +47,7 @@ impl<T: Send + Sync + 'static> Parse<T> for u64 {
         _: &Client,
         _: &T,
         value: Option<&CommandOptionValue>,
-    ) -> Result<Self, SlashParseError> {
+    ) -> Result<Self, ParseError> {
         if let Some(kind) = value {
             if let CommandOptionValue::Integer(i) = kind {
                 return Ok(*i as u64);
@@ -67,7 +67,7 @@ impl<T: Send + Sync + 'static> Parse<T> for f64 {
         _: &Client,
         _: &T,
         value: Option<&CommandOptionValue>,
-    ) -> Result<Self, SlashParseError> {
+    ) -> Result<Self, ParseError> {
         if let Some(kind) = value {
             if let CommandOptionValue::Number(i) = kind {
                 return Ok(i.0);
@@ -87,7 +87,7 @@ impl<T: Send + Sync + 'static> Parse<T> for bool {
         _: &Client,
         _: &T,
         value: Option<&CommandOptionValue>,
-    ) -> Result<Self, SlashParseError> {
+    ) -> Result<Self, ParseError> {
         if let Some(kind) = value {
             if let CommandOptionValue::Boolean(i) = kind {
                 return Ok(*i);
@@ -107,7 +107,7 @@ impl<T: Send + Sync + 'static> Parse<T> for ChannelId {
         _: &Client,
         _: &T,
         value: Option<&CommandOptionValue>,
-    ) -> Result<Self, SlashParseError> {
+    ) -> Result<Self, ParseError> {
         if let Some(kind) = value {
             if let CommandOptionValue::Channel(channel) = kind {
                 return Ok(*channel);
@@ -128,7 +128,7 @@ impl<T: Send + Sync + 'static> Parse<T> for UserId {
         _: &Client,
         _: &T,
         value: Option<&CommandOptionValue>,
-    ) -> Result<Self, SlashParseError> {
+    ) -> Result<Self, ParseError> {
         if let Some(kind) = value {
             if let CommandOptionValue::User(user) = kind {
                 return Ok(*user);
@@ -149,7 +149,7 @@ impl<T: Send + Sync + 'static> Parse<T> for RoleId {
         _: &Client,
         _: &T,
         value: Option<&CommandOptionValue>,
-    ) -> Result<Self, SlashParseError> {
+    ) -> Result<Self, ParseError> {
         if let Some(kind) = value {
             if let CommandOptionValue::Role(role) = kind {
                 return Ok(*role);
@@ -170,7 +170,7 @@ impl<T: Send + Sync + 'static> Parse<T> for GenericId {
         _: &Client,
         _: &T,
         value: Option<&CommandOptionValue>,
-    ) -> Result<Self, SlashParseError> {
+    ) -> Result<Self, ParseError> {
         if let Some(kind) = value {
             if let CommandOptionValue::Mentionable(id) = kind {
                 return Ok(*id);
@@ -191,7 +191,7 @@ impl<T: Parse<E>, E: Send + Sync + 'static> Parse<E> for Option<T> {
         http_client: &Client,
         data: &E,
         value: Option<&CommandOptionValue>,
-    ) -> Result<Self, SlashParseError> {
+    ) -> Result<Self, ParseError> {
         if let Ok(parsed) = T::parse(http_client, data, value).await {
             Ok(Some(parsed))
         } else {
@@ -212,14 +212,14 @@ impl<T: Parse<E>, E: Send + Sync + 'static> Parse<E> for Option<T> {
 impl<T, E, C> Parse<C> for Result<T, E>
 where
     T: Parse<C>,
-    E: From<SlashParseError>,
+    E: From<ParseError>,
     C: Send + Sync + 'static,
 {
     async fn parse(
         http_client: &Client,
         data: &C,
         value: Option<&CommandOptionValue>,
-    ) -> Result<Self, SlashParseError> {
+    ) -> Result<Self, ParseError> {
         // as we want to return the error if occurs, we'll map the error and always return Ok
         Ok(T::parse(http_client, data, value).await.map_err(From::from))
     }
@@ -242,7 +242,7 @@ macro_rules! impl_derived_parse {
                     http_client: &Client,
                     data: &T,
                     value: Option<&CommandOptionValue>
-                ) -> Result<Self, SlashParseError> {
+                ) -> Result<Self, ParseError> {
                     let p = <$prim>::parse(http_client, data, value).await?;
 
                     if p > <$derived>::MAX as $prim {

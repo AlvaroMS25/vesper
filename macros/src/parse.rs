@@ -87,12 +87,12 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
                     http_client: &::zephyrus::twilight_exports::Client,
                     data: &T,
                     value: Option<&::zephyrus::twilight_exports::CommandOptionValue>,
-                ) -> Result<Self, ::zephyrus::prelude::SlashParseError>
+                ) -> Result<Self, ::zephyrus::prelude::ParseError>
                 {
                     let num = usize::parse(http_client, data, value).await?;
                     match num {
                         #parse_stream
-                        _ => return Err(::zephyrus::prelude::SlashParseError::StructureMismatch(
+                        _ => return Err(::zephyrus::prelude::ParseError::StructureMismatch(
                             "Unrecognized option".to_string())
                         )
                     }
