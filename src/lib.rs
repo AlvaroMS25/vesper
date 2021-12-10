@@ -1,18 +1,18 @@
-mod argument;
-mod group;
 mod parse_impl;
 
-pub mod command;
-
+pub mod argument;
 pub mod builder;
-pub use macros;
+pub mod command;
 pub mod context;
 pub mod framework;
+pub mod group;
 pub mod hook;
 pub mod iter;
 pub mod message;
 pub mod parse;
 pub mod waiter;
+
+pub use macros;
 
 type BoxFuture<'a, T> = std::pin::Pin<Box<dyn std::future::Future<Output = T> + Send + 'a>>;
 
