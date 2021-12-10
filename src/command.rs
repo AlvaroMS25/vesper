@@ -7,7 +7,7 @@ pub type CommandResult = Result<(), Box<dyn Error + Send + Sync>>;
 /// A pointer to a command function.
 pub(crate) type CommandFun<D> = for<'a> fn(&'a SlashContext<D>) -> BoxFuture<'a, CommandResult>;
 /// A map of [commands](self::Command).
-pub(crate)                                                               type CommandMap<D> = HashMap<&'static str, Command<D>>;
+pub type CommandMap<D> = HashMap<&'static str, Command<D>>;
 
 /// A command executed by the framework.
 pub struct Command<D> {
