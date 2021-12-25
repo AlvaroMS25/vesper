@@ -132,28 +132,19 @@ impl ToTokens for Argument<'_> {
         let parse_trait = crate::util::get_parse_trait();
         let tt = &self.trait_type;
 
-        if let Some(rename) = &self.renaming {
-            tokens.extend(quote::quote! {
-                .add_argument((
-                    #rename,
-                    #des,
-                    <#ty as #parse_trait<#tt>>::is_required(),
-                    <#ty as #parse_trait<#tt>>::option_type(),
-                    <#ty as #parse_trait<#tt>>::add_choices()
-                ).into())
-            })
-        } else {
-            let name = self.name.to_string();
+        let name = match &self.renaming {
+            Some(rename) => rename.clone(),
+            None => self.name.to_string()
+        };
 
-            tokens.extend(quote::quote! {
-                .add_argument((
-                    #name,
-                    #des,
-                    <#ty as #parse_trait<#tt>>::is_required(),
-                    <#ty as #parse_trait<#tt>>::option_type(),
-                    <#ty as #parse_trait<#tt>>::add_choices()
-                ).into())
-            })
-        }
+        tokens.extend(quote::quote! {
+            .add_argument((
+                #name,
+                #des,
+                <#ty as #parse_trait<#tt>>::is_required(),
+                <#ty as #parse_trait<#tt>>::option_type(),
+                <#ty as #parse_trait<#tt>>::add_choices()
+            ).into())
+        });
     }
 }
