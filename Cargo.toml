@@ -2,7 +2,7 @@
 name = "zephyrus"
 version = "0.2.0"
 authors = ["Alvaro <62391364+AlvaroMS25@users.noreply.github.com>"]
-edition = "2021"
+edition = "2018"
 description = "A slash-command framework meant to be used with twilight"
 readme = "README.md"
 repository = "https://github.com/AlvaroMS25/zephyrus"
@@ -17,8 +17,8 @@ async-trait = "0.1"
 macros = { path = "./macros" }
 parking_lot = "0.11"
 tracing = "0.1"
-twilight-model = "0.7"
-twilight-http = "0.7"
+twilight-model = "0.8"
+twilight-http = "0.8"
 
 [dependencies.tokio]
 version = "1"
