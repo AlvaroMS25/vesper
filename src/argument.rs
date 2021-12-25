@@ -15,24 +15,21 @@ pub struct CommandArgument {
 }
 
 impl CommandArgument {
+    fn choices(&self) -> Vec<CommandOptionChoice> {
+        (self.choices_fn)().unwrap_or_default()
+    }
     pub fn as_option(&self) -> CommandOption {
         match self.kind {
             CommandOptionType::String => CommandOption::String(ChoiceCommandOptionData {
                 autocomplete: false,
-                choices: match (self.choices_fn)() {
-                    Some(choices) => choices,
-                    None => Vec::new(),
-                },
+                choices: self.choices(),
                 description: self.description.to_string(),
                 name: self.name.to_string(),
                 required: self.required,
             }),
             CommandOptionType::Integer => CommandOption::Integer(NumberCommandOptionData {
                 autocomplete: false,
-                choices: match (self.choices_fn)() {
-                    Some(choices) => choices,
-                    None => Vec::new(),
-                },
+                choices: self.choices(),
                 description: self.description.to_string(),
                 name: self.name.to_string(),
                 required: self.required,
@@ -66,10 +63,7 @@ impl CommandArgument {
             }),
             CommandOptionType::Number => CommandOption::Number(NumberCommandOptionData {
                 autocomplete: false,
-                choices: match (self.choices_fn)() {
-                    Some(choices) => choices,
-                    None => Vec::new(),
-                },
+                choices: self.choices(),
                 description: self.description.to_string(),
                 name: self.name.to_string(),
                 required: self.required,
