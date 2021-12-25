@@ -1,7 +1,14 @@
 [package]
 name = "zephyrus"
 version = "0.2.0"
+authors = ["Alvaro <62391364+AlvaroMS25@users.noreply.github.com>"]
 edition = "2021"
+description = "A slash-command framework meant to be used with twilight"
+readme = "README.md"
+repository = "https://github.com/AlvaroMS25/zephyrus"
+license = "MIT"
+keywords = ["async", "twilight", "discord", "slash-command"]
+categories = ["asynchronous"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
