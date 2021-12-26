@@ -12,7 +12,7 @@ pub mod message;
 pub mod parse;
 pub mod waiter;
 
-pub use macros;
+pub use zephyrus_macros;
 
 type BoxFuture<'a, T> = std::pin::Pin<Box<dyn std::future::Future<Output = T> + Send + 'a>>;
 
@@ -27,7 +27,7 @@ pub mod prelude {
         waiter::WaiterReceiver,
     };
     pub use async_trait::async_trait;
-    pub use macros::*;
+    pub use zephyrus_macros::*;
 }
 
 pub mod twilight_exports {
