@@ -125,6 +125,36 @@ discord. If the attribute is not used, the argument will have the same name as i
 
 **Important: All command functions must have as the first parameter a `&SlashContext<T>`**
 
+## Setting choices as command arguments
+Choices are a very useful feature of slash commands, allowing the developer to set some choices from which the user has
+to choose.
+
+Zephyrus allows doing this in an easy way, to allow this, a derive macro is provided by the framework. This macro is
+named the same way as `Parse` trait and can only be used in enums to define the options. Renaming is also allowed here
+by using the `#[rename]` attribute and allows to change the option name seen in discord.
+
+```rust
+#[derive(Parse)]
+enum Choices {
+    First,
+    Second,
+    Third,
+    #[rename = "Forth"]
+    Other
+}
+
+#[command]
+#[description = "Some description"]
+async fn choices(
+    ctx: &SlashContext<()>,
+    #[description = "Some description"] choice: Choices
+) -> CommandResult
+{
+    // Command body
+    Ok(())
+}
+```
+
 ***
 
 # Command Groups
