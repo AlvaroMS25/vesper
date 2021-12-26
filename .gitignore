@@ -1,8 +1,4 @@
 .idea/
-target/
 
-macros/.idea/
-macros/target/
-macros/Cargo.lock
-
+target
 Cargo.lock
