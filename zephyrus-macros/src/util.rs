@@ -8,7 +8,7 @@ use syn::{
 
 /// Gets the path of the futurize macro
 pub fn get_futurize_macro() -> Path {
-    parse2(quote::quote!(::zephyrus::zephyrus_macros::futurize)).unwrap()
+    parse2(quote::quote!(::zephyrus::macros::futurize)).unwrap()
 }
 
 /// Gets the path of the parse trait used by zephyrus to parse arguments
