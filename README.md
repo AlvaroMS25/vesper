@@ -1,4 +1,4 @@
-# Zephyrus Framework
+# Zephyrus Framework [![Crate](https://img.shields.io/crates/v/zephyrus)](https://crates.io/crates/zephyrus)
 
 `Zephyrus` is a slash command framework meant to be used by [twilight](https://twilight.rs/)
 
