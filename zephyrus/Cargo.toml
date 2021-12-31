@@ -24,3 +24,6 @@ twilight-http = "0.8"
 version = "1"
 default-features = false
 features = ["sync"]
+
+[features]
+rc = []

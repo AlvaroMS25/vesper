@@ -4,28 +4,32 @@ use crate::{
     hook::{AfterHook, BeforeHook},
     twilight_exports::Client,
 };
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
+#[cfg(feature = "rc")]
+use std::rc::Rc;
 
 /// A wrapper around twilight's http client allowing the user to decide how to provide it to the framework.
 pub enum WrappedClient {
     Arc(Arc<Client>),
+    #[cfg(feature = "rc")]
     Rc(Rc<Client>),
-    None(Client),
+    Raw(Client),
 }
 
 impl WrappedClient {
     pub fn inner(&self) -> &Client {
         match self {
             Self::Arc(c) => &c,
+            #[cfg(feature = "rc")]
             Self::Rc(c) => &c,
-            Self::None(c) => &c,
+            Self::Raw(c) => &c,
         }
     }
 }
 
 impl From<Client> for WrappedClient {
     fn from(c: Client) -> Self {
-        WrappedClient::None(c)
+        WrappedClient::Raw(c)
     }
 }
 
@@ -35,6 +39,7 @@ impl From<Arc<Client>> for WrappedClient {
     }
 }
 
+#[cfg(feature = "rc")]
 impl From<Rc<Client>> for WrappedClient {
     fn from(c: Rc<Client>) -> Self {
         WrappedClient::Rc(c)
