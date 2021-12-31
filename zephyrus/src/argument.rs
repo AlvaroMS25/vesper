@@ -11,7 +11,7 @@ pub struct CommandArgument {
     /// The type this argument has.
     pub kind: CommandOptionType,
     /// A function that allows to set specific options to the command, disabling arbitrary values.
-    pub choices_fn: Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send>,
+    pub choices_fn: Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send + Sync>,
 }
 
 impl CommandArgument {
@@ -80,7 +80,7 @@ impl
         &'static str,
         bool,
         CommandOptionType,
-        Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send>,
+        Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send + Sync>,
     )> for CommandArgument
 {
     fn from(
@@ -89,7 +89,7 @@ impl
             &'static str,
             bool,
             CommandOptionType,
-            Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send>,
+            Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send + Sync>,
         ),
     ) -> Self {
         Self {

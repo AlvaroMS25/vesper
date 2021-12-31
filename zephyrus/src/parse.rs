@@ -31,7 +31,7 @@ pub trait Parse<T: Send + Sync + 'static>: Sized {
 
     /// Adds the possible choices to the argument, this function is usually implemented by the
     /// derive macro, but can be overridden manually.
-    fn add_choices() -> Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send> {
+    fn add_choices() -> Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send + Sync> {
         Box::new(|| None)
     }
 
