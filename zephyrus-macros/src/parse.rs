@@ -101,7 +101,7 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
                     ::zephyrus::twilight_exports::CommandOptionType::Integer
                 }
                 fn add_choices()
-                -> Box<dyn Fn() -> Option<Vec<::zephyrus::twilight_exports::CommandOptionChoice>> + Send> {
+                -> Box<dyn Fn() -> Option<Vec<::zephyrus::twilight_exports::CommandOptionChoice>> + Send + Sync> {
                     Box::new(|| {
                         let mut choices = Vec::new();
 
