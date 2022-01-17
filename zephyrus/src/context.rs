@@ -55,7 +55,7 @@ impl<'a, D> SlashContext<'a, D> {
                     allowed_mentions: None,
                     components: None,
                     content: None,
-                    embeds: Vec::new(),
+                    embeds: None,
                     flags: None,
                     tts: None,
                 }),
