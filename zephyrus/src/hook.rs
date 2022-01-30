@@ -6,6 +6,7 @@ pub(crate) type BeforeFun<D> = for<'a> fn(&'a SlashContext<D>, &'a str) -> BoxFu
 pub struct BeforeHook<D>(pub BeforeFun<D>);
 
 /// A pointer to a function used by [after hook](self::AfterHook).
-pub(crate) type AfterFun<D> = for<'a> fn(&'a SlashContext<D>, &'a str, CommandResult) -> BoxFuture<'a, ()>;
+pub(crate) type AfterFun<D> =
+    for<'a> fn(&'a SlashContext<D>, &'a str, CommandResult) -> BoxFuture<'a, ()>;
 /// A hook executed after command execution.
 pub struct AfterHook<D>(pub AfterFun<D>);

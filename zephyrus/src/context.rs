@@ -46,8 +46,7 @@ impl<'a, D> SlashContext<'a, D> {
     ///
     /// When this method is used [update_response](Self::update_response) has to be used to edit the response.
     pub async fn acknowledge(&self) -> CommandResult {
-        self
-            .http_client
+        self.http_client
             .interaction_callback(
                 self.interaction.id,
                 &self.interaction.token,

@@ -19,10 +19,7 @@ pub trait Parse<T: Send + Sync + 'static>: Sized {
             Self::parse(http_client, data, Some(&o.value)).await
         } else {
             if Self::is_required() {
-                Err(ParseError::StructureMismatch(format!(
-                    "{} not found",
-                    name
-                )))
+                Err(ParseError::StructureMismatch(format!("{} not found", name)))
             } else {
                 Self::parse(http_client, data, None).await
             }

@@ -57,9 +57,7 @@ impl<D> Framework<D> {
     /// Processes the given interaction, dispatching commands or waking waiters if necessary.
     pub async fn process(&self, interaction: Interaction) {
         match interaction {
-            Interaction::ApplicationCommand(cmd) => {
-                self.try_execute(*cmd).await
-            }
+            Interaction::ApplicationCommand(cmd) => self.try_execute(*cmd).await,
             Interaction::MessageComponent(component) => {
                 let mut lock = self.waiters.lock();
                 let index = lock.iter().position(|sender| sender.check(&component));
@@ -155,7 +153,7 @@ impl<D> Framework<D> {
 
     pub async fn register_guild_commands(
         &self,
-        guild_id: GuildId,
+        guild_id: Id<GuildMarker>,
     ) -> Result<Vec<TwilightCommand>, Box<dyn std::error::Error + Send + Sync>> {
         let mut commands = Vec::new();
 

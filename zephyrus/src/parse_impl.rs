@@ -102,7 +102,7 @@ impl<T: Send + Sync + 'static> Parse<T> for bool {
 }
 
 #[async_trait]
-impl<T: Send + Sync + 'static> Parse<T> for ChannelId {
+impl<T: Send + Sync + 'static> Parse<T> for Id<ChannelMarker> {
     async fn parse(
         _: &Client,
         _: &T,
@@ -123,7 +123,7 @@ impl<T: Send + Sync + 'static> Parse<T> for ChannelId {
 }
 
 #[async_trait]
-impl<T: Send + Sync + 'static> Parse<T> for UserId {
+impl<T: Send + Sync + 'static> Parse<T> for Id<UserMarker> {
     async fn parse(
         _: &Client,
         _: &T,
@@ -144,7 +144,7 @@ impl<T: Send + Sync + 'static> Parse<T> for UserId {
 }
 
 #[async_trait]
-impl<T: Send + Sync + 'static> Parse<T> for RoleId {
+impl<T: Send + Sync + 'static> Parse<T> for Id<RoleMarker> {
     async fn parse(
         _: &Client,
         _: &T,
@@ -165,7 +165,7 @@ impl<T: Send + Sync + 'static> Parse<T> for RoleId {
 }
 
 #[async_trait]
-impl<T: Send + Sync + 'static> Parse<T> for GenericId {
+impl<T: Send + Sync + 'static> Parse<T> for Id<GenericMarker> {
     async fn parse(
         _: &Client,
         _: &T,

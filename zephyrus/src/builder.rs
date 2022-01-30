@@ -4,9 +4,9 @@ use crate::{
     hook::{AfterHook, BeforeHook},
     twilight_exports::Client,
 };
-use std::sync::Arc;
 #[cfg(feature = "rc")]
 use std::rc::Rc;
+use std::sync::Arc;
 
 /// A wrapper around twilight's http client allowing the user to decide how to provide it to the framework.
 pub enum WrappedClient {
