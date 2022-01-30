@@ -8,7 +8,7 @@ use crate::{
     twilight_exports::{
         ApplicationCommand, Client, Command as TwilightCommand, CommandDataOption, CommandOption,
         CommandOptionType, CommandOptionValue, GuildMarker, Id, Interaction,
-        OptionsCommandOptionData,
+        OptionsCommandOptionData, ApplicationMarker
     },
     waiter::WaiterSender,
 };
@@ -19,6 +19,8 @@ use tracing::debug;
 pub struct Framework<D> {
     /// The http client used by the framework.
     http_client: WrappedClient,
+    /// The application id of the client.
+    application_id: Id<ApplicationMarker>,
     /// Data shared across all command and hook invocations.
     pub data: D,
     /// A map of simple commands.
@@ -38,6 +40,7 @@ impl<D> Framework<D> {
     pub(crate) fn from_builder(builder: FrameworkBuilder<D>) -> Self {
         Self {
             http_client: builder.http_client,
+            application_id: builder.application_id,
             data: builder.data,
             commands: builder.commands,
             groups: builder.groups,
@@ -49,8 +52,8 @@ impl<D> Framework<D> {
 
     /// Creates a new framework builder, this is a shortcut to FrameworkBuilder.
     /// [new](crate::builder::FrameworkBuilder::new)
-    pub fn builder(http_client: impl Into<WrappedClient>, data: D) -> FrameworkBuilder<D> {
-        FrameworkBuilder::new(http_client, data)
+    pub fn builder(http_client: impl Into<WrappedClient>, application_id: Id<ApplicationMarker>, data: D) -> FrameworkBuilder<D> {
+        FrameworkBuilder::new(http_client, application_id, data)
     }
 
     /// Gets the http client used by the framework.
@@ -138,7 +141,7 @@ impl<D> Framework<D> {
     /// Executes the given [command](crate::command::Command) and the hooks.
     async fn execute(&self, cmd: &Command<D>, interaction: ApplicationCommand) {
         let context =
-            SlashContext::new(&self.http_client(), &self.data, &self.waiters, interaction);
+            SlashContext::new(&self.http_client(), self.application_id, &self.data, &self.waiters, interaction);
 
         let execute = if let Some(before) = &self.before {
             (before.0)(&context, cmd.name).await
@@ -159,6 +162,8 @@ impl<D> Framework<D> {
         &self,
         guild_id: Id<GuildMarker>,
     ) -> Result<Vec<TwilightCommand>, Box<dyn std::error::Error + Send + Sync>> {
+        let interaction_http = self.http_client().interaction(self.application_id);
+
         let mut commands = Vec::new();
 
         for (_, cmd) in &self.commands {
@@ -169,9 +174,9 @@ impl<D> Framework<D> {
             }
 
             commands.push(
-                self.http_client()
-                    .create_guild_command(guild_id, cmd.name)?
-                    .chat_input(cmd.description)?
+                interaction_http
+                    .create_guild_command(guild_id)
+                    .chat_input(cmd.name, cmd.description)?
                     .command_options(&options)?
                     .exec()
                     .await?
@@ -182,9 +187,9 @@ impl<D> Framework<D> {
 
         for (_, group) in &self.groups {
             commands.push(
-                self.http_client()
-                    .create_guild_command(guild_id, group.name)?
-                    .chat_input(group.description)?
+                interaction_http
+                    .create_guild_command(guild_id)
+                    .chat_input(group.name, group.description)?
                     .command_options(&self.create_group(group))?
                     .exec()
                     .await?
@@ -199,6 +204,8 @@ impl<D> Framework<D> {
     pub async fn register_global_commands(
         &self,
     ) -> Result<Vec<TwilightCommand>, Box<dyn std::error::Error + Send + Sync>> {
+        let interaction_http = self.http_client().interaction(self.application_id);
+
         let mut commands = Vec::new();
 
         for (_, cmd) in &self.commands {
@@ -209,9 +216,9 @@ impl<D> Framework<D> {
             }
 
             commands.push(
-                self.http_client()
-                    .create_global_command(cmd.name)?
-                    .chat_input(cmd.description)?
+                interaction_http
+                    .create_global_command()
+                    .chat_input(cmd.name, cmd.description)?
                     .command_options(&options)?
                     .exec()
                     .await?
@@ -222,9 +229,9 @@ impl<D> Framework<D> {
 
         for (_, group) in &self.groups {
             commands.push(
-                self.http_client()
-                    .create_global_command(group.name)?
-                    .chat_input(group.description)?
+                interaction_http
+                    .create_global_command()
+                    .chat_input(group.name, group.description)?
                     .command_options(&self.create_group(group))?
                     .exec()
                     .await?

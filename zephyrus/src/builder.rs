@@ -2,7 +2,7 @@ use crate::{
     command::{Command, CommandMap},
     group::{GroupParentBuilder, ParentGroupMap},
     hook::{AfterHook, BeforeHook},
-    twilight_exports::Client,
+    twilight_exports::{Client, Id, ApplicationMarker},
 };
 #[cfg(feature = "rc")]
 use std::rc::Rc;
@@ -53,6 +53,8 @@ pub(crate) type FnPointer<T> = fn() -> T;
 pub struct FrameworkBuilder<D> {
     /// The http client used by the framework.
     pub http_client: WrappedClient,
+    /// The application id of the client.
+    pub application_id: Id<ApplicationMarker>,
     /// Data that will be available to all commands.
     pub data: D,
     /// The actual commands, only the simple ones.
@@ -67,9 +69,10 @@ pub struct FrameworkBuilder<D> {
 
 impl<D: Sized> FrameworkBuilder<D> {
     /// Creates a new [Builder](self::FrameworkBuilder).
-    pub fn new(http_client: impl Into<WrappedClient>, data: D) -> Self {
+    pub fn new(http_client: impl Into<WrappedClient>, application_id: Id<ApplicationMarker>, data: D) -> Self {
         Self {
             http_client: http_client.into(),
+            application_id,
             data,
             commands: Default::default(),
             groups: Default::default(),
