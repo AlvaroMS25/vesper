@@ -9,11 +9,16 @@ use parking_lot::Mutex;
 /// Framework context given to all command functions, this struct contains all the necessary
 /// items to respond the interaction and access shared data.
 pub struct SlashContext<'a, D> {
+    /// The [http client](Client) used by the framework.
     pub http_client: &'a Client,
+    /// The application id provided to the framework.
     pub application_id: Id<ApplicationMarker>,
+    /// An [interaction client](InteractionClient) made out of the framework's [http client](Client)
     pub interaction_client: InteractionClient<'a>,
+    /// The data shared across the framework.
     pub data: &'a D,
     waiters: &'a Mutex<Vec<WaiterSender>>,
+    /// The interaction itself.
     pub interaction: ApplicationCommand,
 }
 
