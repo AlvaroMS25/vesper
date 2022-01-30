@@ -2,7 +2,7 @@ use crate::{
     command::{Command, CommandMap},
     group::{GroupParentBuilder, ParentGroupMap},
     hook::{AfterHook, BeforeHook},
-    twilight_exports::{Client, Id, ApplicationMarker},
+    twilight_exports::{ApplicationMarker, Client, Id},
 };
 #[cfg(feature = "rc")]
 use std::rc::Rc;
@@ -69,7 +69,11 @@ pub struct FrameworkBuilder<D> {
 
 impl<D: Sized> FrameworkBuilder<D> {
     /// Creates a new [Builder](self::FrameworkBuilder).
-    pub fn new(http_client: impl Into<WrappedClient>, application_id: Id<ApplicationMarker>, data: D) -> Self {
+    pub fn new(
+        http_client: impl Into<WrappedClient>,
+        application_id: Id<ApplicationMarker>,
+        data: D,
+    ) -> Self {
         Self {
             http_client: http_client.into(),
             application_id,

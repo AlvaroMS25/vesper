@@ -6,9 +6,9 @@ use crate::{
     group::{GroupParent, ParentGroupMap, ParentType},
     hook::{AfterHook, BeforeHook},
     twilight_exports::{
-        ApplicationCommand, Client, Command as TwilightCommand, CommandDataOption, CommandOption,
-        CommandOptionType, CommandOptionValue, GuildMarker, Id, Interaction,
-        OptionsCommandOptionData, ApplicationMarker
+        ApplicationCommand, ApplicationMarker, Client, Command as TwilightCommand,
+        CommandDataOption, CommandOption, CommandOptionType, CommandOptionValue, GuildMarker, Id,
+        Interaction, OptionsCommandOptionData,
     },
     waiter::WaiterSender,
 };
@@ -52,7 +52,11 @@ impl<D> Framework<D> {
 
     /// Creates a new framework builder, this is a shortcut to FrameworkBuilder.
     /// [new](crate::builder::FrameworkBuilder::new)
-    pub fn builder(http_client: impl Into<WrappedClient>, application_id: Id<ApplicationMarker>, data: D) -> FrameworkBuilder<D> {
+    pub fn builder(
+        http_client: impl Into<WrappedClient>,
+        application_id: Id<ApplicationMarker>,
+        data: D,
+    ) -> FrameworkBuilder<D> {
         FrameworkBuilder::new(http_client, application_id, data)
     }
 
@@ -140,8 +144,13 @@ impl<D> Framework<D> {
 
     /// Executes the given [command](crate::command::Command) and the hooks.
     async fn execute(&self, cmd: &Command<D>, interaction: ApplicationCommand) {
-        let context =
-            SlashContext::new(&self.http_client(), self.application_id, &self.data, &self.waiters, interaction);
+        let context = SlashContext::new(
+            &self.http_client(),
+            self.application_id,
+            &self.data,
+            &self.waiters,
+            interaction,
+        );
 
         let execute = if let Some(before) = &self.before {
             (before.0)(&context, cmd.name).await

@@ -31,7 +31,10 @@ pub mod prelude {
 }
 
 pub mod twilight_exports {
-    pub use twilight_http::{request::application::interaction::UpdateOriginalResponse, client::{Client, InteractionClient}};
+    pub use twilight_http::{
+        client::{Client, InteractionClient},
+        request::application::interaction::UpdateOriginalResponse,
+    };
     pub use twilight_model::{
         application::{
             callback::{CallbackData, InteractionResponse},
@@ -50,7 +53,8 @@ pub mod twilight_exports {
         gateway::payload::incoming::InteractionCreate,
         id::{
             marker::{
-                ApplicationMarker, ChannelMarker, GenericMarker, GuildMarker, MessageMarker, RoleMarker, UserMarker,
+                ApplicationMarker, ChannelMarker, GenericMarker, GuildMarker, MessageMarker,
+                RoleMarker, UserMarker,
             },
             Id,
         },

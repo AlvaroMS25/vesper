@@ -86,8 +86,7 @@ impl<'a, D> SlashContext<'a, D> {
         F: for<'b> FnOnce(UpdateOriginalResponse<'b>) -> UpdateOriginalResponse<'b>,
     {
         let interaction_client = self.interaction_client();
-        let mut update = interaction_client
-            .update_interaction_original(&self.interaction.token);
+        let mut update = interaction_client.update_interaction_original(&self.interaction.token);
         update = fun(update);
 
         Ok(update
@@ -95,8 +94,7 @@ impl<'a, D> SlashContext<'a, D> {
             .await?
             .model()
             .await
-            .map(|msg| Message::new(&self, msg))?
-        )
+            .map(|msg| Message::new(&self, msg))?)
     }
 
     /// Waits for a component interaction which satisfies the given predicate.
