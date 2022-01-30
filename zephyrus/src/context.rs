@@ -11,6 +11,7 @@ use parking_lot::Mutex;
 pub struct SlashContext<'a, D> {
     pub http_client: &'a Client,
     pub application_id: Id<ApplicationMarker>,
+    pub interaction_client: InteractionClient<'a>,
     pub data: &'a D,
     waiters: &'a Mutex<Vec<WaiterSender>>,
     pub interaction: ApplicationCommand,
@@ -21,6 +22,7 @@ impl<'a, D> Clone for SlashContext<'a, D> {
         SlashContext {
             http_client: &self.http_client,
             application_id: self.application_id,
+            interaction_client: self.http_client.interaction(self.application_id),
             data: &self.data,
             waiters: &self.waiters,
             interaction: self.interaction.clone(),
@@ -37,26 +39,22 @@ impl<'a, D> SlashContext<'a, D> {
         waiters: &'a Mutex<Vec<WaiterSender>>,
         interaction: ApplicationCommand,
     ) -> Self {
+        let interaction_client = http_client.interaction(application_id);
         Self {
             http_client,
             application_id,
+            interaction_client,
             data,
             waiters,
             interaction,
         }
     }
 
-    /// Gets the [interaction client](InteractionClient) using this framework's
-    /// [http client](Client) and [application id](ApplicationMarker)
-    pub fn interaction_client(&self) -> InteractionClient<'a> {
-        self.http_client.interaction(self.application_id)
-    }
-
     /// Responds to the interaction with an empty message to allow to respond later.
     ///
     /// When this method is used [update_response](Self::update_response) has to be used to edit the response.
     pub async fn acknowledge(&self) -> CommandResult {
-        self.interaction_client()
+        self.interaction_client
             .interaction_callback(
                 self.interaction.id,
                 &self.interaction.token,
@@ -83,12 +81,9 @@ impl<'a, D> SlashContext<'a, D> {
         fun: F,
     ) -> Result<Message<'a, D>, Box<dyn std::error::Error + Send + Sync>>
     where
-        F: for<'b> FnOnce(UpdateOriginalResponse<'b>) -> UpdateOriginalResponse<'b>,
+        F: FnOnce(UpdateOriginalResponse<'a>) -> UpdateOriginalResponse<'a>,
     {
-        let interaction_client = self.interaction_client();
-        let mut update = interaction_client.update_interaction_original(&self.interaction.token);
-        update = fun(update);
-
+        let update = fun(self.interaction_client.update_interaction_original(&self.interaction.token));
         Ok(update
             .exec()
             .await?
