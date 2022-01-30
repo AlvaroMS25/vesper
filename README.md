@@ -39,7 +39,7 @@ async fn hello(ctx: &SlashContext<()>) -> CommandResult {
             allowed_mentions: None,
             components: None,
             content: Some("Hello world".to_string()),
-            embeds: Vec::new(),
+            embeds: None,
             flags: None,
             tts: None,
         })
