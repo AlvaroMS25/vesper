@@ -8,7 +8,7 @@ use crate::{
     twilight_exports::{
         ApplicationCommand, ApplicationMarker, Client, Command as TwilightCommand,
         CommandDataOption, CommandOption, CommandOptionType, CommandOptionValue, GuildMarker, Id,
-        Interaction, OptionsCommandOptionData,
+        Interaction, InteractionClient, OptionsCommandOptionData,
     },
     waiter::WaiterSender,
 };
@@ -20,7 +20,7 @@ pub struct Framework<D> {
     /// The http client used by the framework.
     http_client: WrappedClient,
     /// The application id of the client.
-    application_id: Id<ApplicationMarker>,
+    pub application_id: Id<ApplicationMarker>,
     /// Data shared across all command and hook invocations.
     pub data: D,
     /// A map of simple commands.
@@ -63,6 +63,12 @@ impl<D> Framework<D> {
     /// Gets the http client used by the framework.
     pub fn http_client(&self) -> &Client {
         self.http_client.inner()
+    }
+
+    /// Gets the [interaction client](InteractionClient) using this framework's
+    /// [http client](Client) and [application id](ApplicationMarker)
+    pub fn interaction_client(&self) -> InteractionClient {
+        self.http_client().interaction(self.application_id)
     }
 
     /// Processes the given interaction, dispatching commands or waking waiters if necessary.
@@ -171,8 +177,6 @@ impl<D> Framework<D> {
         &self,
         guild_id: Id<GuildMarker>,
     ) -> Result<Vec<TwilightCommand>, Box<dyn std::error::Error + Send + Sync>> {
-        let interaction_http = self.http_client().interaction(self.application_id);
-
         let mut commands = Vec::new();
 
         for (_, cmd) in &self.commands {
@@ -183,7 +187,7 @@ impl<D> Framework<D> {
             }
 
             commands.push(
-                interaction_http
+                self.interaction_client()
                     .create_guild_command(guild_id)
                     .chat_input(cmd.name, cmd.description)?
                     .command_options(&options)?
@@ -196,7 +200,7 @@ impl<D> Framework<D> {
 
         for (_, group) in &self.groups {
             commands.push(
-                interaction_http
+                self.interaction_client()
                     .create_guild_command(guild_id)
                     .chat_input(group.name, group.description)?
                     .command_options(&self.create_group(group))?
@@ -213,8 +217,6 @@ impl<D> Framework<D> {
     pub async fn register_global_commands(
         &self,
     ) -> Result<Vec<TwilightCommand>, Box<dyn std::error::Error + Send + Sync>> {
-        let interaction_http = self.http_client().interaction(self.application_id);
-
         let mut commands = Vec::new();
 
         for (_, cmd) in &self.commands {
@@ -225,7 +227,7 @@ impl<D> Framework<D> {
             }
 
             commands.push(
-                interaction_http
+                self.interaction_client()
                     .create_global_command()
                     .chat_input(cmd.name, cmd.description)?
                     .command_options(&options)?
@@ -238,7 +240,7 @@ impl<D> Framework<D> {
 
         for (_, group) in &self.groups {
             commands.push(
-                interaction_http
+                self.interaction_client()
                     .create_global_command()
                     .chat_input(group.name, group.description)?
                     .command_options(&self.create_group(group))?
