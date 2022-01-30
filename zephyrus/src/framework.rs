@@ -5,7 +5,11 @@ use crate::{
     context::SlashContext,
     group::{GroupParent, ParentGroupMap, ParentType},
     hook::{AfterHook, BeforeHook},
-    twilight_exports::*,
+    twilight_exports::{
+        ApplicationCommand, Client, Command as TwilightCommand, CommandDataOption, CommandOption,
+        CommandOptionType, CommandOptionValue, GuildMarker, Id, Interaction,
+        OptionsCommandOptionData,
+    },
     waiter::WaiterSender,
 };
 use parking_lot::Mutex;

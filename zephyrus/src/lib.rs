@@ -36,9 +36,9 @@ pub mod twilight_exports {
         application::{
             callback::{CallbackData, InteractionResponse},
             command::{
-                BaseCommandOptionData, ChannelCommandOptionData, ChoiceCommandOptionData,
-                Command as TwilightCommand, CommandOption, CommandOptionChoice, CommandOptionType,
-                NumberCommandOptionData, OptionsCommandOptionData,
+                BaseCommandOptionData, ChannelCommandOptionData, ChoiceCommandOptionData, Command,
+                CommandOption, CommandOptionChoice, CommandOptionType, NumberCommandOptionData,
+                OptionsCommandOptionData,
             },
             interaction::application_command::{
                 ApplicationCommand, CommandData, CommandDataOption, CommandOptionValue,

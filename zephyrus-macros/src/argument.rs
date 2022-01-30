@@ -134,7 +134,7 @@ impl ToTokens for Argument<'_> {
 
         let name = match &self.renaming {
             Some(rename) => rename.clone(),
-            None => self.name.to_string()
+            None => self.name.to_string(),
         };
 
         tokens.extend(quote::quote! {
