@@ -15,6 +15,12 @@ impl<T> std::ops::Deref for Message<'_, T> {
     }
 }
 
+impl<T> std::ops::DerefMut for Message<'_, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
+
 impl<'a, T> Message<'a, T> {
     /// Creates a new [message](self::Message).
     pub(crate) fn new(context: &'a SlashContext<'a, T>, msg: TwilightMessage) -> Self {
