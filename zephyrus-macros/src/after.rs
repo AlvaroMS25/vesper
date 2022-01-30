@@ -17,7 +17,7 @@ pub fn after(input: TokenStream2) -> Result<TokenStream2> {
         c if c != 3 => {
             // This hook is expected to have three arguments, a reference to an `SlashContext`,
             // a &str indicating the name of the command and the result of a command execution.
-            return Err(Error::new(sig.inputs.span(), "Expected two arguments"));
+            return Err(Error::new(sig.inputs.span(), "Expected three arguments"));
         }
         _ => (),
     };
