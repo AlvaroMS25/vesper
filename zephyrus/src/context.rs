@@ -79,7 +79,7 @@ impl<'a, D> SlashContext<'a, D> {
     }
 
     /// Updates the sent interaction, this method is a shortcut to twilight's
-    /// [update_interaction_original](Client::update_interaction_original)
+    /// [update_interaction_original](InteractionClient::update_interaction_original)
     /// but http is automatically provided.
     pub async fn update_response<F>(
         &'a self,
