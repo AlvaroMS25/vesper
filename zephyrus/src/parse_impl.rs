@@ -192,10 +192,15 @@ impl<T: Parse<E>, E: Send + Sync + 'static> Parse<E> for Option<T> {
         data: &E,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
-        if let Ok(parsed) = T::parse(http_client, data, value).await {
-            Ok(Some(parsed))
-        } else {
-            Ok(None)
+        match T::parse(http_client, data, value).await {
+            Ok(parsed) => Ok(Some(parsed)),
+            Err(why) => {
+                if value.is_some() {
+                    Err(why)
+                } else {
+                    Ok(None)
+                }
+            }
         }
     }
 
