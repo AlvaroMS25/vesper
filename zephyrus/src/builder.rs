@@ -42,7 +42,7 @@ impl From<Arc<Client>> for WrappedClient {
 }
 
 impl From<Box<dyn Deref<Target = Client> + Send>> for WrappedClient {
-    fn from(c: Box<dyn Deref<Target = Client>>) -> Self {
+    fn from(c: Box<dyn Deref<Target = Client> + Send>) -> Self {
         Self::Boxed(c)
     }
 }
