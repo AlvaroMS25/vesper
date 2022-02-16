@@ -6,7 +6,7 @@ use crate::{
 };
 #[cfg(feature = "rc")]
 use std::rc::Rc;
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 
 /// A wrapper around twilight's http client allowing the user to decide how to provide it to the framework.
 pub enum WrappedClient {
@@ -14,6 +14,7 @@ pub enum WrappedClient {
     #[cfg(feature = "rc")]
     Rc(Rc<Client>),
     Raw(Client),
+    Boxed(Box<dyn Deref<Target = Client>>)
 }
 
 impl WrappedClient {
@@ -23,6 +24,7 @@ impl WrappedClient {
             #[cfg(feature = "rc")]
             Self::Rc(c) => &c,
             Self::Raw(c) => &c,
+            Self::Boxed(b) => b
         }
     }
 }
@@ -36,6 +38,12 @@ impl From<Client> for WrappedClient {
 impl From<Arc<Client>> for WrappedClient {
     fn from(c: Arc<Client>) -> Self {
         WrappedClient::Arc(c)
+    }
+}
+
+impl From<Box<dyn Deref<Target = Client>>> for WrappedClient {
+    fn from(c: Box<dyn Deref<Target = Client>>) -> Self {
+        Self::Boxed(c)
     }
 }
 
