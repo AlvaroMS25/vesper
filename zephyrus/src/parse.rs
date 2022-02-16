@@ -5,8 +5,7 @@ use std::error::Error;
 /// The core trait of this framework, it is used to parse all command arguments
 #[async_trait]
 pub trait Parse<T: Send + Sync + 'static>: Sized {
-    /// Parses an argument by the option name, this is the entry point of this trait and should
-    /// never be overridden.
+    /// Parses an argument by the option name.
     async fn named_parse(
         name: &'static str,
         http_client: &Client,
