@@ -18,19 +18,19 @@ use tracing::debug;
 /// The framework used to dispatch slash commands.
 pub struct Framework<D> {
     /// The http client used by the framework.
-    http_client: WrappedClient,
+    pub http_client: WrappedClient,
     /// The application id of the client.
     pub application_id: Id<ApplicationMarker>,
     /// Data shared across all command and hook invocations.
     pub data: D,
     /// A map of simple commands.
-    commands: CommandMap<D>,
+    pub commands: CommandMap<D>,
     /// A map of command groups including all children.
-    groups: ParentGroupMap<D>,
+    pub groups: ParentGroupMap<D>,
     /// A hook executed before the command.
-    before: Option<BeforeHook<D>>,
+    pub before: Option<BeforeHook<D>>,
     /// A hook executed after command's execution.
-    after: Option<AfterHook<D>>,
+    pub after: Option<AfterHook<D>>,
     /// A vector of waiters corresponding to different commands.
     waiters: Mutex<Vec<WaiterSender>>,
 }

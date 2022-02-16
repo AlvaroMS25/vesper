@@ -58,13 +58,13 @@ pub struct FrameworkBuilder<D> {
     /// Data that will be available to all commands.
     pub data: D,
     /// The actual commands, only the simple ones.
-    pub(crate) commands: CommandMap<D>,
+    pub commands: CommandMap<D>,
     /// All groups containing commands.
-    pub(crate) groups: ParentGroupMap<D>,
+    pub groups: ParentGroupMap<D>,
     /// A hook executed before any command.
-    pub(crate) before: Option<BeforeHook<D>>,
+    pub before: Option<BeforeHook<D>>,
     /// A hook executed after command's completion.
-    pub(crate) after: Option<AfterHook<D>>,
+    pub after: Option<AfterHook<D>>,
 }
 
 impl<D: Sized> FrameworkBuilder<D> {
