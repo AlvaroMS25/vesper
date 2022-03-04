@@ -27,6 +27,15 @@ impl WrappedClient {
             Self::Boxed(b) => b
         }
     }
+
+    pub fn cast<'a, T>(&'a self) -> Option<&'a T> {
+        if let WrappedClient::Boxed(inner) = self {
+            let ptr = (&*inner) as *const _ as *const T;
+            Some(unsafe { &*ptr })
+        } else {
+            None
+        }
+    }
 }
 
 impl From<Client> for WrappedClient {
