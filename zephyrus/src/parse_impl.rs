@@ -286,7 +286,7 @@ macro_rules! impl_derived_parse {
 }
 
 impl_derived_parse! {
-    [i8, i16, i32, i128, isize] from i64,
-    [u8, u16, u32, u128, usize] from u64,
+    [i8, i16, i32, isize] from i64,
+    [u8, u16, u32, usize] from u64,
     [f32] from f64,
 }
