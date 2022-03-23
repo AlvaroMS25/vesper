@@ -84,7 +84,7 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
             #[::zephyrus::prelude::async_trait]
             impl<T: Send + Sync + 'static> ::zephyrus::prelude::Parse<T> for #enum_name {
                 async fn parse(
-                    http_client: &::zephyrus::twilight_exports::Client,
+                    http_client: &::zephyrus::builder::WrappedClient,
                     data: &T,
                     value: Option<&::zephyrus::twilight_exports::CommandOptionValue>,
                 ) -> Result<Self, ::zephyrus::prelude::ParseError>
