@@ -30,7 +30,7 @@ impl WrappedClient {
 
     /// Casts the [client](WrappedClient) into T if it's [Boxed](WrappedClient::Boxed)
     ///
-    /// **SAFETY: The caller must ensure the type given is the same as the boxed one**
+    /// **SAFETY: The caller must ensure the type given is the same as the boxed one.**
     pub fn cast<'a, T>(&'a self) -> Option<&'a T> {
         if let WrappedClient::Boxed(inner) = self {
             // SAFETY: The caller must ensure here that the type provided is the original type of
