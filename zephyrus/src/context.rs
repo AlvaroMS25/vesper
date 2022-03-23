@@ -5,12 +5,13 @@ use crate::{
     waiter::{WaiterReceiver, WaiterSender},
 };
 use parking_lot::Mutex;
+use crate::builder::WrappedClient;
 
 /// Framework context given to all command functions, this struct contains all the necessary
 /// items to respond the interaction and access shared data.
 pub struct SlashContext<'a, D> {
-    /// The [http client](Client) used by the framework.
-    pub http_client: &'a Client,
+    /// The http client used by the framework.
+    pub http_client: &'a WrappedClient,
     /// The application id provided to the framework.
     pub application_id: Id<ApplicationMarker>,
     /// An [interaction client](InteractionClient) made out of the framework's [http client](Client)
@@ -27,7 +28,7 @@ impl<'a, D> Clone for SlashContext<'a, D> {
         SlashContext {
             http_client: &self.http_client,
             application_id: self.application_id,
-            interaction_client: self.http_client.interaction(self.application_id),
+            interaction_client: self.http_client.inner().interaction(self.application_id),
             data: &self.data,
             waiters: &self.waiters,
             interaction: self.interaction.clone(),
@@ -38,13 +39,13 @@ impl<'a, D> Clone for SlashContext<'a, D> {
 impl<'a, D> SlashContext<'a, D> {
     /// Creates a new context.
     pub(crate) fn new(
-        http_client: &'a Client,
+        http_client: &'a WrappedClient,
         application_id: Id<ApplicationMarker>,
         data: &'a D,
         waiters: &'a Mutex<Vec<WaiterSender>>,
         interaction: ApplicationCommand,
     ) -> Self {
-        let interaction_client = http_client.interaction(application_id);
+        let interaction_client = http_client.inner().interaction(application_id);
         Self {
             http_client,
             application_id,
@@ -53,6 +54,11 @@ impl<'a, D> SlashContext<'a, D> {
             waiters,
             interaction,
         }
+    }
+
+    /// Gets the http client used by the framework.
+    pub fn http_client(&self) -> &Client {
+        self.http_client.inner()
     }
 
     /// Responds to the interaction with an empty message to allow to respond later.

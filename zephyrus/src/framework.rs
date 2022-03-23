@@ -151,7 +151,7 @@ impl<D> Framework<D> {
     /// Executes the given [command](crate::command::Command) and the hooks.
     async fn execute(&self, cmd: &Command<D>, interaction: ApplicationCommand) {
         let context = SlashContext::new(
-            &self.http_client(),
+            &self.http_client,
             self.application_id,
             &self.data,
             &self.waiters,
