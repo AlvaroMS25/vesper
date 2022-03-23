@@ -28,9 +28,16 @@ impl WrappedClient {
         }
     }
 
+    /// Casts the [client](WrappedClient) into T if it's [Boxed](WrappedClient::Boxed)
+    ///
+    /// **SAFETY: The caller must ensure the type given is the same as the boxed one**
     pub fn cast<'a, T>(&'a self) -> Option<&'a T> {
         if let WrappedClient::Boxed(inner) = self {
+            // SAFETY: The caller must ensure here that the type provided is the original type of
+            // the pointer.
             let ptr = (&*inner) as *const _ as *const T;
+            // SAFETY: It is safe to dereference here the pointer as we hold the owned value,
+            // so we ensure it is valid.
             Some(unsafe { &*ptr })
         } else {
             None
