@@ -4,7 +4,7 @@ use crate::twilight_exports::*;
 #[async_trait]
 impl<T: Send + Sync + 'static> Parse<T> for String {
     async fn parse(
-        _: &Client,
+        _: &WrappedClient,
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
@@ -24,7 +24,7 @@ impl<T: Send + Sync + 'static> Parse<T> for String {
 #[async_trait]
 impl<T: Send + Sync + 'static> Parse<T> for i64 {
     async fn parse(
-        _: &Client,
+        _: &WrappedClient,
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
@@ -44,7 +44,7 @@ impl<T: Send + Sync + 'static> Parse<T> for i64 {
 #[async_trait]
 impl<T: Send + Sync + 'static> Parse<T> for u64 {
     async fn parse(
-        _: &Client,
+        _: &WrappedClient,
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
@@ -64,7 +64,7 @@ impl<T: Send + Sync + 'static> Parse<T> for u64 {
 #[async_trait]
 impl<T: Send + Sync + 'static> Parse<T> for f64 {
     async fn parse(
-        _: &Client,
+        _: &WrappedClient,
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
@@ -84,7 +84,7 @@ impl<T: Send + Sync + 'static> Parse<T> for f64 {
 #[async_trait]
 impl<T: Send + Sync + 'static> Parse<T> for bool {
     async fn parse(
-        _: &Client,
+        _: &WrappedClient,
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
@@ -104,7 +104,7 @@ impl<T: Send + Sync + 'static> Parse<T> for bool {
 #[async_trait]
 impl<T: Send + Sync + 'static> Parse<T> for Id<ChannelMarker> {
     async fn parse(
-        _: &Client,
+        _: &WrappedClient,
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
@@ -125,7 +125,7 @@ impl<T: Send + Sync + 'static> Parse<T> for Id<ChannelMarker> {
 #[async_trait]
 impl<T: Send + Sync + 'static> Parse<T> for Id<UserMarker> {
     async fn parse(
-        _: &Client,
+        _: &WrappedClient,
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
@@ -146,7 +146,7 @@ impl<T: Send + Sync + 'static> Parse<T> for Id<UserMarker> {
 #[async_trait]
 impl<T: Send + Sync + 'static> Parse<T> for Id<RoleMarker> {
     async fn parse(
-        _: &Client,
+        _: &WrappedClient,
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
@@ -167,7 +167,7 @@ impl<T: Send + Sync + 'static> Parse<T> for Id<RoleMarker> {
 #[async_trait]
 impl<T: Send + Sync + 'static> Parse<T> for Id<GenericMarker> {
     async fn parse(
-        _: &Client,
+        _: &WrappedClient,
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
@@ -188,7 +188,7 @@ impl<T: Send + Sync + 'static> Parse<T> for Id<GenericMarker> {
 #[async_trait]
 impl<T: Parse<E>, E: Send + Sync + 'static> Parse<E> for Option<T> {
     async fn parse(
-        http_client: &Client,
+        http_client: &WrappedClient,
         data: &E,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
@@ -221,7 +221,7 @@ where
     C: Send + Sync + 'static,
 {
     async fn parse(
-        http_client: &Client,
+        http_client: &WrappedClient,
         data: &C,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
@@ -244,7 +244,7 @@ macro_rules! impl_derived_parse {
             #[async_trait]
             impl<T: Send + Sync + 'static> Parse<T> for $derived {
                 async fn parse(
-                    http_client: &Client,
+                    http_client: &WrappedClient,
                     data: &T,
                     value: Option<&CommandOptionValue>
                 ) -> Result<Self, ParseError> {

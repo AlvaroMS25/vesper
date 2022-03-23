@@ -1,4 +1,4 @@
-use crate::{iter::DataIterator, twilight_exports::*};
+use crate::{builder::WrappedClient, iter::DataIterator, twilight_exports::*};
 use async_trait::async_trait;
 use std::error::Error;
 
@@ -8,7 +8,7 @@ pub trait Parse<T: Send + Sync + 'static>: Sized {
     /// Parses an argument by the option name.
     async fn named_parse(
         name: &'static str,
-        http_client: &Client,
+        http_client: &WrappedClient,
         data: &T,
         iterator: &mut DataIterator,
     ) -> Result<Self, ParseError> {
@@ -33,7 +33,7 @@ pub trait Parse<T: Send + Sync + 'static>: Sized {
 
     /// Parses the option into the argument.
     async fn parse(
-        _http_client: &Client,
+        _http_client: &WrappedClient,
         _data: &T,
         _value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError>;
