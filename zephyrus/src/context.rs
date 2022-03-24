@@ -66,17 +66,13 @@ impl<'a, D> SlashContext<'a, D> {
     /// When this method is used [update_response](Self::update_response) has to be used to edit the response.
     pub async fn acknowledge(&self) -> CommandResult {
         self.interaction_client
-            .interaction_callback(
+            .create_response(
                 self.interaction.id,
                 &self.interaction.token,
-                &InteractionResponse::DeferredChannelMessageWithSource(CallbackData {
-                    allowed_mentions: None,
-                    components: None,
-                    content: None,
-                    embeds: None,
-                    flags: None,
-                    tts: None,
-                }),
+                &InteractionResponse {
+                    kind: InteractionResponseType::DeferredChannelMessageWithSource,
+                    data: None,
+                },
             )
             .exec()
             .await?;
@@ -92,11 +88,11 @@ impl<'a, D> SlashContext<'a, D> {
         fun: F,
     ) -> Result<Message<'a, D>, Box<dyn std::error::Error + Send + Sync>>
     where
-        F: FnOnce(UpdateOriginalResponse<'a>) -> UpdateOriginalResponse<'a>,
+        F: FnOnce(UpdateResponse<'a>) -> UpdateResponse<'a>,
     {
         let update = fun(self
             .interaction_client
-            .update_interaction_original(&self.interaction.token));
+            .update_response(&self.interaction.token));
         Ok(update
             .exec()
             .await?
