@@ -254,7 +254,7 @@ impl<D> Framework<D> {
         Ok(commands)
     }
 
-    fn arg_options(&self, arguments: &Vec<CommandArgument>) -> Vec<CommandOption> {
+    fn arg_options(&self, arguments: &Vec<CommandArgument<D>>) -> Vec<CommandOption> {
         let mut options = Vec::with_capacity(arguments.len());
 
         for arg in arguments {

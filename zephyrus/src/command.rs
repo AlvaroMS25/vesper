@@ -16,7 +16,7 @@ pub struct Command<D> {
     /// The description of the commands.
     pub description: &'static str,
     /// All the arguments the command requires.
-    pub fun_arguments: Vec<CommandArgument>,
+    pub fun_arguments: Vec<CommandArgument<D>>,
     /// A pointer to this command function.
     pub fun: CommandFun<D>,
 }
@@ -45,7 +45,7 @@ impl<D> Command<D> {
     }
 
     /// Adds an argument to the command.
-    pub fn add_argument(mut self, arg: CommandArgument) -> Self {
+    pub fn add_argument(mut self, arg: CommandArgument<D>) -> Self {
         self.fun_arguments.push(arg);
         self
     }

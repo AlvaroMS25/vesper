@@ -174,17 +174,29 @@ impl ToTokens for Argument<'_> {
             None => self.name.to_string(),
         };
 
-        let autocomplete = &self.autocomplete;
-
-        tokens.extend(quote::quote! {
-            .add_argument((
-                #name,
-                #des,
-                <#ty as #parse_trait<#tt>>::is_required(),
-                <#ty as #parse_trait<#tt>>::option_type(),
-                <#ty as #parse_trait<#tt>>::add_choices(),
-                #autocomplete
-            ).into())
-        });
+        if let Some(autocomplete) = &self.autocomplete {
+            tokens.extend(quote::quote! {
+                .add_argument((
+                    #name,
+                    #des,
+                    <#ty as #parse_trait<#tt>>::is_required(),
+                    <#ty as #parse_trait<#tt>>::option_type(),
+                    <#ty as #parse_trait<#tt>>::add_choices(),
+                    Some(#autocomplete())
+                ).into())
+            });
+        } else {
+            let autocomplete_hook = quote::quote!(::zephyrus::hook::AutocompleteHook);
+            tokens.extend(quote::quote! {
+                .add_argument((
+                    #name,
+                    #des,
+                    <#ty as #parse_trait<#tt>>::is_required(),
+                    <#ty as #parse_trait<#tt>>::option_type(),
+                    <#ty as #parse_trait<#tt>>::add_choices(),
+                    Option::<#autocomplete_hook<#tt>>::None
+                ).into())
+            });
+        }
     }
 }

@@ -1,7 +1,8 @@
+use crate::hook::AutocompleteHook;
 use crate::twilight_exports::*;
 
 /// A command argument.
-pub struct CommandArgument {
+pub struct CommandArgument<D> {
     /// Argument name.
     pub name: &'static str,
     /// Description of the argument.
@@ -12,23 +13,25 @@ pub struct CommandArgument {
     pub kind: CommandOptionType,
     /// A function that allows to set specific options to the command, disabling arbitrary values.
     pub choices_fn: Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send + Sync>,
+    /// A function used to autocomplete fields.
+    pub autocomplete: Option<AutocompleteHook<D>>
 }
 
-impl CommandArgument {
+impl<D> CommandArgument<D> {
     fn choices(&self) -> Vec<CommandOptionChoice> {
         (self.choices_fn)().unwrap_or_default()
     }
     pub fn as_option(&self) -> CommandOption {
         match self.kind {
             CommandOptionType::String => CommandOption::String(ChoiceCommandOptionData {
-                autocomplete: false,
+                autocomplete: self.autocomplete.is_some(),
                 choices: self.choices(),
                 description: self.description.to_string(),
                 name: self.name.to_string(),
                 required: self.required,
             }),
             CommandOptionType::Integer => CommandOption::Integer(NumberCommandOptionData {
-                autocomplete: false,
+                autocomplete: self.autocomplete.is_some(),
                 choices: self.choices(),
                 description: self.description.to_string(),
                 name: self.name.to_string(),
@@ -62,7 +65,7 @@ impl CommandArgument {
                 required: self.required,
             }),
             CommandOptionType::Number => CommandOption::Number(NumberCommandOptionData {
-                autocomplete: false,
+                autocomplete: self.autocomplete.is_some(),
                 choices: self.choices(),
                 description: self.description.to_string(),
                 name: self.name.to_string(),
@@ -74,22 +77,24 @@ impl CommandArgument {
     }
 }
 
-impl
+impl<D>
     From<(
         &'static str,
         &'static str,
         bool,
         CommandOptionType,
         Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send + Sync>,
-    )> for CommandArgument
+        Option<AutocompleteHook<D>>
+    )> for CommandArgument<D>
 {
     fn from(
-        (name, description, required, kind, fun): (
+        (name, description, required, kind, fun, autocomplete): (
             &'static str,
             &'static str,
             bool,
             CommandOptionType,
             Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send + Sync>,
+            Option<AutocompleteHook<D>>
         ),
     ) -> Self {
         Self {
@@ -98,6 +103,7 @@ impl
             required,
             kind,
             choices_fn: fun,
+            autocomplete
         }
     }
 }
