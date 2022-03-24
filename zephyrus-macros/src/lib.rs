@@ -5,6 +5,7 @@ use proc_macro2::TokenStream as TokenStream2;
 mod after;
 mod argument;
 mod attr;
+mod autocomplete;
 mod before;
 mod command;
 mod futurize;
@@ -68,6 +69,12 @@ pub fn after(_: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn before(_: TokenStream, input: TokenStream) -> TokenStream {
     extract(before::before(input.into()))
+}
+
+/// Prepares the function to be used to autocomplete command arguments.
+#[proc_macro_attribute]
+pub fn autocomplete(_: TokenStream, input: TokenStream) -> TokenStream {
+    extract(autocomplete::autocomplete(input.into()))
 }
 
 #[proc_macro_derive(Parse, attributes(rename))]

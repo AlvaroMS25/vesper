@@ -30,6 +30,7 @@ pub struct Argument<'a> {
     /// The renaming of this argument, if this option is not specified, the original name will be
     /// used to parse the argument and register the command in discord
     pub renaming: Option<String>,
+    pub autocomplete: Option<Ident>,
     trait_type: &'a Type,
 }
 
@@ -60,6 +61,16 @@ impl<'a> Argument<'a> {
             .map(|n| n.unwrap())
             .collect::<Vec<_>>();
 
+        let mut autocompletes = pat
+            .attrs
+            .iter()
+            .map(Self::extract_autocomplete)
+            .collect::<Result<Vec<_>>>()?
+            .into_iter()
+            .filter(|n| n.is_some())
+            .map(|n| n.unwrap())
+            .collect::<Vec<_>>();
+
         if descriptions.len() > 1 {
             // We only want a single description attribute
             return Err(Error::new(
@@ -79,6 +90,13 @@ impl<'a> Argument<'a> {
             ));
         }
 
+        if autocompletes.len() > 1 {
+            return Err(Error::new(
+                arg.span(),
+                "Only allowed a single autocomplete attribute",
+            ));
+        }
+
         Ok(Self {
             name,
             ty: type_,
@@ -87,6 +105,11 @@ impl<'a> Argument<'a> {
                 None
             } else {
                 Some(names.remove(0))
+            },
+            autocomplete: if autocompletes.is_empty() {
+                None
+            } else {
+                Some(autocompletes.remove(0))
             },
             trait_type,
         })
@@ -123,6 +146,20 @@ impl<'a> Argument<'a> {
             }
         })
     }
+
+    fn extract_autocomplete(attr: &Attribute) -> Result<Option<Ident>> {
+        Self::exec(attr, |parsed| {
+            if parsed.path.is_ident("autocomplete") {
+                if let Ok(s) = parsed.parse_string() {
+                    return Ok(Some(Ident::new(&s, parsed.span())))
+                }
+
+                Ok(Some(parsed.parse_identifier()?))
+            } else {
+                Ok(None)
+            }
+        })
+    }
 }
 
 impl ToTokens for Argument<'_> {
@@ -137,13 +174,16 @@ impl ToTokens for Argument<'_> {
             None => self.name.to_string(),
         };
 
+        let autocomplete = &self.autocomplete;
+
         tokens.extend(quote::quote! {
             .add_argument((
                 #name,
                 #des,
                 <#ty as #parse_trait<#tt>>::is_required(),
                 <#ty as #parse_trait<#tt>>::option_type(),
-                <#ty as #parse_trait<#tt>>::add_choices()
+                <#ty as #parse_trait<#tt>>::add_choices(),
+                #autocomplete
             ).into())
         });
     }
