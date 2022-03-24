@@ -14,7 +14,7 @@ pub enum WrappedClient {
     #[cfg(feature = "rc")]
     Rc(Rc<Client>),
     Raw(Client),
-    Boxed(Box<dyn Deref<Target = Client> + Send + Sync>)
+    Boxed(Box<dyn Deref<Target = Client> + Send + Sync>),
 }
 
 impl WrappedClient {
@@ -24,7 +24,7 @@ impl WrappedClient {
             #[cfg(feature = "rc")]
             Self::Rc(c) => &c,
             Self::Raw(c) => &c,
-            Self::Boxed(b) => b
+            Self::Boxed(b) => b,
         }
     }
 

@@ -43,11 +43,14 @@ pub mod twilight_exports {
                 CommandOption, CommandOptionChoice, CommandOptionType, NumberCommandOptionData,
                 OptionsCommandOptionData,
             },
-            interaction::application_command::{
-                ApplicationCommand, CommandData, CommandDataOption, CommandOptionValue,
+            interaction::{
+                application_command::{
+                    ApplicationCommand, CommandData, CommandDataOption, CommandOptionValue,
+                },
+                application_command_autocomplete::ApplicationCommandAutocomplete,
+                message_component::MessageComponentInteraction,
+                Interaction,
             },
-            interaction::message_component::MessageComponentInteraction,
-            interaction::Interaction,
         },
         channel::Message,
         gateway::payload::incoming::InteractionCreate,

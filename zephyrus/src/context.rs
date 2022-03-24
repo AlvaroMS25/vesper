@@ -1,11 +1,11 @@
 use crate::{
+    builder::WrappedClient,
     command::CommandResult,
     message::Message,
     twilight_exports::*,
     waiter::{WaiterReceiver, WaiterSender},
 };
 use parking_lot::Mutex;
-use crate::builder::WrappedClient;
 
 /// Framework context given to all command functions, this struct contains all the necessary
 /// items to respond the interaction and access shared data.
@@ -94,7 +94,9 @@ impl<'a, D> SlashContext<'a, D> {
     where
         F: FnOnce(UpdateOriginalResponse<'a>) -> UpdateOriginalResponse<'a>,
     {
-        let update = fun(self.interaction_client.update_interaction_original(&self.interaction.token));
+        let update = fun(self
+            .interaction_client
+            .update_interaction_original(&self.interaction.token));
         Ok(update
             .exec()
             .await?
