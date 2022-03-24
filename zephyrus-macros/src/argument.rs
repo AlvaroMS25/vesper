@@ -151,7 +151,7 @@ impl<'a> Argument<'a> {
         Self::exec(attr, |parsed| {
             if parsed.path.is_ident("autocomplete") {
                 if let Ok(s) = parsed.parse_string() {
-                    return Ok(Some(Ident::new(&s, parsed.span())))
+                    return Ok(Some(Ident::new(&s, parsed.span())));
                 }
 
                 Ok(Some(parsed.parse_identifier()?))
