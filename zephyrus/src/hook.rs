@@ -1,4 +1,4 @@
-use crate::{builder::WrappedClient, command::CommandResult, context::SlashContext, BoxFuture};
+use crate::{builder::WrappedClient, command::CommandResult, context::SlashContext, twilight_exports::CommandOptionChoice, BoxFuture};
 
 /// A pointer to a function used by [before hook](BeforeHook).
 pub(crate) type BeforeFun<D> = for<'a> fn(&'a SlashContext<D>, &'a str) -> BoxFuture<'a, bool>;
@@ -13,6 +13,6 @@ pub struct AfterHook<D>(pub AfterFun<D>);
 
 /// A pointer to a function used by [autocomplete hook](AutocompleteHook)
 pub(crate) type AutocompleteFun<D> =
-    for<'a> fn(&'a WrappedClient, &'a D, Option<String>) -> BoxFuture<'a, ()>;
+    for<'a> fn(&'a WrappedClient, &'a D, Option<String>) -> BoxFuture<'a, Option<Vec<CommandOptionChoice>>>;
 /// A hook used to suggest inputs to the command caller.
 pub struct AutocompleteHook<D>(pub AutocompleteFun<D>);

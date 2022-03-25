@@ -46,14 +46,16 @@ pub mod twilight_exports {
                 application_command::{
                     ApplicationCommand, CommandData, CommandDataOption, CommandOptionValue,
                 },
-                application_command_autocomplete::ApplicationCommandAutocomplete,
+                application_command_autocomplete::{
+                    ApplicationCommandAutocomplete, ApplicationCommandAutocompleteDataOptionType
+                },
                 message_component::MessageComponentInteraction,
                 Interaction,
             },
         },
         channel::Message,
         gateway::payload::incoming::InteractionCreate,
-        http::interaction::{InteractionResponse, InteractionResponseType},
+        http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
         id::{
             marker::{
                 ApplicationMarker, ChannelMarker, GenericMarker, GuildMarker, MessageMarker,

@@ -6,9 +6,10 @@ use crate::{
     group::{GroupParent, ParentGroupMap, ParentType},
     hook::{AfterHook, BeforeHook},
     twilight_exports::{
-        ApplicationCommand, ApplicationCommandAutocomplete, ApplicationMarker, Client,
-        Command as TwilightCommand, CommandDataOption, CommandOption, CommandOptionType,
-        CommandOptionValue, GuildMarker, Id, Interaction, InteractionClient,
+        ApplicationCommand, ApplicationCommandAutocomplete, ApplicationCommandAutocompleteDataOptionType, ApplicationMarker, Client,
+        Command as TwilightCommand, CommandOptionChoice, CommandDataOption, CommandOption, CommandOptionType,
+        CommandOptionValue, GuildMarker, Id, Interaction, InteractionClient, InteractionResponse,
+        InteractionResponseData, InteractionResponseType,
         OptionsCommandOptionData,
     },
     waiter::WaiterSender,
@@ -16,7 +17,6 @@ use crate::{
 use parking_lot::Mutex;
 use std::future::Future;
 use tracing::debug;
-use twilight_model::application::interaction::application_command_autocomplete::ApplicationCommandAutocompleteDataOptionType;
 
 /// The framework used to dispatch slash commands.
 pub struct Framework<D> {
@@ -103,18 +103,27 @@ impl<D> Framework<D> {
         }
     }
 
-    async fn try_autocomplete(&self, autocomplete: ApplicationCommandAutocomplete) {
-        println!("{:?}", autocomplete);
+    async fn try_autocomplete(&self, mut autocomplete: ApplicationCommandAutocomplete) {
+        if let Some(future) = self.get_autocomplete(&mut autocomplete) {
+            let choices = future.await;
 
-        if let Some(future) = self.get_autocomplete(autocomplete) {
-            future.await;
+            let _ = self.interaction_client()
+                .create_response(autocomplete.id, &autocomplete.token, &InteractionResponse {
+                    kind: InteractionResponseType::ApplicationCommandAutocompleteResult,
+                    data: Some(InteractionResponseData {
+                        choices,
+                        ..Default::default()
+                    })
+                })
+                .exec()
+                .await;
         }
     }
 
     fn get_autocomplete<'a>(
         &'a self,
-        mut autocomplete: ApplicationCommandAutocomplete,
-    ) -> Option<std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'a>>> {
+        autocomplete: &mut ApplicationCommandAutocomplete,
+    ) -> Option<std::pin::Pin<Box<dyn Future<Output = Option<Vec<CommandOptionChoice>>> + Send + 'a>>> {
         if autocomplete.data.options.len() > 0 {
             let mut inner = autocomplete.data.options.remove(0);
             match inner.kind {
