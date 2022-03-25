@@ -47,7 +47,7 @@ pub mod twilight_exports {
                     ApplicationCommand, CommandData, CommandDataOption, CommandOptionValue,
                 },
                 application_command_autocomplete::{
-                    ApplicationCommandAutocomplete, ApplicationCommandAutocompleteDataOptionType
+                    ApplicationCommandAutocomplete, ApplicationCommandAutocompleteDataOptionType,
                 },
                 message_component::MessageComponentInteraction,
                 Interaction,
@@ -55,7 +55,9 @@ pub mod twilight_exports {
         },
         channel::Message,
         gateway::payload::incoming::InteractionCreate,
-        http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
+        http::interaction::{
+            InteractionResponse, InteractionResponseData, InteractionResponseType,
+        },
         id::{
             marker::{
                 ApplicationMarker, ChannelMarker, GenericMarker, GuildMarker, MessageMarker,
