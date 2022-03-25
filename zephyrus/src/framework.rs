@@ -6,14 +6,17 @@ use crate::{
     group::{GroupParent, ParentGroupMap, ParentType},
     hook::{AfterHook, BeforeHook},
     twilight_exports::{
-        ApplicationCommand, ApplicationMarker, Client, Command as TwilightCommand,
-        CommandDataOption, CommandOption, CommandOptionType, CommandOptionValue, GuildMarker, Id,
-        Interaction, InteractionClient, OptionsCommandOptionData,
+        ApplicationCommand, ApplicationCommandAutocomplete, ApplicationMarker, Client,
+        Command as TwilightCommand, CommandDataOption, CommandOption, CommandOptionType,
+        CommandOptionValue, GuildMarker, Id, Interaction, InteractionClient,
+        OptionsCommandOptionData,
     },
     waiter::WaiterSender,
 };
 use parking_lot::Mutex;
+use std::future::Future;
 use tracing::debug;
+use twilight_model::application::interaction::application_command_autocomplete::ApplicationCommandAutocompleteDataOptionType;
 
 /// The framework used to dispatch slash commands.
 pub struct Framework<D> {
@@ -85,6 +88,9 @@ impl<D> Framework<D> {
                     return;
                 }
             }
+            Interaction::ApplicationCommandAutocomplete(autocomplete) => {
+                self.try_autocomplete(*autocomplete).await
+            }
             _ => return,
         }
     }
@@ -95,6 +101,89 @@ impl<D> Framework<D> {
         if let Some(command) = self.get_command(&mut interaction) {
             self.execute(command, interaction).await;
         }
+    }
+
+    async fn try_autocomplete(&self, autocomplete: ApplicationCommandAutocomplete) {
+        println!("{:?}", autocomplete);
+
+        if let Some(future) = self.get_autocomplete(autocomplete) {
+            future.await;
+        }
+    }
+
+    fn get_autocomplete<'a>(
+        &'a self,
+        mut autocomplete: ApplicationCommandAutocomplete,
+    ) -> Option<std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'a>>> {
+        if autocomplete.data.options.len() > 0 {
+            let mut inner = autocomplete.data.options.remove(0);
+            match inner.kind {
+                ApplicationCommandAutocompleteDataOptionType::SubCommandGroup => {
+                    if inner.options.len() > 0 {
+                        let map = self
+                            .groups
+                            .get(autocomplete.data.name.as_str())?
+                            .kind
+                            .as_group()?;
+                        let group = map.get(inner.name.as_str())?;
+                        let mut inner = inner.options.remove(0);
+                        if let ApplicationCommandAutocompleteDataOptionType::SubCommand = inner.kind
+                        {
+                            if inner.options.len() > 0 {
+                                let command = group.subcommands.get(inner.name.as_str())?;
+                                let inner = inner.options.remove(0);
+                                let position = command
+                                    .fun_arguments
+                                    .iter()
+                                    .position(|arg| arg.name == &inner.name)?;
+                                let arg = command.fun_arguments.get(position)?;
+                                return Some((arg.autocomplete.as_ref()?.0)(
+                                    &self.http_client,
+                                    &self.data,
+                                    inner.value,
+                                ));
+                            }
+                        }
+                    }
+                }
+                ApplicationCommandAutocompleteDataOptionType::SubCommand => {
+                    if inner.options.len() > 0 {
+                        let subcommands = self
+                            .groups
+                            .get(autocomplete.data.name.as_str())?
+                            .kind
+                            .as_simple()?;
+                        let command = subcommands.get(inner.name.as_str())?;
+                        let inner = inner.options.remove(0);
+                        let position = command
+                            .fun_arguments
+                            .iter()
+                            .position(|arg| arg.name == &inner.name)?;
+                        let arg = command.fun_arguments.get(position)?;
+                        return Some((arg.autocomplete.as_ref()?.0)(
+                            &self.http_client,
+                            &self.data,
+                            inner.value,
+                        ));
+                    }
+                }
+                _ => {
+                    let command = self.commands.get(autocomplete.data.name.as_str())?;
+                    let position = command
+                        .fun_arguments
+                        .iter()
+                        .position(|arg| arg.name == &inner.name)?;
+                    let arg = command.fun_arguments.get(position)?;
+                    return Some((arg.autocomplete.as_ref()?.0)(
+                        &self.http_client,
+                        &self.data,
+                        inner.value,
+                    ));
+                }
+            }
+        }
+
+        None
     }
 
     /// Gets the command matching the given

@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream as TokenStream2;
-use syn::{parse2, spanned::Spanned, Error, ItemFn, Result, Signature, Type, FnArg};
+use syn::{parse2, spanned::Spanned, Error, FnArg, ItemFn, Result, Signature, Type};
 
 pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
     let mut fun = parse2::<ItemFn>(input)?;
@@ -35,7 +35,7 @@ fn get_data_type(sig: &Signature) -> Result<Type> {
         FnArg::Receiver(_) => Err(Error::new(arg.span(), "`self` not allowed here")),
         FnArg::Typed(type_) => match &*type_.ty {
             Type::Reference(reference) => Ok(*reference.elem.clone()),
-            _ => Err(Error::new(arg.span(), "Reference expected"))
-        }
+            _ => Err(Error::new(arg.span(), "Reference expected")),
+        },
     }
 }

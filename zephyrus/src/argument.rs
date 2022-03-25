@@ -14,7 +14,7 @@ pub struct CommandArgument<D> {
     /// A function that allows to set specific options to the command, disabling arbitrary values.
     pub choices_fn: Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send + Sync>,
     /// A function used to autocomplete fields.
-    pub autocomplete: Option<AutocompleteHook<D>>
+    pub autocomplete: Option<AutocompleteHook<D>>,
 }
 
 impl<D> CommandArgument<D> {
@@ -84,7 +84,7 @@ impl<D>
         bool,
         CommandOptionType,
         Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send + Sync>,
-        Option<AutocompleteHook<D>>
+        Option<AutocompleteHook<D>>,
     )> for CommandArgument<D>
 {
     fn from(
@@ -94,7 +94,7 @@ impl<D>
             bool,
             CommandOptionType,
             Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send + Sync>,
-            Option<AutocompleteHook<D>>
+            Option<AutocompleteHook<D>>,
         ),
     ) -> Self {
         Self {
@@ -103,7 +103,7 @@ impl<D>
             required,
             kind,
             choices_fn: fun,
-            autocomplete
+            autocomplete,
         }
     }
 }
