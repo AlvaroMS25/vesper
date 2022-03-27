@@ -7,7 +7,7 @@ pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
     if fun.sig.inputs.len() != 3 {
         return Err(Error::new(
             fun.sig.inputs.span(),
-            "Autocomplete hook must have as parameters a &WrappedClient, a reference to the data and an Option<String>"
+            "Autocomplete hook must have as parameters a &Client, a reference to the data and an Option<String>"
         ));
     }
 

@@ -154,7 +154,7 @@ impl<D> Framework<D> {
                                     .position(|arg| arg.name == &inner.name)?;
                                 let arg = command.fun_arguments.get(position)?;
                                 return Some((arg.autocomplete.as_ref()?.0)(
-                                    &self.http_client,
+                                    self.http_client(),
                                     &self.data,
                                     inner.value,
                                 ));
@@ -177,7 +177,7 @@ impl<D> Framework<D> {
                             .position(|arg| arg.name == &inner.name)?;
                         let arg = command.fun_arguments.get(position)?;
                         return Some((arg.autocomplete.as_ref()?.0)(
-                            &self.http_client,
+                            self.http_client(),
                             &self.data,
                             inner.value,
                         ));
@@ -191,7 +191,7 @@ impl<D> Framework<D> {
                         .position(|arg| arg.name == &inner.name)?;
                     let arg = command.fun_arguments.get(position)?;
                     return Some((arg.autocomplete.as_ref()?.0)(
-                        &self.http_client,
+                        self.http_client(),
                         &self.data,
                         inner.value,
                     ));
