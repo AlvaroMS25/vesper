@@ -1,6 +1,8 @@
 use crate::{
-    command::CommandResult, context::SlashContext,
-    twilight_exports::{Client, CommandOptionChoice}, BoxFuture,
+    command::CommandResult,
+    context::SlashContext,
+    twilight_exports::{Client, CommandOptionChoice},
+    BoxFuture,
 };
 
 /// A pointer to a function used by [before hook](BeforeHook).
