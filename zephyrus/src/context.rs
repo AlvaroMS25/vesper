@@ -11,7 +11,7 @@ pub struct AutocompleteContext<'a, D> {
     pub http_client: &'a WrappedClient,
     pub data: &'a D,
     pub user_input: Option<String>,
-    pub interaction: &'a mut ApplicationCommandAutocomplete
+    pub interaction: &'a mut ApplicationCommandAutocomplete,
 }
 
 impl<'a, D> AutocompleteContext<'a, D> {
@@ -19,13 +19,13 @@ impl<'a, D> AutocompleteContext<'a, D> {
         http_client: &'a WrappedClient,
         data: &'a D,
         user_input: Option<String>,
-        interaction: &'a mut ApplicationCommandAutocomplete
+        interaction: &'a mut ApplicationCommandAutocomplete,
     ) -> Self {
         Self {
             http_client,
             data,
             user_input,
-            interaction
+            interaction,
         }
     }
 }

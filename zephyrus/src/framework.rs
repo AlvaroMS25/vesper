@@ -106,7 +106,12 @@ impl<D> Framework<D> {
     async fn try_autocomplete(&self, mut autocomplete: ApplicationCommandAutocomplete) {
         if let Some((argument, value)) = self.get_autocomplete_argument(&mut autocomplete) {
             if let Some(fun) = &argument.autocomplete {
-                let context = AutocompleteContext::new(&self.http_client, &self.data, value, &mut autocomplete);
+                let context = AutocompleteContext::new(
+                    &self.http_client,
+                    &self.data,
+                    value,
+                    &mut autocomplete,
+                );
                 let data = (fun.0)(context).await;
 
                 let _ = self

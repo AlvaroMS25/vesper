@@ -1,5 +1,8 @@
 use proc_macro2::{Span, TokenStream as TokenStream2};
-use syn::{parse2, spanned::Spanned, Error, ItemFn, Result, Signature, Type, GenericArgument, Lifetime, PathArguments};
+use syn::{
+    parse2, spanned::Spanned, Error, GenericArgument, ItemFn, Lifetime, PathArguments, Result,
+    Signature, Type,
+};
 
 pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
     let mut fun = parse2::<ItemFn>(input)?;
@@ -94,7 +97,9 @@ fn set_lifetime(sig: &mut Signature) -> Result<()> {
     }
 
     if insert_lifetime {
-        if let PathArguments::AngleBracketed(inner) = &mut path.segments.last_mut().unwrap().arguments {
+        if let PathArguments::AngleBracketed(inner) =
+            &mut path.segments.last_mut().unwrap().arguments
+        {
             inner.args.insert(0, GenericArgument::Lifetime(lifetime));
         }
     }

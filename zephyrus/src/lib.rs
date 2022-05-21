@@ -55,6 +55,7 @@ pub mod twilight_exports {
         },
         channel::Message,
         gateway::payload::incoming::InteractionCreate,
+        guild::Permissions,
         http::interaction::{
             InteractionResponse, InteractionResponseData, InteractionResponseType,
         },
