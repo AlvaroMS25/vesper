@@ -369,6 +369,7 @@ impl<D> Framework<D> {
                     name: group.name.to_string(),
                     description: group.description.to_string(),
                     options: subcommands,
+                    ..Default::default()
                 }));
             }
             subgroups
@@ -392,6 +393,7 @@ impl<D> Framework<D> {
             name: cmd.name.to_string(),
             description: cmd.description.to_string(),
             options: self.arg_options(&cmd.fun_arguments),
+            ..Default::default()
         })
     }
 }

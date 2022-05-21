@@ -29,6 +29,7 @@ impl<D> CommandArgument<D> {
                 description: self.description.to_string(),
                 name: self.name.to_string(),
                 required: self.required,
+                ..Default::default()
             }),
             CommandOptionType::Integer => CommandOption::Integer(NumberCommandOptionData {
                 autocomplete: self.autocomplete.is_some(),
@@ -42,27 +43,32 @@ impl<D> CommandArgument<D> {
                 description: self.description.to_string(),
                 name: self.name.to_string(),
                 required: self.required,
+                ..Default::default()
             }),
             CommandOptionType::User => CommandOption::User(BaseCommandOptionData {
                 description: self.description.to_string(),
                 name: self.name.to_string(),
                 required: self.required,
+                ..Default::default()
             }),
             CommandOptionType::Channel => CommandOption::Channel(ChannelCommandOptionData {
                 channel_types: Vec::new(),
                 description: self.description.to_string(),
                 name: self.name.to_string(),
                 required: self.required,
+                ..Default::default()
             }),
             CommandOptionType::Role => CommandOption::Role(BaseCommandOptionData {
                 description: self.description.to_string(),
                 name: self.name.to_string(),
                 required: self.required,
+                ..Default::default()
             }),
             CommandOptionType::Mentionable => CommandOption::Mentionable(BaseCommandOptionData {
                 description: self.description.to_string(),
                 name: self.name.to_string(),
                 required: self.required,
+                ..Default::default()
             }),
             CommandOptionType::Number => CommandOption::Number(NumberCommandOptionData {
                 autocomplete: self.autocomplete.is_some(),
