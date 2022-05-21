@@ -1,17 +1,18 @@
-use proc_macro2::TokenStream as TokenStream2;
-use syn::{parse2, spanned::Spanned, Error, FnArg, ItemFn, Result, Signature, Type};
+use proc_macro2::{Span, TokenStream as TokenStream2};
+use syn::{parse2, spanned::Spanned, Error, ItemFn, Result, Signature, Type, GenericArgument, Lifetime, PathArguments};
 
 pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
     let mut fun = parse2::<ItemFn>(input)?;
 
-    if fun.sig.inputs.len() != 3 {
+    if fun.sig.inputs.len() != 1 {
         return Err(Error::new(
             fun.sig.inputs.span(),
-            "Autocomplete hook must have as parameters a &Client, a reference to the data and an Option<String>"
+            "Autocomplete hook must have as parameters an AutocompleteContext<D>",
         ));
     }
 
-    let data_type = get_data_type(&fun.sig)?;
+    let data_type = get_data_type_and_set_lifetime(&fun.sig)?;
+    set_lifetime(&mut fun.sig)?;
     let futurize = crate::util::get_futurize_macro();
     let path = quote::quote!(::zephyrus::hook::AutocompleteHook);
     let ident = fun.sig.ident.clone();
@@ -28,14 +29,75 @@ pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
     })
 }
 
-fn get_data_type(sig: &Signature) -> Result<Type> {
-    let arg = &sig.inputs[1];
+fn get_data_type_and_set_lifetime(sig: &Signature) -> Result<Type> {
+    let ctx = match sig.inputs.iter().next() {
+        None => {
+            return Err(Error::new(
+                sig.inputs.span(),
+                "Expected AutocompleteContext as first paramenter",
+            ))
+        }
+        Some(c) => crate::util::get_pat(c)?,
+    };
+    let mut generics = crate::util::get_generic_arguments(crate::util::get_path(&ctx.ty)?)?;
 
-    match arg {
-        FnArg::Receiver(_) => Err(Error::new(arg.span(), "`self` not allowed here")),
-        FnArg::Typed(type_) => match &*type_.ty {
-            Type::Reference(reference) => Ok(*reference.elem.clone()),
-            _ => Err(Error::new(arg.span(), "Reference expected")),
-        },
+    let ty = loop {
+        match generics.next() {
+            Some(GenericArgument::Lifetime(_)) => (),
+            Some(a) => {
+                break match a {
+                    GenericArgument::Type(t) => {
+                        if let Type::Infer(_) = t {
+                            return Err(Error::new(
+                                sig.inputs.span(),
+                                "AutocompleteContext must have a known type",
+                            ));
+                        } else {
+                            t.clone()
+                        }
+                    }
+                    _ => {
+                        return Err(Error::new(
+                            sig.inputs.span(),
+                            "AutocompleteContext type must be a type",
+                        ))
+                    }
+                }
+            }
+            None => {
+                return Err(Error::new(
+                    sig.inputs.span(),
+                    "AutocompleteContext type must be set",
+                ))
+            }
+        }
+    };
+
+    Ok(ty)
+}
+
+fn set_lifetime(sig: &mut Signature) -> Result<()> {
+    let lifetime = Lifetime::new("'future", Span::call_site());
+    let ctx = crate::util::get_pat_mut(sig.inputs.iter_mut().next().unwrap())?;
+    let path = crate::util::get_path_mut(&mut ctx.ty)?;
+    let mut insert_lifetime = true;
+
+    {
+        let mut generics = crate::util::get_generic_arguments(&path)?;
+        while let Some(generic) = generics.next() {
+            if let GenericArgument::Lifetime(inner) = generic {
+                if *inner == lifetime {
+                    insert_lifetime = false;
+                }
+            }
+        }
     }
+
+    if insert_lifetime {
+        if let PathArguments::AngleBracketed(inner) = &mut path.segments.last_mut().unwrap().arguments {
+            inner.args.insert(0, GenericArgument::Lifetime(lifetime));
+        }
+    }
+
+    Ok(())
 }

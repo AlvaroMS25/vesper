@@ -1,3 +1,4 @@
+use crate::context::AutocompleteContext;
 use crate::{
     argument::CommandArgument,
     builder::{FrameworkBuilder, WrappedClient},
@@ -8,15 +9,13 @@ use crate::{
     twilight_exports::{
         ApplicationCommand, ApplicationCommandAutocomplete,
         ApplicationCommandAutocompleteDataOptionType, ApplicationMarker, Client,
-        Command as TwilightCommand, CommandDataOption, CommandOption, CommandOptionChoice,
-        CommandOptionType, CommandOptionValue, GuildMarker, Id, Interaction, InteractionClient,
-        InteractionResponse, InteractionResponseData, InteractionResponseType,
-        OptionsCommandOptionData,
+        Command as TwilightCommand, CommandDataOption, CommandOption, CommandOptionType,
+        CommandOptionValue, GuildMarker, Id, Interaction, InteractionClient, InteractionResponse,
+        InteractionResponseType, OptionsCommandOptionData,
     },
     waiter::WaiterSender,
 };
 use parking_lot::Mutex;
-use std::future::Future;
 use tracing::debug;
 
 /// The framework used to dispatch slash commands.
@@ -105,32 +104,31 @@ impl<D> Framework<D> {
     }
 
     async fn try_autocomplete(&self, mut autocomplete: ApplicationCommandAutocomplete) {
-        if let Some(future) = self.get_autocomplete(&mut autocomplete) {
-            let choices = future.await;
+        if let Some((argument, value)) = self.get_autocomplete_argument(&mut autocomplete) {
+            if let Some(fun) = &argument.autocomplete {
+                let context = AutocompleteContext::new(&self.http_client, &self.data, value, &mut autocomplete);
+                let data = (fun.0)(context).await;
 
-            let _ = self
-                .interaction_client()
-                .create_response(
-                    autocomplete.id,
-                    &autocomplete.token,
-                    &InteractionResponse {
-                        kind: InteractionResponseType::ApplicationCommandAutocompleteResult,
-                        data: Some(InteractionResponseData {
-                            choices,
-                            ..Default::default()
-                        }),
-                    },
-                )
-                .exec()
-                .await;
+                let _ = self
+                    .interaction_client()
+                    .create_response(
+                        autocomplete.id,
+                        &autocomplete.token,
+                        &InteractionResponse {
+                            kind: InteractionResponseType::ApplicationCommandAutocompleteResult,
+                            data,
+                        },
+                    )
+                    .exec()
+                    .await;
+            }
         }
     }
 
-    fn get_autocomplete<'a>(
-        &'a self,
+    fn get_autocomplete_argument(
+        &self,
         autocomplete: &mut ApplicationCommandAutocomplete,
-    ) -> Option<std::pin::Pin<Box<dyn Future<Output = Option<Vec<CommandOptionChoice>>> + Send + 'a>>>
-    {
+    ) -> Option<(&CommandArgument<D>, Option<String>)> {
         if autocomplete.data.options.len() > 0 {
             let mut inner = autocomplete.data.options.remove(0);
             match inner.kind {
@@ -152,12 +150,7 @@ impl<D> Framework<D> {
                                     .fun_arguments
                                     .iter()
                                     .position(|arg| arg.name == &inner.name)?;
-                                let arg = command.fun_arguments.get(position)?;
-                                return Some((arg.autocomplete.as_ref()?.0)(
-                                    self.http_client(),
-                                    &self.data,
-                                    inner.value,
-                                ));
+                                return Some((command.fun_arguments.get(position)?, inner.value));
                             }
                         }
                     }
@@ -175,12 +168,7 @@ impl<D> Framework<D> {
                             .fun_arguments
                             .iter()
                             .position(|arg| arg.name == &inner.name)?;
-                        let arg = command.fun_arguments.get(position)?;
-                        return Some((arg.autocomplete.as_ref()?.0)(
-                            self.http_client(),
-                            &self.data,
-                            inner.value,
-                        ));
+                        return Some((command.fun_arguments.get(position)?, inner.value));
                     }
                 }
                 _ => {
@@ -189,12 +177,7 @@ impl<D> Framework<D> {
                         .fun_arguments
                         .iter()
                         .position(|arg| arg.name == &inner.name)?;
-                    let arg = command.fun_arguments.get(position)?;
-                    return Some((arg.autocomplete.as_ref()?.0)(
-                        self.http_client(),
-                        &self.data,
-                        inner.value,
-                    ));
+                    return Some((command.fun_arguments.get(position)?, inner.value));
                 }
             }
         }

@@ -21,7 +21,7 @@ pub mod prelude {
     pub use crate::{
         builder::{FrameworkBuilder, WrappedClient},
         command::CommandResult,
-        context::SlashContext,
+        context::{AutocompleteContext, SlashContext},
         framework::Framework,
         parse::{Parse, ParseError},
         waiter::WaiterReceiver,

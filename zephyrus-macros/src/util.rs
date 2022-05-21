@@ -35,8 +35,33 @@ pub fn get_path(t: &Type) -> Result<&Path> {
     }
 }
 
+/// Gets the path of the given type
+pub fn get_path_mut(t: &mut Type) -> Result<&mut Path> {
+    match t {
+        // If the type is actually a path, just return it
+        Type::Path(p) => Ok(&mut p.path),
+        // If the type is a reference, call this function recursively until we get the path
+        Type::Reference(r) => get_path_mut(&mut r.elem),
+        _ => Err(Error::new(
+            t.span(),
+            "parameter must be a path to a context type",
+        )),
+    }
+}
+
 /// Get the ascription pattern of the given function argument
 pub fn get_pat(arg: &FnArg) -> Result<&PatType> {
+    match arg {
+        FnArg::Typed(t) => Ok(t),
+        _ => Err(Error::new(
+            arg.span(),
+            "`self` parameter is not allowed here",
+        )),
+    }
+}
+
+/// Get the ascription pattern of the given function argument
+pub fn get_pat_mut(arg: &mut FnArg) -> Result<&mut PatType> {
     match arg {
         FnArg::Typed(t) => Ok(t),
         _ => Err(Error::new(
@@ -56,7 +81,7 @@ pub fn get_ident(p: &Pat) -> Result<Ident> {
 
 /// Gets the generic arguments of the given path, this is useful to extract the generic parameter
 /// used in `SlashContext<T>`
-fn get_generic_arguments(path: &Path) -> Result<impl Iterator<Item = &GenericArgument> + '_> {
+pub fn get_generic_arguments(path: &Path) -> Result<impl Iterator<Item = &GenericArgument> + '_> {
     match &path.segments.last().unwrap().arguments {
         PathArguments::None => Ok(Vec::new().into_iter()),
         PathArguments::AngleBracketed(arguments) => {

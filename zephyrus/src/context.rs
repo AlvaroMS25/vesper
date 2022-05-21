@@ -7,6 +7,29 @@ use crate::{
 };
 use parking_lot::Mutex;
 
+pub struct AutocompleteContext<'a, D> {
+    pub http_client: &'a WrappedClient,
+    pub data: &'a D,
+    pub user_input: Option<String>,
+    pub interaction: &'a mut ApplicationCommandAutocomplete
+}
+
+impl<'a, D> AutocompleteContext<'a, D> {
+    pub(crate) fn new(
+        http_client: &'a WrappedClient,
+        data: &'a D,
+        user_input: Option<String>,
+        interaction: &'a mut ApplicationCommandAutocomplete
+    ) -> Self {
+        Self {
+            http_client,
+            data,
+            user_input,
+            interaction
+        }
+    }
+}
+
 /// Framework context given to all command functions, this struct contains all the necessary
 /// items to respond the interaction and access shared data.
 pub struct SlashContext<'a, D> {
