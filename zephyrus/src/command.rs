@@ -1,4 +1,4 @@
-use crate::{argument::CommandArgument, context::SlashContext, BoxFuture};
+use crate::{argument::CommandArgument, context::SlashContext, BoxFuture, twilight_exports::Permissions};
 use std::collections::HashMap;
 use std::error::Error;
 
@@ -19,6 +19,8 @@ pub struct Command<D> {
     pub fun_arguments: Vec<CommandArgument<D>>,
     /// A pointer to this command function.
     pub fun: CommandFun<D>,
+    /// The required permissions to use this command
+    pub required_permissions: Option<Permissions>
 }
 
 impl<D> Command<D> {
@@ -29,6 +31,7 @@ impl<D> Command<D> {
             description: Default::default(),
             fun_arguments: Default::default(),
             fun,
+            required_permissions: Default::default()
         }
     }
 
@@ -47,6 +50,11 @@ impl<D> Command<D> {
     /// Adds an argument to the command.
     pub fn add_argument(mut self, arg: CommandArgument<D>) -> Self {
         self.fun_arguments.push(arg);
+        self
+    }
+
+    pub fn set_permissions(mut self, permissions: Permissions) -> Self {
+        self.required_permissions = Some(permissions);
         self
     }
 }

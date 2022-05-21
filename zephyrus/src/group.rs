@@ -1,6 +1,7 @@
 use crate::{
     builder::FnPointer,
     command::{Command, CommandMap},
+    twilight_exports::Permissions
 };
 use std::collections::HashMap;
 
@@ -52,6 +53,8 @@ pub struct GroupParent<D> {
     pub description: &'static str,
     /// This parent group child commands.
     pub kind: ParentType<D>,
+    /// The required permissions to execute commands inside this group
+    pub required_permissions: Option<Permissions>
 }
 
 /// A builder of a [group parent](self::GroupParent), see it for documentation.
@@ -59,6 +62,7 @@ pub struct GroupParentBuilder<D> {
     name: Option<&'static str>,
     description: Option<&'static str>,
     kind: ParentType<D>,
+    required_permissions: Option<Permissions>
 }
 
 impl<D> GroupParentBuilder<D> {
@@ -68,6 +72,7 @@ impl<D> GroupParentBuilder<D> {
             name: None,
             description: None,
             kind: ParentType::Group(Default::default()),
+            required_permissions: None
         }
     }
 
@@ -80,6 +85,11 @@ impl<D> GroupParentBuilder<D> {
     /// Sets the description of this parent group.
     pub fn description(&mut self, description: &'static str) -> &mut Self {
         self.description = Some(description);
+        self
+    }
+
+    pub fn required_permissions(&mut self, permissions: Permissions) -> &mut Self {
+        self.required_permissions = Some(permissions);
         self
     }
 
@@ -124,6 +134,7 @@ impl<D> GroupParentBuilder<D> {
             name: self.name.unwrap(),
             description: self.description.unwrap(),
             kind: self.kind,
+            required_permissions: self.required_permissions
         }
     }
 }

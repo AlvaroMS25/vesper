@@ -318,12 +318,18 @@ impl<D> Framework<D> {
             for i in &cmd.fun_arguments {
                 options.push(i.as_option());
             }
+            let interaction_client = self.interaction_client();
+            let mut command = interaction_client
+                .create_global_command()
+                .chat_input(cmd.name, cmd.description)?
+                .command_options(&options)?;
+
+            if let Some(permissions) = &cmd.required_permissions {
+                command = command.default_member_permissions(*permissions);
+            }
 
             commands.push(
-                self.interaction_client()
-                    .create_global_command()
-                    .chat_input(cmd.name, cmd.description)?
-                    .command_options(&options)?
+                command
                     .exec()
                     .await?
                     .model()
@@ -332,11 +338,19 @@ impl<D> Framework<D> {
         }
 
         for (_, group) in &self.groups {
+            let options = self.create_group(group);
+            let interaction_client = self.interaction_client();
+            let mut command = interaction_client
+                .create_global_command()
+                .chat_input(group.name, group.description)?
+                .command_options(&options)?;
+
+            if let Some(permissions) = &group.required_permissions {
+                command = command.default_member_permissions(*permissions);
+            }
+
             commands.push(
-                self.interaction_client()
-                    .create_global_command()
-                    .chat_input(group.name, group.description)?
-                    .command_options(&self.create_group(group))?
+                command
                     .exec()
                     .await?
                     .model()

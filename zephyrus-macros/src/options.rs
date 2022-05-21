@@ -1,5 +1,5 @@
 use crate::attr::*;
-use proc_macro2::TokenStream as TokenStream2;
+use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::ToTokens;
 use std::convert::TryInto;
 use syn::{spanned::Spanned, Attribute, Error, Result};
@@ -9,6 +9,7 @@ use syn::{spanned::Spanned, Attribute, Error, Result};
 pub struct CommandDetails {
     /// The description of this command
     pub description: String,
+    pub required_permissions: Option<Vec<Ident>>
 }
 
 impl CommandDetails {
@@ -30,7 +31,12 @@ impl CommandDetails {
                         let a: &Attr = &attr.try_into()?;
                         a.parse_string()?
                     };
-                }
+                },
+                "required_permissions" => {
+                    let a: &Attr = &attr.try_into()?;
+                    let permissions = a.parse_all()?;
+                    s.required_permissions = Some(permissions);
+                },
                 _ => return Err(Error::new(attr.span(), "Attribute not recognized")),
             }
 
@@ -52,5 +58,19 @@ impl ToTokens for CommandDetails {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
         let d = &self.description;
         tokens.extend(quote::quote!(.description(#d)));
+
+        if let Some(permissions) = &self.required_permissions {
+            let mut permission_stream = TokenStream2::new();
+
+            for (index, permission) in permissions.iter().enumerate() {
+                if index == 0 || permissions.len() == 1 {
+                    permission_stream.extend(quote::quote!(zephyrus::twilight_exports::Permissions::#permission))
+                } else {
+                    permission_stream.extend(quote::quote!( | zephyrus::twilight_exports::Permissions::#permission))
+                }
+            }
+
+            tokens.extend(quote::quote!(.set_permissions(#permission_stream)));
+        }
     }
 }
