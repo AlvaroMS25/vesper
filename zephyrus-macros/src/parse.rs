@@ -24,7 +24,8 @@ impl Variant {
         tokens.extend(quote::quote! {
             choices.push(::zephyrus::twilight_exports::CommandOptionChoice::Int {
                 name: #value.to_string(),
-                value: #index
+                value: #index,
+                name_localizations: None
             });
         })
     }
