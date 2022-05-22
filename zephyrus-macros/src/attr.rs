@@ -60,11 +60,14 @@ impl Attr {
 
     #[allow(dead_code)]
     pub fn parse_all(&self) -> Result<Vec<Ident>> {
-        self.values.iter()
+        self.values
+            .iter()
             .map(|v| match v {
                 Value::Ident(ident) => Ok(ident.clone()),
-                Value::Lit(Lit::Str(inner)) => Ok(Ident::new(inner.value().as_str(), Span::call_site())),
-                other => Err(Error::new(other.span(), "Not supported"))
+                Value::Lit(Lit::Str(inner)) => {
+                    Ok(Ident::new(inner.value().as_str(), Span::call_site()))
+                }
+                other => Err(Error::new(other.span(), "Not supported")),
             })
             .collect::<Result<_>>()
     }

@@ -9,7 +9,7 @@ use syn::{spanned::Spanned, Attribute, Error, Result};
 pub struct CommandDetails {
     /// The description of this command
     pub description: String,
-    pub required_permissions: Option<Vec<Ident>>
+    pub required_permissions: Option<Vec<Ident>>,
 }
 
 impl CommandDetails {
@@ -31,12 +31,12 @@ impl CommandDetails {
                         let a: &Attr = &attr.try_into()?;
                         a.parse_string()?
                     };
-                },
+                }
                 "required_permissions" => {
                     let a: &Attr = &attr.try_into()?;
                     let permissions = a.parse_all()?;
                     s.required_permissions = Some(permissions);
-                },
+                }
                 _ => return Err(Error::new(attr.span(), "Attribute not recognized")),
             }
 
@@ -64,9 +64,12 @@ impl ToTokens for CommandDetails {
 
             for (index, permission) in permissions.iter().enumerate() {
                 if index == 0 || permissions.len() == 1 {
-                    permission_stream.extend(quote::quote!(zephyrus::twilight_exports::Permissions::#permission))
+                    permission_stream
+                        .extend(quote::quote!(zephyrus::twilight_exports::Permissions::#permission))
                 } else {
-                    permission_stream.extend(quote::quote!( | zephyrus::twilight_exports::Permissions::#permission))
+                    permission_stream.extend(
+                        quote::quote!( | zephyrus::twilight_exports::Permissions::#permission),
+                    )
                 }
             }
 

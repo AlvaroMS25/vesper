@@ -328,13 +328,7 @@ impl<D> Framework<D> {
                 command = command.default_member_permissions(*permissions);
             }
 
-            commands.push(
-                command
-                    .exec()
-                    .await?
-                    .model()
-                    .await?,
-            );
+            commands.push(command.exec().await?.model().await?);
         }
 
         for (_, group) in &self.groups {
@@ -349,13 +343,7 @@ impl<D> Framework<D> {
                 command = command.default_member_permissions(*permissions);
             }
 
-            commands.push(
-                command
-                    .exec()
-                    .await?
-                    .model()
-                    .await?,
-            );
+            commands.push(command.exec().await?.model().await?);
         }
 
         Ok(commands)

@@ -1,4 +1,6 @@
-use crate::{argument::CommandArgument, context::SlashContext, BoxFuture, twilight_exports::Permissions};
+use crate::{
+    argument::CommandArgument, context::SlashContext, twilight_exports::Permissions, BoxFuture,
+};
 use std::collections::HashMap;
 use std::error::Error;
 
@@ -20,7 +22,7 @@ pub struct Command<D> {
     /// A pointer to this command function.
     pub fun: CommandFun<D>,
     /// The required permissions to use this command
-    pub required_permissions: Option<Permissions>
+    pub required_permissions: Option<Permissions>,
 }
 
 impl<D> Command<D> {
@@ -31,7 +33,7 @@ impl<D> Command<D> {
             description: Default::default(),
             fun_arguments: Default::default(),
             fun,
-            required_permissions: Default::default()
+            required_permissions: Default::default(),
         }
     }
 
