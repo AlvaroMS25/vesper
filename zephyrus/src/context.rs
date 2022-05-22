@@ -28,6 +28,11 @@ impl<'a, D> AutocompleteContext<'a, D> {
             interaction,
         }
     }
+
+    /// Gets the http client used by the framework.
+    pub fn http_client(&self) -> &Client {
+        self.http_client.inner()
+    }
 }
 
 /// Framework context given to all command functions, this struct contains all the necessary
