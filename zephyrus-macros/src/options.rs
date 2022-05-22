@@ -70,7 +70,7 @@ impl ToTokens for CommandDetails {
                 }
             }
 
-            tokens.extend(quote::quote!(.set_permissions(#permission_stream)));
+            tokens.extend(quote::quote!(.required_permissions(#permission_stream)));
         }
     }
 }

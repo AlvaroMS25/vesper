@@ -53,7 +53,7 @@ impl<D> Command<D> {
         self
     }
 
-    pub fn set_permissions(mut self, permissions: Permissions) -> Self {
+    pub fn required_permissions(mut self, permissions: Permissions) -> Self {
         self.required_permissions = Some(permissions);
         self
     }
