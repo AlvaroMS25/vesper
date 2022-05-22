@@ -14,8 +14,7 @@ categories = ["asynchronous"]
 
 [dependencies]
 async-trait = "0.1"
-#zephyrus-macros = "^0.2.5"
-zephyrus-macros = { path = "../zephyrus-macros" }
+zephyrus-macros = "^0.2.8"
 parking_lot = "0.12"
 tracing = "0.1"
 twilight-model = "0.11"
