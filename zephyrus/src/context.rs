@@ -7,6 +7,7 @@ use crate::{
 };
 use parking_lot::Mutex;
 
+/// Context given to all functions used to autocomplete arguments.
 pub struct AutocompleteContext<'a, D> {
     pub http_client: &'a WrappedClient,
     pub data: &'a D,
@@ -109,7 +110,7 @@ impl<'a, D> SlashContext<'a, D> {
     }
 
     /// Updates the sent interaction, this method is a shortcut to twilight's
-    /// [update_interaction_original](InteractionClient::update_interaction_original)
+    /// [update_interaction_original](InteractionClient::update_response)
     /// but http is automatically provided.
     pub async fn update_response<F>(
         &'a self,
