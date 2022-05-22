@@ -21,13 +21,13 @@ pub fn futurize(_: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 /// Converts an `async-compatible` function into a builder and modifies function's body
-/// to parse all required commands, for further information about the behaviour of this macro, see
+/// to parse all required arguments, for further information about the behaviour of this macro, see
 /// the implementation.
 ///
 /// By an `async-compatible` function it's meant a function with a minimum of one argument,
 /// which must be an `&SlashContext<T>`, which is always given and also used to parse all arguments.
 ///
-/// Usage:
+/// # Usage:
 ///
 /// This macro can be used two ways:
 ///
@@ -42,16 +42,30 @@ pub fn futurize(_: TokenStream, input: TokenStream) -> TokenStream {
 ///
 ///     - Named value way: #[description = "Some description"]
 ///
-/// Arguments:
+/// ## Arguments:
 ///
 /// You **must** provide another `description` attribute for every argument describing what they
 /// are, this description will be seen on discord when filling up the argument. This needs to be
 /// done with all the arguments except the context, which must be the first one, the accepted
 /// syntax is the same as the previous `description` one.
 ///
+/// ### Renaming:
 /// Adding a `rename` attribute is optional, but can be used to modify the name of the argument seen
-/// in discord, it is allowed to have only one `name` attribute per argument and the attribute can
+/// in discord, it is allowed to have only one `rename` attribute per argument and the attribute can
 /// be used the same ways a the `description` one.
+///
+/// ### Autocompletion:
+/// Adding an `autocomplete` attribute is also optional, but it allows the developer to complete
+/// the user's input for an argument. This attribute is used the same way as the description one,
+/// but it *must* point to a function marked with the `#[autocomplete]` attribute macro.
+///
+/// ## Specifying required permissions
+///
+/// It is possible to specify the permissions needed to execute the command by using the
+/// `#[required_permissions]` attribute. It accepts as input a list of comma separated
+/// [twilight permissions](https://docs.rs/twilight-model/latest/twilight_model/guild/struct.Permissions.html).
+/// For example, to specify that a user needs to have administrator permissions to execute a command,
+/// the attribute would be used like this `#[required_permissions(ADMINISTRATOR)]`.
 #[proc_macro_attribute]
 pub fn command(attrs: TokenStream, input: TokenStream) -> TokenStream {
     extract(command::command(attrs.into(), input.into()))
