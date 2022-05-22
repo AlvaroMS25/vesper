@@ -17,6 +17,8 @@ Parsing is done with the `Parse` trait, so users can implement the parsing of th
 Argument parsing is done in a named way, this means the argument name shown on discord gets parsed into
 the arguments named the same way in the handler function.
 
+The framework itself ***doesn't*** spawn any tasks by itself, so you might want to wrap it in an `Arc` and call
+`tokio::spawn` before calling the `.process` method.
 ***
 
 ## Usage example
@@ -32,26 +34,25 @@ use zephyrus::prelude::*;
 #[command]
 #[description = "Says hello"]
 async fn hello(ctx: &SlashContext<()>) -> CommandResult {
-    ctx.http_client.interaction_callback(
+    ctx.interaction_client.create_response(
         ctx.interaction.id,
         &ctx.interaction.token,
-        &InteractionResponse::ChannelMessageWithSource(CallbackData {
-            allowed_mentions: None,
-            components: None,
-            content: Some("Hello world".to_string()),
-            embeds: None,
-            flags: None,
-            tts: None,
-        })
+        &InteractionResponse {
+            kind: InteractionResponseType::ChannelMessageWithSource,
+            data: Some(InteractionResponseData {
+                content: Some(String::from("Hello world")),
+                ..Default::default()
+            })
+        }
     ).exec().await?;
 
     Ok(())
 }
 
 async fn handle_events(http_client: Arc<Client>, mut events: Events) {
-    let framework = Framework::builder(http_client, ())
+    let framework = Arc::new(Framework::builder(http_client, ())
         .command(hello)
-        .build();
+        .build());
 
     // Zephyrus can register commands in guilds or globally.
     framework.register_guild_commands(GuildId::new("<GUILD_ID>").unwrap()).await.unwrap();
@@ -59,8 +60,11 @@ async fn handle_events(http_client: Arc<Client>, mut events: Events) {
     while let Some((_, event)) = events.next().await {
         match event {
             Event::InteractionCreate(i) => {
-                let inner = i.0;
-                framework.process(inner).await;
+                let clone = Arc::clone(&framework);
+                tokio::spawn(async move {
+                    let inner = i.0;
+                    clone.process(inner).await;
+                });
             },
             _ => (),
         }
@@ -70,8 +74,7 @@ async fn handle_events(http_client: Arc<Client>, mut events: Events) {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let token = std::env::var("DISCORD_TOKEN")?;
-    let client = Arc::new(Client::new(token.clone()));
-    client.set_application_id(ApplicationId::new("<APP_ID>").unwrap());
+    let client = Arc::new(Client::builder().token(token.clone()).build());
 
     let (cluster, events) = Cluster::builder(token, Intents::empty())
         .http_client(Arc::clone(&client))
@@ -151,6 +154,56 @@ async fn choices(
 ) -> CommandResult
 {
     // Command body
+    Ok(())
+}
+```
+
+## Autocompleting commands
+Autocomplete user input is made easy with `Zephyrus`, just use the `autocomplete` macro provided by the framework.
+
+Here, take a look at this example. We'll use as the base an empty command like this
+
+```rust
+#[command]
+#[description = "Some description"]
+async fn some_command(
+    ctx: &SlashCommand</* Some type */>,
+    #[autocomplete = "autocomplete_arg"] #[description = "Some description"] arg: String
+) -> CommandResult
+{
+    // Logic goes here
+    Ok(())
+}
+```
+
+As you may have noticed, we added an `autocomplete` attribute to the argument `arg`. The input specified on it should
+point to a function marked with the `#[autocomplete]` attribute like this one:
+
+```rust
+#[autocomplete]
+async fn autocomplete_arg(ctx: AutocompleteContext</* Some type */>) -> Option<InteractionResponseData> {
+    // Function body
+}
+```
+
+Autocompleting functions must have an `AutocompleteContext<T>` as the sole parameter, it allows you to access to the
+data stored at the framework while also allowing you to access the raw interaction, the framework's http client and the
+user input, if exists.
+
+## Permissions
+To specify required permissions to run a command, just use the `#[required_permissions]` attribute when declaring
+a command, or the `.required_permissions` method when declaring a command group.
+
+The attribute accepts as input a comma separated list of 
+[twilight's permissions](https://docs.rs/twilight-model/latest/twilight_model/guild/struct.Permissions.html). Let's take
+a look at what it would look like to create a command needing `MANAGE_CHANNELS` and `MANAGE_MESSAGES` permissions:
+
+```rust
+#[command]
+#[description = "Super cool command"]
+#[required_permissions(MANAGE_CHANNELS, MANAGE_MESSAGES)]
+async fn super_cool_command(ctx: &SlashContext</* Your type */>) -> CommandResult {
+    // Body
     Ok(())
 }
 ```
