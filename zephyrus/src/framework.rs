@@ -278,30 +278,32 @@ impl<D> Framework<D> {
             for i in &cmd.fun_arguments {
                 options.push(i.as_option());
             }
+            let interaction_client = self.interaction_client();
+            let mut command = interaction_client
+                .create_guild_command(guild_id)
+                .chat_input(cmd.name, cmd.description)?
+                .command_options(&options)?;
 
-            commands.push(
-                self.interaction_client()
-                    .create_guild_command(guild_id)
-                    .chat_input(cmd.name, cmd.description)?
-                    .command_options(&options)?
-                    .exec()
-                    .await?
-                    .model()
-                    .await?,
-            );
+            if let Some(permissions) = &cmd.required_permissions {
+                command = command.default_member_permissions(*permissions);
+            }
+
+            commands.push(command.exec().await?.model().await?);
         }
 
         for (_, group) in &self.groups {
-            commands.push(
-                self.interaction_client()
-                    .create_guild_command(guild_id)
-                    .chat_input(group.name, group.description)?
-                    .command_options(&self.create_group(group))?
-                    .exec()
-                    .await?
-                    .model()
-                    .await?,
-            );
+            let options = self.create_group(group);
+            let interaction_client = self.interaction_client();
+            let mut command = interaction_client
+                .create_guild_command(guild_id)
+                .chat_input(group.name, group.description)?
+                .command_options(&options)?;
+
+            if let Some(permissions) = &group.required_permissions {
+                command = command.default_member_permissions(*permissions);
+            }
+
+            commands.push(command.exec().await?.model().await?);
         }
 
         Ok(commands)
