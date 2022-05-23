@@ -176,7 +176,7 @@ async fn some_command(
 }
 ```
 
-As you may have noticed, we added an `autocomplete` attribute to the argument `arg`. The input specified on it should
+As you may have noticed, we added an `autocomplete` attribute to the argument `arg`. The input specified on it must
 point to a function marked with the `#[autocomplete]` attribute like this one:
 
 ```rust
