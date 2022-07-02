@@ -1,5 +1,6 @@
 use crate::{
     command::{Command, CommandMap},
+    framework::Framework,
     group::{GroupParentBuilder, ParentGroupMap},
     hook::{AfterHook, BeforeHook},
     twilight_exports::{ApplicationMarker, Client, Id},
@@ -149,7 +150,7 @@ impl<D: Sized> FrameworkBuilder<D> {
     }
 
     /// Builds the framework, returning a [Framework](crate::framework::Framework).
-    pub fn build(self) -> crate::framework::Framework<D> {
+    pub fn build(self) -> Framework<D> {
         crate::framework::Framework::from_builder(self)
     }
 }
