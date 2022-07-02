@@ -1,4 +1,4 @@
-use crate::{builder::WrappedClient, iter::DataIterator, twilight_exports::*};
+use crate::{builder::WrappedClient, twilight_exports::*};
 use async_trait::async_trait;
 use std::error::Error;
 
