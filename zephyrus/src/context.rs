@@ -11,9 +11,13 @@ use crate::parse::{Parse, ParseError};
 
 /// Context given to all functions used to autocomplete arguments.
 pub struct AutocompleteContext<'a, D> {
+    /// The http client used by the framework.
     pub http_client: &'a WrappedClient,
+    /// The data shared across the framework.
     pub data: &'a D,
+    /// The user input, if exists.
     pub user_input: Option<String>,
+    /// The interaction itself.
     pub interaction: &'a mut ApplicationCommandAutocomplete,
 }
 
@@ -49,6 +53,7 @@ pub struct SlashContext<'a, D> {
     pub interaction_client: InteractionClient<'a>,
     /// The data shared across the framework.
     pub data: &'a D,
+    /// Waiters used to wait for component interactions.
     waiters: &'a Mutex<Vec<WaiterSender>>,
     /// The interaction itself.
     pub interaction: ApplicationCommand,
