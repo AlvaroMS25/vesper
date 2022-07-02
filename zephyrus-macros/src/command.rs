@@ -96,7 +96,6 @@ pub fn parse_arguments<'a>(
             })
             .collect::<Vec<_>>(),
     );
-    let parse_trait = crate::util::get_parse_trait();
 
     // The original block of the function
     let b = &block;
@@ -115,7 +114,7 @@ pub fn parse_arguments<'a>(
             );
 
             #(let #names: #types =
-                #parse_trait::<#ctx_type>::named_parse(#renames, &#ctx_ident.http_client, &#ctx_ident.data, &mut __options).await?;)*
+                #ctx_ident.named_parse(#renames, &mut __options).await?;)*
 
             if __options.len() > 0 {
                 return Err(
