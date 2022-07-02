@@ -5,26 +5,6 @@ use std::error::Error;
 /// The core trait of this framework, it is used to parse all command arguments
 #[async_trait]
 pub trait Parse<T: Send + Sync>: Sized {
-    /// Parses an argument by the option name.
-    async fn named_parse(
-        name: &'static str,
-        http_client: &WrappedClient,
-        data: &T,
-        iterator: &mut DataIterator,
-    ) -> Result<Self, ParseError> {
-        let out = iterator.get(|s| s.name == name);
-
-        if let Some(o) = out {
-            Self::parse(http_client, data, Some(&o.value)).await
-        } else {
-            if Self::is_required() {
-                Err(ParseError::StructureMismatch(format!("{} not found", name)))
-            } else {
-                Self::parse(http_client, data, None).await
-            }
-        }
-    }
-
     /// Adds the possible choices to the argument, this function is usually implemented by the
     /// derive macro, but can be overridden manually.
     fn add_choices() -> Box<dyn Fn() -> Option<Vec<CommandOptionChoice>> + Send + Sync> {

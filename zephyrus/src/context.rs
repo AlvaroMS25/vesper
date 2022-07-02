@@ -6,6 +6,8 @@ use crate::{
     waiter::{WaiterReceiver, WaiterSender},
 };
 use parking_lot::Mutex;
+use crate::iter::DataIterator;
+use crate::parse::{Parse, ParseError};
 
 /// Context given to all functions used to autocomplete arguments.
 pub struct AutocompleteContext<'a, D> {
@@ -141,5 +143,24 @@ impl<'a, D> SlashContext<'a, D> {
             lock.push(sender);
         }
         receiver
+    }
+}
+
+impl<D: Send + Sync> SlashContext<'_, D> {
+    #[doc(hidden)]
+    pub async fn named_parse<T>(
+        &self,
+        name: &str,
+        iterator: &mut DataIterator<'_>
+    ) -> Result<T, ParseError>
+    where
+        T: Parse<D>
+    {
+        let value = iterator.get(|s| s.name == name);
+        if value.is_none() && <T as Parse<D>>::is_required() {
+            Err(ParseError::StructureMismatch(format!("{} not found", name)))
+        } else {
+            <T as Parse<D>>::parse(&self.http_client, &self.data, value.map(|it| &it.value)).await
+        }
     }
 }
