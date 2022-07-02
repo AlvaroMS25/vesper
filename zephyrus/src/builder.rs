@@ -151,6 +151,6 @@ impl<D: Sized> FrameworkBuilder<D> {
 
     /// Builds the framework, returning a [Framework](crate::framework::Framework).
     pub fn build(self) -> Framework<D> {
-        crate::framework::Framework::from_builder(self)
+        Framework::from_builder(self)
     }
 }
