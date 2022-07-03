@@ -255,7 +255,7 @@ macro_rules! impl_derived_parse {
                     let p = <$prim>::parse(http_client, data, value).await?;
 
                     if p > <$derived>::MAX as $prim {
-                        Err(ParsingGenericError::new(
+                        Err(GenericParsingError::new(
                             concat!(
                                 "Failed to parse to ",
                                 stringify!($derived),
@@ -266,7 +266,7 @@ macro_rules! impl_derived_parse {
                             )
                         ))
                     } else if p < <$derived>::MIN as $prim {
-                        Err(ParsingGenericError::new(
+                        Err(GenericParsingError::new(
                             concat!(
                                 "Failed to parse to ",
                                 stringify!($derived),
