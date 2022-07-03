@@ -19,7 +19,7 @@ impl std::fmt::Display for ParsingError {
 impl std::error::Error for ParsingError {}
 
 #[async_trait]
-impl<T: Send + Sync + 'static> Parse<T> for String {
+impl<T: Send + Sync> Parse<T> for String {
     async fn parse(
         _: &WrappedClient,
         _: &T,
@@ -39,7 +39,7 @@ impl<T: Send + Sync + 'static> Parse<T> for String {
 }
 
 #[async_trait]
-impl<T: Send + Sync + 'static> Parse<T> for i64 {
+impl<T: Send + Sync> Parse<T> for i64 {
     async fn parse(
         _: &WrappedClient,
         _: &T,
@@ -59,7 +59,7 @@ impl<T: Send + Sync + 'static> Parse<T> for i64 {
 }
 
 #[async_trait]
-impl<T: Send + Sync + 'static> Parse<T> for u64 {
+impl<T: Send + Sync> Parse<T> for u64 {
     async fn parse(
         _: &WrappedClient,
         _: &T,
@@ -82,7 +82,7 @@ impl<T: Send + Sync + 'static> Parse<T> for u64 {
 }
 
 #[async_trait]
-impl<T: Send + Sync + 'static> Parse<T> for f64 {
+impl<T: Send + Sync> Parse<T> for f64 {
     async fn parse(
         _: &WrappedClient,
         _: &T,
@@ -102,7 +102,7 @@ impl<T: Send + Sync + 'static> Parse<T> for f64 {
 }
 
 #[async_trait]
-impl<T: Send + Sync + 'static> Parse<T> for bool {
+impl<T: Send + Sync> Parse<T> for bool {
     async fn parse(
         _: &WrappedClient,
         _: &T,
@@ -122,7 +122,7 @@ impl<T: Send + Sync + 'static> Parse<T> for bool {
 }
 
 #[async_trait]
-impl<T: Send + Sync + 'static> Parse<T> for Id<ChannelMarker> {
+impl<T: Send + Sync> Parse<T> for Id<ChannelMarker> {
     async fn parse(
         _: &WrappedClient,
         _: &T,
@@ -143,7 +143,7 @@ impl<T: Send + Sync + 'static> Parse<T> for Id<ChannelMarker> {
 }
 
 #[async_trait]
-impl<T: Send + Sync + 'static> Parse<T> for Id<UserMarker> {
+impl<T: Send + Sync> Parse<T> for Id<UserMarker> {
     async fn parse(
         _: &WrappedClient,
         _: &T,
@@ -164,7 +164,7 @@ impl<T: Send + Sync + 'static> Parse<T> for Id<UserMarker> {
 }
 
 #[async_trait]
-impl<T: Send + Sync + 'static> Parse<T> for Id<RoleMarker> {
+impl<T: Send + Sync> Parse<T> for Id<RoleMarker> {
     async fn parse(
         _: &WrappedClient,
         _: &T,
@@ -185,7 +185,7 @@ impl<T: Send + Sync + 'static> Parse<T> for Id<RoleMarker> {
 }
 
 #[async_trait]
-impl<T: Send + Sync + 'static> Parse<T> for Id<GenericMarker> {
+impl<T: Send + Sync> Parse<T> for Id<GenericMarker> {
     async fn parse(
         _: &WrappedClient,
         _: &T,
@@ -206,7 +206,7 @@ impl<T: Send + Sync + 'static> Parse<T> for Id<GenericMarker> {
 }
 
 #[async_trait]
-impl<T: Parse<E>, E: Send + Sync + 'static> Parse<E> for Option<T> {
+impl<T: Parse<E>, E: Send + Sync> Parse<E> for Option<T> {
     async fn parse(
         http_client: &WrappedClient,
         data: &E,
@@ -238,7 +238,7 @@ impl<T, E, C> Parse<C> for Result<T, E>
 where
     T: Parse<C>,
     E: From<ParseError>,
-    C: Send + Sync + 'static,
+    C: Send + Sync,
 {
     async fn parse(
         http_client: &WrappedClient,
@@ -262,7 +262,7 @@ macro_rules! impl_derived_parse {
     ($([$($derived:ty),+] from $prim:ty),* $(,)?) => {
         $($(
             #[async_trait]
-            impl<T: Send + Sync + 'static> Parse<T> for $derived {
+            impl<T: Send + Sync> Parse<T> for $derived {
                 async fn parse(
                     http_client: &WrappedClient,
                     data: &T,
