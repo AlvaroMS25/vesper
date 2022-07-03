@@ -5,21 +5,21 @@ use std::error::Error;
 #[doc(hidden)]
 #[derive(Debug)]
 // Generic error used by the framework.
-pub struct ParsingGenericError(&'static str);
+pub struct GenericParsingError(&'static str);
 
-impl ParsingGenericError {
+impl GenericParsingError {
     pub fn new(message: &'static str) -> ParseError {
         ParseError::Parse(Box::new(Self(message)) as Box<_>)
     }
 }
 
-impl std::fmt::Display for ParsingGenericError {
+impl std::fmt::Display for GenericParsingError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl std::error::Error for ParsingGenericError {}
+impl std::error::Error for GenericParsingError {}
 
 /// The core trait of this framework, it is used to parse all command arguments
 #[async_trait]
