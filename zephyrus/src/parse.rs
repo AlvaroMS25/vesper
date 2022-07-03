@@ -2,6 +2,25 @@ use crate::{builder::WrappedClient, twilight_exports::*};
 use async_trait::async_trait;
 use std::error::Error;
 
+#[doc(hidden)]
+#[derive(Debug)]
+// Generic error used by the framework.
+pub struct ParsingGenericError(&'static str);
+
+impl ParsingGenericError {
+    pub fn new(message: &'static str) -> ParseError {
+        ParseError::Parse(Box::new(Self(message)) as Box<_>)
+    }
+}
+
+impl std::fmt::Display for ParsingGenericError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl std::error::Error for ParsingGenericError {}
+
 /// The core trait of this framework, it is used to parse all command arguments
 #[async_trait]
 pub trait Parse<T: Send + Sync>: Sized {
