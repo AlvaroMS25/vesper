@@ -1,6 +1,23 @@
 use crate::prelude::*;
 use crate::twilight_exports::*;
 
+#[derive(Debug)]
+struct ParsingError(&'static str);
+
+impl ParsingError {
+    fn new(message: &'static str) -> ParseError {
+        ParseError::Parse(Box::new(Self(message)) as Box<_>)
+    }
+}
+
+impl std::fmt::Display for ParsingError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl std::error::Error for ParsingError {}
+
 #[async_trait]
 impl<T: Send + Sync + 'static> Parse<T> for String {
     async fn parse(
@@ -50,6 +67,9 @@ impl<T: Send + Sync + 'static> Parse<T> for u64 {
     ) -> Result<Self, ParseError> {
         if let Some(kind) = value {
             if let CommandOptionValue::Integer(i) = kind {
+                if *i < 0 {
+                    return Err(ParsingError::new("Input out of range"))
+                }
                 return Ok(*i as u64);
             }
         }
@@ -251,7 +271,7 @@ macro_rules! impl_derived_parse {
                     let p = <$prim>::parse(http_client, data, value).await?;
 
                     if p > <$derived>::MAX as $prim {
-                        Err(
+                        Err(ParsingError::new(
                             concat!(
                                 "Failed to parse to ",
                                 stringify!($derived),
@@ -259,10 +279,10 @@ macro_rules! impl_derived_parse {
                                 stringify!($derived),
                                 "'s ",
                                 "range of values"
-                            ).into()
-                        )
+                            )
+                        ))
                     } else if p < <$derived>::MIN as $prim {
-                        Err(
+                        Err(ParsingError::new(
                             concat!(
                                 "Failed to parse to ",
                                 stringify!($derived),
@@ -270,8 +290,8 @@ macro_rules! impl_derived_parse {
                                 stringify!($derived),
                                 "'s ",
                                 "range of values"
-                            ).into()
-                        )
+                            )
+                        ))
                     } else {
                         Ok(p as $derived)
                     }
