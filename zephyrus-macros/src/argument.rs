@@ -182,6 +182,7 @@ impl ToTokens for Argument<'_> {
                     <#ty as #parse_trait<#tt>>::is_required(),
                     <#ty as #parse_trait<#tt>>::option_type(),
                     <#ty as #parse_trait<#tt>>::add_choices(),
+                    <#ty as #parse_trait<#tt>>::set_limits(),
                     Some(#autocomplete())
                 ).into())
             });
@@ -194,6 +195,7 @@ impl ToTokens for Argument<'_> {
                     <#ty as #parse_trait<#tt>>::is_required(),
                     <#ty as #parse_trait<#tt>>::option_type(),
                     <#ty as #parse_trait<#tt>>::add_choices(),
+                    <#ty as #parse_trait<#tt>>::set_limits(),
                     Option::<#autocomplete_hook<#tt>>::None
                 ).into())
             });
