@@ -2,6 +2,8 @@ use crate::prelude::*;
 use crate::twilight_exports::*;
 use crate::parse::GenericParsingError;
 
+const NUMBER_MAX_VALUE: i64 = 9007199254740991;
+
 #[async_trait]
 impl<T: Send + Sync> Parse<T> for String {
     async fn parse(
@@ -63,6 +65,14 @@ impl<T: Send + Sync> Parse<T> for u64 {
     fn option_type() -> CommandOptionType {
         CommandOptionType::Integer
     }
+
+    fn set_limits() -> Option<ArgumentLimits> {
+        use twilight_model::application::command::CommandOptionValue;
+        Some(ArgumentLimits {
+            min: Some(CommandOptionValue::Integer(0)),
+            max: None
+        })
+    }
 }
 
 #[async_trait]
@@ -82,6 +92,45 @@ impl<T: Send + Sync> Parse<T> for f64 {
 
     fn option_type() -> CommandOptionType {
         CommandOptionType::Number
+    }
+
+    fn set_limits() -> Option<ArgumentLimits> {
+        use twilight_model::application::command::{CommandOptionValue, Number};
+        Some(ArgumentLimits {
+            min: Some(CommandOptionValue::Number(Number(f64::MIN))),
+            max: Some(CommandOptionValue::Number(Number(f64::MAX)))
+        })
+    }
+}
+
+#[async_trait]
+impl<T: Send + Sync> Parse<T> for f32 {
+    async fn parse(
+        _: &WrappedClient,
+        _: &T,
+        value: Option<&CommandOptionValue>,
+    ) -> Result<Self, ParseError> {
+        if let Some(kind) = value {
+            if let CommandOptionValue::Number(i) = kind {
+                if i.0 > f32::MAX as f64 || i.0 < f32::MIN as f64 {
+                    return Err(GenericParsingError::new("Input out of range"))
+                }
+                return Ok(i.0 as f32);
+            }
+        }
+        Err("Number expected".into())
+    }
+
+    fn option_type() -> CommandOptionType {
+        CommandOptionType::Number
+    }
+
+    fn set_limits() -> Option<ArgumentLimits> {
+        use twilight_model::application::command::{CommandOptionValue, Number};
+        Some(ArgumentLimits {
+            min: Some(CommandOptionValue::Number(Number(f32::MIN as f64))),
+            max: Some(CommandOptionValue::Number(Number(f32::MAX as f64)))
+        })
     }
 }
 
@@ -208,12 +257,20 @@ impl<T: Parse<E>, E: Send + Sync> Parse<E> for Option<T> {
         }
     }
 
+    fn option_type() -> CommandOptionType {
+        T::option_type()
+    }
+
     fn is_required() -> bool {
         false
     }
 
-    fn option_type() -> CommandOptionType {
-        T::option_type()
+    fn add_choices() -> Option<Vec<CommandOptionChoice>> {
+        T::add_choices()
+    }
+
+    fn set_limits() -> Option<ArgumentLimits> {
+        T::set_limits()
     }
 }
 
@@ -233,12 +290,20 @@ where
         Ok(T::parse(http_client, data, value).await.map_err(From::from))
     }
 
+    fn option_type() -> CommandOptionType {
+        T::option_type()
+    }
+
     fn is_required() -> bool {
         T::is_required()
     }
 
-    fn option_type() -> CommandOptionType {
-        T::option_type()
+    fn add_choices() -> Option<Vec<CommandOptionChoice>> {
+        T::add_choices()
+    }
+
+    fn set_limits() -> Option<ArgumentLimits> {
+        T::set_limits()
     }
 }
 
@@ -284,6 +349,20 @@ macro_rules! impl_derived_parse {
                 fn option_type() -> CommandOptionType {
                     <$prim as Parse<T>>::option_type()
                 }
+
+                fn set_limits() -> Option<ArgumentLimits> {
+                    use twilight_model::application::command::CommandOptionValue;
+                    Some(ArgumentLimits {
+                        min: Some(CommandOptionValue::Integer(<$derived>::MIN as i64)),
+                        max: Some(CommandOptionValue::Integer({
+                            if <$derived>::MAX as i64 > NUMBER_MAX_VALUE {
+                                NUMBER_MAX_VALUE
+                            } else {
+                                <$derived>::MAX as i64
+                            }
+                        }))
+                    })
+                }
             }
         )*)*
     };
@@ -292,5 +371,4 @@ macro_rules! impl_derived_parse {
 impl_derived_parse! {
     [i8, i16, i32, isize] from i64,
     [u8, u16, u32, usize] from u64,
-    [f32] from f64,
 }
