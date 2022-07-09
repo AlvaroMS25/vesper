@@ -7,7 +7,7 @@ use std::error::Error;
 /// The result of a command execution.
 pub type CommandResult = Result<(), Box<dyn Error + Send + Sync>>;
 /// A pointer to a command function.
-pub(crate) type CommandFun<D> = for<'a> fn(&'a SlashContext<D>) -> BoxFuture<'a, CommandResult>;
+pub(crate) type CommandFun<D> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, CommandResult>;
 /// A map of [commands](self::Command).
 pub type CommandMap<D> = HashMap<&'static str, Command<D>>;
 
