@@ -1,13 +1,17 @@
 use crate::{
     builder::WrappedClient,
     command::CommandResult,
-    message::Message,
     twilight_exports::*,
-    waiter::{WaiterReceiver, WaiterSender},
 };
-use parking_lot::Mutex;
+
 use crate::iter::DataIterator;
 use crate::parse::{Parse, ParseError};
+
+#[derive(Debug, Clone)]
+pub struct Focused {
+    pub input: String,
+    pub kind: CommandOptionType,
+}
 
 /// Context given to all functions used to autocomplete arguments.
 pub struct AutocompleteContext<'a, D> {
@@ -15,18 +19,18 @@ pub struct AutocompleteContext<'a, D> {
     pub http_client: &'a WrappedClient,
     /// The data shared across the framework.
     pub data: &'a D,
-    /// The user input, if exists.
-    pub user_input: Option<String>,
+    /// The user input.
+    pub user_input: Focused,
     /// The interaction itself.
-    pub interaction: &'a mut ApplicationCommandAutocomplete,
+    pub interaction: &'a mut Interaction,
 }
 
 impl<'a, D> AutocompleteContext<'a, D> {
     pub(crate) fn new(
         http_client: &'a WrappedClient,
         data: &'a D,
-        user_input: Option<String>,
-        interaction: &'a mut ApplicationCommandAutocomplete,
+        user_input: Focused,
+        interaction: &'a mut Interaction,
     ) -> Self {
         Self {
             http_client,
@@ -53,10 +57,8 @@ pub struct SlashContext<'a, D> {
     pub interaction_client: InteractionClient<'a>,
     /// The data shared across the framework.
     pub data: &'a D,
-    /// Waiters used to wait for component interactions.
-    waiters: &'a Mutex<Vec<WaiterSender>>,
     /// The interaction itself.
-    pub interaction: ApplicationCommand,
+    pub interaction: Interaction,
 }
 
 impl<'a, D> Clone for SlashContext<'a, D> {
@@ -66,7 +68,6 @@ impl<'a, D> Clone for SlashContext<'a, D> {
             application_id: self.application_id,
             interaction_client: self.http_client.inner().interaction(self.application_id),
             data: &self.data,
-            waiters: &self.waiters,
             interaction: self.interaction.clone(),
         }
     }
@@ -78,8 +79,7 @@ impl<'a, D> SlashContext<'a, D> {
         http_client: &'a WrappedClient,
         application_id: Id<ApplicationMarker>,
         data: &'a D,
-        waiters: &'a Mutex<Vec<WaiterSender>>,
-        interaction: ApplicationCommand,
+        interaction: Interaction,
     ) -> Self {
         let interaction_client = http_client.inner().interaction(application_id);
         Self {
@@ -87,7 +87,6 @@ impl<'a, D> SlashContext<'a, D> {
             application_id,
             interaction_client,
             data,
-            waiters,
             interaction,
         }
     }
@@ -122,7 +121,7 @@ impl<'a, D> SlashContext<'a, D> {
     pub async fn update_response<F>(
         &'a self,
         fun: F,
-    ) -> Result<Message<'a, D>, Box<dyn std::error::Error + Send + Sync>>
+    ) -> Result<Message, Box<dyn std::error::Error + Send + Sync>>
     where
         F: FnOnce(UpdateResponse<'a>) -> UpdateResponse<'a>,
     {
@@ -133,21 +132,7 @@ impl<'a, D> SlashContext<'a, D> {
             .exec()
             .await?
             .model()
-            .await
-            .map(|msg| Message::new(&self, msg))?)
-    }
-
-    /// Waits for a component interaction which satisfies the given predicate.
-    pub fn wait_component<F>(&self, fun: F) -> WaiterReceiver
-    where
-        F: Fn(&MessageComponentInteraction) -> bool + Send + 'static,
-    {
-        let (sender, receiver) = WaiterSender::new(fun);
-        {
-            let mut lock = self.waiters.lock();
-            lock.push(sender);
-        }
-        receiver
+            .await?)
     }
 }
 

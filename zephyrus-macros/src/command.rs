@@ -103,11 +103,13 @@ pub fn parse_arguments<'a>(
     // Modify the block to parse arguments
     *block = parse2(quote::quote! {{
         let (#(#names),*) = {
+            let data = match #ctx_ident.interaction.data.as_ref().unwrap() {
+                twilight_model::application::interaction::InteractionData::ApplicationCommand(data) => data,
+                _ => unreachable!()
+            };
             #[allow(unused_mut)]
             let mut __options = ::zephyrus::iter::DataIterator::new(
-                #ctx_ident
-                .interaction
-                .data
+                data
                 .options
                 .iter()
                 .collect::<Vec<_>>()
