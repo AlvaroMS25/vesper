@@ -151,6 +151,12 @@ impl<D: Send + Sync> SlashContext<'_, D> {
             Err(ParseError::StructureMismatch(format!("{} not found", name)))
         } else {
             <T as Parse<D>>::parse(&self.http_client, &self.data, value.map(|it| &it.value)).await
+                .map_err(|mut err| {
+                    if let ParseError::Parsing { argument_name, .. } = &mut err {
+                        *argument_name = name.to_string();
+                    }
+                    err
+                })
         }
     }
 }
