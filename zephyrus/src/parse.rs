@@ -2,25 +2,6 @@ use crate::{argument::ArgumentLimits, builder::WrappedClient, twilight_exports::
 use async_trait::async_trait;
 use std::error::Error;
 
-#[doc(hidden)]
-#[derive(Debug)]
-// Generic error used by the framework.
-pub struct GenericParsingError(&'static str);
-
-impl GenericParsingError {
-    pub fn new(message: &'static str) -> ParseError {
-        ParseError::Parse(Box::new(Self(message)) as Box<_>)
-    }
-}
-
-impl std::fmt::Display for GenericParsingError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl std::error::Error for GenericParsingError {}
-
 /// The core trait of this framework, it is used to parse all command arguments
 #[async_trait]
 pub trait Parse<T: Send + Sync>: Sized {
@@ -54,14 +35,29 @@ pub trait Parse<T: Send + Sync>: Sized {
 #[derive(Debug)]
 pub enum ParseError {
     StructureMismatch(String),
-    Parse(Box<dyn Error + Send + Sync>),
+    Parsing {
+        argument_name: String,
+        required: bool,
+        type_: String,
+        error: String
+    },
+    Other(Box<dyn Error + Send + Sync>),
 }
 
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::StructureMismatch(why) => write!(f, "Structure mismatch: {}", why),
-            Self::Parse(why) => write!(f, "Failed parsing an argument: {}", why),
+            Self::Parsing { argument_name, required, type_, error } => {
+                write!(f, "Failed to parse {}({}required {}): {}", argument_name, {
+                    if !required {
+                        "not "
+                    } else {
+                        ""
+                    }
+                }, type_, error)
+            }
+            Self::Other(why) => write!(f, "Other: {}", why),
         }
     }
 }
@@ -69,7 +65,7 @@ impl Error for ParseError {}
 
 impl From<Box<dyn Error + Send + Sync>> for ParseError {
     fn from(e: Box<dyn Error + Send + Sync>) -> Self {
-        Self::Parse(e)
+        Self::Other(e)
     }
 }
 

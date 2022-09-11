@@ -1,8 +1,66 @@
+use std::any::type_name;
 use crate::prelude::*;
 use crate::twilight_exports::*;
-use crate::parse::GenericParsingError;
 
 const NUMBER_MAX_VALUE: i64 = 9007199254740991;
+
+fn error(type_name: &str, required: bool, why: &str) -> ParseError {
+    ParseError::Parsing {
+        argument_name: String::new(),
+        required,
+        type_: type_name.to_string(),
+        error: why.to_string()
+    }
+}
+
+pub struct Range<T: Copy, const START: i64, const END: i64>(T);
+
+impl<T: Copy, const START: i64, const END: i64> std::ops::Deref for Range<T, START, END> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T: Copy, const START: i64, const END: i64> std::ops::DerefMut for Range<T, START, END> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+#[async_trait]
+impl<T, E: Copy, const START: i64, const END: i64> Parse<T> for Range<E, START, END>
+where
+    T: Send + Sync,
+    E: Parse<T>
+{
+    async fn parse(http_client: &WrappedClient, data: &T, value: Option<&CommandOptionValue>) -> Result<Self, ParseError> {
+        let value = E::parse(http_client, data, value).await?;
+        let v = unsafe { *(&value as *const E as *const i64) };
+
+        if v < START || v > END {
+            return Err(error(
+                &format!("Range<{}, {}, {}>", type_name::<E>(), START, END),
+                true,
+                "Input out of range"
+            ));
+        }
+
+        Ok(Self(value))
+    }
+
+    fn option_type() -> CommandOptionType {
+        E::option_type()
+    }
+
+    fn set_limits() -> Option<ArgumentLimits> {
+        use twilight_model::application::command::CommandOptionValue;
+        Some(ArgumentLimits {
+            min: Some(CommandOptionValue::Integer(START)),
+            max: Some(CommandOptionValue::Integer(END))
+        })
+    }
+}
 
 #[async_trait]
 impl<T: Send + Sync> Parse<T> for String {
@@ -16,7 +74,7 @@ impl<T: Send + Sync> Parse<T> for String {
                 return Ok(s.to_owned());
             }
         }
-        Err("String expected".into())
+        Err(error("String", true, "String expected"))
     }
 
     fn option_type() -> CommandOptionType {
@@ -36,7 +94,7 @@ impl<T: Send + Sync> Parse<T> for i64 {
                 return Ok(*i);
             }
         }
-        Err("Integer expected".into())
+        Err(error("i64", true, "Integer expected"))
     }
 
     fn option_type() -> CommandOptionType {
@@ -54,12 +112,12 @@ impl<T: Send + Sync> Parse<T> for u64 {
         if let Some(kind) = value {
             if let CommandOptionValue::Integer(i) = kind {
                 if *i < 0 {
-                    return Err(GenericParsingError::new("Input out of range"))
+                    return Err(error("u64", true, "Input out of range"))
                 }
                 return Ok(*i as u64);
             }
         }
-        Err("Integer expected".into())
+        Err(error("Integer", true, "Integer expected"))
     }
 
     fn option_type() -> CommandOptionType {
@@ -84,10 +142,10 @@ impl<T: Send + Sync> Parse<T> for f64 {
     ) -> Result<Self, ParseError> {
         if let Some(kind) = value {
             if let CommandOptionValue::Number(i) = kind {
-                return Ok(i.0);
+                return Ok(*i);
             }
         }
-        Err("Number expected".into())
+        Err(error("f64", true, "Number expected"))
     }
 
     fn option_type() -> CommandOptionType {
@@ -95,10 +153,10 @@ impl<T: Send + Sync> Parse<T> for f64 {
     }
 
     fn set_limits() -> Option<ArgumentLimits> {
-        use twilight_model::application::command::{CommandOptionValue, Number};
+        use twilight_model::application::command::CommandOptionValue;
         Some(ArgumentLimits {
-            min: Some(CommandOptionValue::Number(Number(f64::MIN))),
-            max: Some(CommandOptionValue::Number(Number(f64::MAX)))
+            min: Some(CommandOptionValue::Number(f64::MIN)),
+            max: Some(CommandOptionValue::Number(f64::MAX))
         })
     }
 }
@@ -112,13 +170,13 @@ impl<T: Send + Sync> Parse<T> for f32 {
     ) -> Result<Self, ParseError> {
         if let Some(kind) = value {
             if let CommandOptionValue::Number(i) = kind {
-                if i.0 > f32::MAX as f64 || i.0 < f32::MIN as f64 {
-                    return Err(GenericParsingError::new("Input out of range"))
+                if *i > f32::MAX as f64 || *i < f32::MIN as f64 {
+                    return Err(error("f32", true, "Input out of range"))
                 }
-                return Ok(i.0 as f32);
+                return Ok(*i as f32);
             }
         }
-        Err("Number expected".into())
+        Err(error("f32", true, "Number expected"))
     }
 
     fn option_type() -> CommandOptionType {
@@ -126,10 +184,10 @@ impl<T: Send + Sync> Parse<T> for f32 {
     }
 
     fn set_limits() -> Option<ArgumentLimits> {
-        use twilight_model::application::command::{CommandOptionValue, Number};
+        use twilight_model::application::command::CommandOptionValue;
         Some(ArgumentLimits {
-            min: Some(CommandOptionValue::Number(Number(f32::MIN as f64))),
-            max: Some(CommandOptionValue::Number(Number(f32::MAX as f64)))
+            min: Some(CommandOptionValue::Number(f32::MIN as f64)),
+            max: Some(CommandOptionValue::Number(f32::MAX as f64))
         })
     }
 }
@@ -146,7 +204,7 @@ impl<T: Send + Sync> Parse<T> for bool {
                 return Ok(*i);
             }
         }
-        Err("Boolean expected".into())
+        Err(error("Boolean", true, "Boolean expected"))
     }
 
     fn option_type() -> CommandOptionType {
@@ -167,7 +225,7 @@ impl<T: Send + Sync> Parse<T> for Id<ChannelMarker> {
             }
         }
 
-        Err("Channel expected".into())
+        Err(error("Channel id", true, "Channel expected"))
     }
 
     fn option_type() -> CommandOptionType {
@@ -188,7 +246,7 @@ impl<T: Send + Sync> Parse<T> for Id<UserMarker> {
             }
         }
 
-        Err("User expected".into())
+        Err(error("User id", true, "User expected"))
     }
 
     fn option_type() -> CommandOptionType {
@@ -209,7 +267,7 @@ impl<T: Send + Sync> Parse<T> for Id<RoleMarker> {
             }
         }
 
-        Err("Role expected".into())
+        Err(error("Role id", true, "Role expected"))
     }
 
     fn option_type() -> CommandOptionType {
@@ -230,7 +288,7 @@ impl<T: Send + Sync> Parse<T> for Id<GenericMarker> {
             }
         }
 
-        Err("Mentionable expected".into())
+        Err(error("Id", true, "Mentionable expected"))
     }
 
     fn option_type() -> CommandOptionType {
@@ -247,8 +305,12 @@ impl<T: Parse<E>, E: Send + Sync> Parse<E> for Option<T> {
     ) -> Result<Self, ParseError> {
         match T::parse(http_client, data, value).await {
             Ok(parsed) => Ok(Some(parsed)),
-            Err(why) => {
+            Err(mut why) => {
                 if value.is_some() {
+                    match &mut why {
+                        ParseError::Parsing {required, ..} => *required = false,
+                        _ => ()
+                    }
                     Err(why)
                 } else {
                     Ok(None)
@@ -320,7 +382,9 @@ macro_rules! impl_derived_parse {
                     let p = <$prim>::parse(http_client, data, value).await?;
 
                     if p > <$derived>::MAX as $prim {
-                        Err(GenericParsingError::new(
+                        Err(error(
+                            stringify!($derived),
+                            true,
                             concat!(
                                 "Failed to parse to ",
                                 stringify!($derived),
@@ -331,7 +395,9 @@ macro_rules! impl_derived_parse {
                             )
                         ))
                     } else if p < <$derived>::MIN as $prim {
-                        Err(GenericParsingError::new(
+                        Err(error(
+                            stringify!($derived),
+                            true,
                             concat!(
                                 "Failed to parse to ",
                                 stringify!($derived),

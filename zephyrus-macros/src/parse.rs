@@ -93,7 +93,12 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
                     let num = usize::parse(http_client, data, value).await?;
                     match num {
                         #parse_stream
-                        _ => return Err(::zephyrus::parse::GenericParsingError::new("Unrecognized option")
+                        _ => return Err(::zephyrus::parse::ParseError::Parsing {
+                                argument_name: String::new(),
+                                required: true,
+                                type_: String::from(stringify!(#enum_name)),
+                                error: String::from("Unrecognized option")
+                            }
                         )
                     }
                 }
