@@ -14,11 +14,11 @@ categories = ["asynchronous"]
 
 [dependencies]
 async-trait = "0.1"
-zephyrus-macros = "^0.3.2"
+zephyrus-macros = { git = "https://github.com/AlvaroMS25/zephyrus.git" }
 parking_lot = "0.12"
 tracing = "0.1"
-twilight-model = "0.11"
-twilight-http = "0.11"
+twilight-model = "0.13"
+twilight-http = "0.13"
 
 [dependencies.tokio]
 version = "1"
