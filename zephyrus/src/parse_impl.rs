@@ -69,10 +69,8 @@ impl<T: Send + Sync> Parse<T> for String {
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
-        if let Some(kind) = value {
-            if let CommandOptionValue::String(s) = kind {
-                return Ok(s.to_owned());
-            }
+        if let Some(CommandOptionValue::String(s)) = value {
+            return Ok(s.to_owned());
         }
         Err(error("String", true, "String expected"))
     }
@@ -89,10 +87,8 @@ impl<T: Send + Sync> Parse<T> for i64 {
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
-        if let Some(kind) = value {
-            if let CommandOptionValue::Integer(i) = kind {
-                return Ok(*i);
-            }
+        if let Some(CommandOptionValue::Integer(i)) = value {
+            return Ok(*i);
         }
         Err(error("i64", true, "Integer expected"))
     }
@@ -109,13 +105,11 @@ impl<T: Send + Sync> Parse<T> for u64 {
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
-        if let Some(kind) = value {
-            if let CommandOptionValue::Integer(i) = kind {
-                if *i < 0 {
-                    return Err(error("u64", true, "Input out of range"))
-                }
-                return Ok(*i as u64);
+        if let Some(CommandOptionValue::Integer(i)) = value {
+            if *i < 0 {
+                return Err(error("u64", true, "Input out of range"))
             }
+            return Ok(*i as u64);
         }
         Err(error("Integer", true, "Integer expected"))
     }
@@ -140,10 +134,8 @@ impl<T: Send + Sync> Parse<T> for f64 {
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
-        if let Some(kind) = value {
-            if let CommandOptionValue::Number(i) = kind {
-                return Ok(*i);
-            }
+        if let Some(CommandOptionValue::Number(i)) = value {
+            return Ok(*i);
         }
         Err(error("f64", true, "Number expected"))
     }
@@ -168,13 +160,11 @@ impl<T: Send + Sync> Parse<T> for f32 {
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
-        if let Some(kind) = value {
-            if let CommandOptionValue::Number(i) = kind {
-                if *i > f32::MAX as f64 || *i < f32::MIN as f64 {
-                    return Err(error("f32", true, "Input out of range"))
-                }
-                return Ok(*i as f32);
+        if let Some(CommandOptionValue::Number(i)) = value {
+            if *i > f32::MAX as f64 || *i < f32::MIN as f64 {
+                return Err(error("f32", true, "Input out of range"))
             }
+            return Ok(*i as f32);
         }
         Err(error("f32", true, "Number expected"))
     }
@@ -199,10 +189,8 @@ impl<T: Send + Sync> Parse<T> for bool {
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
-        if let Some(kind) = value {
-            if let CommandOptionValue::Boolean(i) = kind {
-                return Ok(*i);
-            }
+        if let Some(CommandOptionValue::Boolean(i)) = value {
+            return Ok(*i);
         }
         Err(error("Boolean", true, "Boolean expected"))
     }
@@ -219,10 +207,8 @@ impl<T: Send + Sync> Parse<T> for Id<ChannelMarker> {
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
-        if let Some(kind) = value {
-            if let CommandOptionValue::Channel(channel) = kind {
-                return Ok(*channel);
-            }
+        if let Some(CommandOptionValue::Channel(channel)) = value {
+            return Ok(*channel);
         }
 
         Err(error("Channel id", true, "Channel expected"))
@@ -240,10 +226,8 @@ impl<T: Send + Sync> Parse<T> for Id<UserMarker> {
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
-        if let Some(kind) = value {
-            if let CommandOptionValue::User(user) = kind {
-                return Ok(*user);
-            }
+        if let Some(CommandOptionValue::User(user)) = value {
+            return Ok(*user);
         }
 
         Err(error("User id", true, "User expected"))
@@ -261,10 +245,8 @@ impl<T: Send + Sync> Parse<T> for Id<RoleMarker> {
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
-        if let Some(kind) = value {
-            if let CommandOptionValue::Role(role) = kind {
-                return Ok(*role);
-            }
+        if let Some(CommandOptionValue::Role(role)) = value {
+            return Ok(*role);
         }
 
         Err(error("Role id", true, "Role expected"))
@@ -282,10 +264,8 @@ impl<T: Send + Sync> Parse<T> for Id<GenericMarker> {
         _: &T,
         value: Option<&CommandOptionValue>,
     ) -> Result<Self, ParseError> {
-        if let Some(kind) = value {
-            if let CommandOptionValue::Mentionable(id) = kind {
-                return Ok(*id);
-            }
+        if let Some(CommandOptionValue::Mentionable(id)) = value {
+            return Ok(*id);
         }
 
         Err(error("Id", true, "Mentionable expected"))
@@ -307,10 +287,10 @@ impl<T: Parse<E>, E: Send + Sync> Parse<E> for Option<T> {
             Ok(parsed) => Ok(Some(parsed)),
             Err(mut why) => {
                 if value.is_some() {
-                    match &mut why {
-                        ParseError::Parsing {required, ..} => *required = false,
-                        _ => ()
+                    if let ParseError::Parsing {required, ..} = &mut why {
+                        *required = false;
                     }
+
                     Err(why)
                 } else {
                     Ok(None)

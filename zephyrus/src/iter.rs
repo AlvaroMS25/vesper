@@ -23,7 +23,7 @@ impl<'a> DataIterator<'a> {
             let mut found = false;
 
             while idx < self.src.len() && !found {
-                if predicate(&self.src[idx]) {
+                if predicate(self.src[idx]) {
                     found = true;
                 }
 

@@ -10,6 +10,7 @@ use std::rc::Rc;
 use std::{ops::Deref, sync::Arc};
 
 /// A wrapper around twilight's http client allowing the user to decide how to provide it to the framework.
+#[allow(clippy::large_enum_variant)]
 pub enum WrappedClient {
     Arc(Arc<Client>),
     #[cfg(feature = "rc")]
@@ -21,10 +22,10 @@ pub enum WrappedClient {
 impl WrappedClient {
     pub fn inner(&self) -> &Client {
         match self {
-            Self::Arc(c) => &c,
+            Self::Arc(c) => c,
             #[cfg(feature = "rc")]
             Self::Rc(c) => &c,
-            Self::Raw(c) => &c,
+            Self::Raw(c) => c,
             Self::Boxed(b) => b,
         }
     }
@@ -32,6 +33,7 @@ impl WrappedClient {
     /// Casts the [client](WrappedClient) into T if it's [Boxed](WrappedClient::Boxed)
     ///
     /// **SAFETY: The caller must ensure the type given is the same as the boxed one.**
+    #[allow(clippy::needless_lifetimes, clippy::borrow_deref_ref)]
     pub fn cast<'a, T>(&'a self) -> Option<&'a T> {
         if let WrappedClient::Boxed(inner) = self {
             // SAFETY: The caller must ensure here that the type provided is the original type of
@@ -128,7 +130,7 @@ impl<D: Sized> FrameworkBuilder<D> {
         if self.commands.contains_key(cmd.name) || self.groups.contains_key(cmd.name) {
             panic!("{} already registered", cmd.name);
         }
-        self.commands.insert(cmd.name.clone(), cmd);
+        self.commands.insert(cmd.name, cmd);
         self
     }
 

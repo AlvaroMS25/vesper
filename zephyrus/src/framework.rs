@@ -95,7 +95,7 @@ impl<D> Framework<D> {
         match interaction.kind {
             InteractionType::ApplicationCommand => self.try_execute(interaction).await,
             InteractionType::ApplicationCommandAutocomplete => self.try_autocomplete(interaction).await,
-            _ => return
+            _ => ()
         }
     }
 
@@ -108,7 +108,6 @@ impl<D> Framework<D> {
     }
 
     async fn try_autocomplete(&self, mut interaction: Interaction) {
-        //println!("{:?}", extract!(interaction.data.as_mut().unwrap() => ApplicationCommand));
         if let Some((argument, value)) = self.get_autocomplete_argument(extract!(interaction.data.as_ref().unwrap() => ApplicationCommand)) {
             if let Some(fun) = &argument.autocomplete {
                 let context = AutocompleteContext::new(
@@ -139,11 +138,11 @@ impl<D> Framework<D> {
         &self,
         data: &CommandData,
     ) -> Option<(&CommandArgument<D>, Focused)> {
-        if data.options.len() > 0 {
+        if !data.options.is_empty() {
             let outer = data.options.get(0)?;
             match &outer.value {
                 CommandOptionValue::SubCommandGroup(sc_group) => {
-                    if sc_group.len() > 0 {
+                    if !sc_group.is_empty() {
                         let map = self
                             .groups
                             .get(data.name.as_str())?
@@ -152,30 +151,27 @@ impl<D> Framework<D> {
                         let group = map.get(outer.name.as_str())?;
                         let next = sc_group.get(0)?;
                         if let CommandOptionValue::SubCommand(options) = &next.value {
-                            let focused = self.get_focus(&options)?;
+                            let focused = self.get_focus(options)?;
                             let command = group.subcommands.get(next.name.as_str())?;
                             let position = command
                                 .fun_arguments
                                 .iter()
-                                .position(|arg| arg.name == &focused.name)?;
+                                .position(|arg| arg.name == focused.name)?;
                             return Some((command.fun_arguments.get(position)?, focused!(&focused.value)));
                         }
                     }
                 }
                 CommandOptionValue::SubCommand(sc) => {
-                    println!("{:?}\n\n{:?}", data, sc);
-                    if sc.len() > 0 {
+                    if !sc.is_empty() {
                         let group = self.groups.get(data.name.as_str())?
                             .kind
                             .as_simple()?;
-                        println!("s");
-                        let focused = self.get_focus(&sc)?;
-                        println!("d");
+                        let focused = self.get_focus(sc)?;
                         let command = group.get(outer.name.as_str())?;
                         let position = command
                             .fun_arguments
                             .iter()
-                            .position(|arg| arg.name == &focused.name)?;
+                            .position(|arg| arg.name == focused.name)?;
                         return Some((command.fun_arguments.get(position)?, focused!(&focused.value)));
                     }
                 }
@@ -185,7 +181,7 @@ impl<D> Framework<D> {
                     let position = command
                         .fun_arguments
                         .iter()
-                        .position(|arg| arg.name == &focused.name)?;
+                        .position(|arg| arg.name == focused.name)?;
                     return Some((command.fun_arguments.get(position)?, focused!(&focused.value)));
                 }
             }
@@ -246,7 +242,7 @@ impl<D> Framework<D> {
     /// Gets the next [option](CommandDataOption)
     /// only if it corresponds to a subcommand or a subcommand group.
     fn get_next(&self, interaction: &mut Vec<CommandDataOption>) -> Option<CommandDataOption> {
-        if interaction.len() > 0
+        if !interaction.is_empty()
             && (interaction[0].value.kind() == CommandOptionType::SubCommand
                 || interaction[0].value.kind() == CommandOptionType::SubCommandGroup)
         {
@@ -286,7 +282,7 @@ impl<D> Framework<D> {
     ) -> Result<Vec<TwilightCommand>, Box<dyn std::error::Error + Send + Sync>> {
         let mut commands = Vec::new();
 
-        for (_, cmd) in &self.commands {
+        for cmd in self.commands.values() {
             let mut options = Vec::new();
 
             for i in &cmd.fun_arguments {
@@ -305,7 +301,7 @@ impl<D> Framework<D> {
             commands.push(command.exec().await?.model().await?);
         }
 
-        for (_, group) in &self.groups {
+        for group in self.groups.values() {
             let options = self.create_group(group);
             let interaction_client = self.interaction_client();
             let mut command = interaction_client
@@ -328,7 +324,7 @@ impl<D> Framework<D> {
     ) -> Result<Vec<TwilightCommand>, Box<dyn std::error::Error + Send + Sync>> {
         let mut commands = Vec::new();
 
-        for (_, cmd) in &self.commands {
+        for cmd in self.commands.values() {
             let mut options = Vec::new();
 
             for i in &cmd.fun_arguments {
@@ -347,7 +343,7 @@ impl<D> Framework<D> {
             commands.push(command.exec().await?.model().await?);
         }
 
-        for (_, group) in &self.groups {
+        for group in self.groups.values() {
             let options = self.create_group(group);
             let interaction_client = self.interaction_client();
             let mut command = interaction_client
@@ -380,11 +376,11 @@ impl<D> Framework<D> {
 
         if let ParentType::Group(map) = &parent.kind {
             let mut subgroups = Vec::new();
-            for (_, group) in map {
+            for group in map.values() {
                 debug!("Registering subgroup {} of {}", group.name, parent.name);
 
                 let mut subcommands = Vec::new();
-                for (_, sub) in &group.subcommands {
+                for sub in group.subcommands.values() {
                     subcommands.push(self.create_subcommand(sub))
                 }
 
@@ -398,7 +394,7 @@ impl<D> Framework<D> {
             subgroups
         } else if let ParentType::Simple(map) = &parent.kind {
             let mut subcommands = Vec::new();
-            for (_, sub) in map {
+            for sub in map.values() {
                 subcommands.push(self.create_subcommand(sub));
             }
 

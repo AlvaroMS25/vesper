@@ -64,10 +64,10 @@ pub struct SlashContext<'a, D> {
 impl<'a, D> Clone for SlashContext<'a, D> {
     fn clone(&self) -> Self {
         SlashContext {
-            http_client: &self.http_client,
+            http_client: self.http_client,
             application_id: self.application_id,
             interaction_client: self.http_client.inner().interaction(self.application_id),
-            data: &self.data,
+            data: self.data,
             interaction: self.interaction.clone(),
         }
     }
@@ -150,7 +150,7 @@ impl<D: Send + Sync> SlashContext<'_, D> {
         if value.is_none() && <T as Parse<D>>::is_required() {
             Err(ParseError::StructureMismatch(format!("{} not found", name)))
         } else {
-            <T as Parse<D>>::parse(&self.http_client, &self.data, value.map(|it| &it.value)).await
+            <T as Parse<D>>::parse(self.http_client, self.data, value.map(|it| &it.value)).await
                 .map_err(|mut err| {
                     if let ParseError::Parsing { argument_name, .. } = &mut err {
                         *argument_name = name.to_string();

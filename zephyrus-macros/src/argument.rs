@@ -47,8 +47,7 @@ impl<'a> Argument<'a> {
             .map(Self::extract_description)
             .collect::<Result<Vec<_>>>()?
             .into_iter()
-            .filter(|d| d.is_some())
-            .map(|d| d.unwrap())
+            .flatten()
             .collect::<Vec<_>>();
 
         let mut names = pat
@@ -57,8 +56,7 @@ impl<'a> Argument<'a> {
             .map(Self::extract_name)
             .collect::<Result<Vec<_>>>()?
             .into_iter()
-            .filter(|n| n.is_some())
-            .map(|n| n.unwrap())
+            .flatten()
             .collect::<Vec<_>>();
 
         let mut autocompletes = pat
@@ -67,8 +65,7 @@ impl<'a> Argument<'a> {
             .map(Self::extract_autocomplete)
             .collect::<Result<Vec<_>>>()?
             .into_iter()
-            .filter(|n| n.is_some())
-            .map(|n| n.unwrap())
+            .flatten()
             .collect::<Vec<_>>();
 
         if descriptions.len() > 1 {

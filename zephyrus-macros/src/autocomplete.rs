@@ -86,8 +86,8 @@ fn set_lifetime(sig: &mut Signature) -> Result<()> {
     let mut insert_lifetime = true;
 
     {
-        let mut generics = crate::util::get_generic_arguments(&path)?;
-        while let Some(generic) = generics.next() {
+        let generics = crate::util::get_generic_arguments(path)?;
+        for generic in generics {
             if let GenericArgument::Lifetime(inner) = generic {
                 if *inner == lifetime {
                     insert_lifetime = false;
