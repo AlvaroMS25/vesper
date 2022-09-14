@@ -9,6 +9,7 @@ pub mod group;
 pub mod hook;
 pub mod iter;
 pub mod parse;
+mod waiter;
 
 pub use zephyrus_macros as macros;
 
