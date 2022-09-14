@@ -1,10 +1,11 @@
 use crate::hook::AutocompleteHook;
 use crate::twilight_exports::*;
+use twilight_model::application::command::CommandOptionValue;
 
 #[derive(Copy, Clone, Default)]
 pub struct ArgumentLimits {
-    pub min: Option<twilight_model::application::command::CommandOptionValue>,
-    pub max: Option<twilight_model::application::command::CommandOptionValue>
+    pub min: Option<CommandOptionValue>,
+    pub max: Option<CommandOptionValue>
 }
 
 /// A command argument.
