@@ -60,7 +60,7 @@ pub struct SlashContext<'a, D> {
     /// The data shared across the framework.
     pub data: &'a D,
     /// Components waiting for an interaction.
-    pub waiters: &'a Mutex<ComponentWaiterWaker<D>>,
+    pub waiters: &'a Mutex<Vec<ComponentWaiterWaker<D>>>,
     /// The interaction itself.
     pub interaction: Interaction,
 }
@@ -84,7 +84,7 @@ impl<'a, D> SlashContext<'a, D> {
         http_client: &'a WrappedClient,
         application_id: Id<ApplicationMarker>,
         data: &'a D,
-        waiters: &'a Mutex<ComponentWaiterWaker<D>>,
+        waiters: &'a Mutex<Vec<ComponentWaiterWaker<D>>>,
         interaction: Interaction,
     ) -> Self {
         let interaction_client = http_client.inner().interaction(application_id);
