@@ -97,6 +97,12 @@ impl<D> Framework<D> {
         match interaction.kind {
             InteractionType::ApplicationCommand => self.try_execute(interaction).await,
             InteractionType::ApplicationCommandAutocomplete => self.try_autocomplete(interaction).await,
+            InteractionType::MessageComponent => {
+                let mut lock = self.waiters.lock();
+                if let Some(position) = lock.iter().position(|waker| waker.check(self, &interaction)) {
+                    lock.remove(position).wake(interaction);
+                }
+            }
             _ => ()
         }
     }
@@ -260,6 +266,7 @@ impl<D> Framework<D> {
             &self.http_client,
             self.application_id,
             &self.data,
+            &self.waiters,
             interaction,
         );
 
