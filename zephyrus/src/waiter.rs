@@ -5,25 +5,25 @@ use crate::{framework::Framework, twilight_exports::Interaction};
 
 type CheckFn<T> = for<'a> fn(&'a Framework<T>, &'a Interaction) -> bool;
 
-pub(crate) fn new_pair<T>(fun: CheckFn<T>) -> (ComponentWaiterWaker<T>, ComponentWaiter) {
+pub(crate) fn new_pair<T>(fun: CheckFn<T>) -> (WaiterWaker<T>, InteractionWaiter) {
     let (sender, receiver) = channel();
 
     (
-        ComponentWaiterWaker {
+        WaiterWaker {
             predicate: fun,
             sender
         },
-        ComponentWaiter {
+        InteractionWaiter {
             receiver
         }
     )
 }
 
-pub struct ComponentWaiter {
+pub struct InteractionWaiter {
     receiver: Receiver<Interaction>
 }
 
-impl Future for ComponentWaiter {
+impl Future for InteractionWaiter {
     type Output = Result<Interaction, Box<dyn std::error::Error + Send + Sync>>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -34,12 +34,12 @@ impl Future for ComponentWaiter {
     }
 }
 
-pub struct ComponentWaiterWaker<T> {
+pub struct WaiterWaker<T> {
     pub predicate: CheckFn<T>,
     pub sender: Sender<Interaction>
 }
 
-impl<T> ComponentWaiterWaker<T> {
+impl<T> WaiterWaker<T> {
     pub fn check(&self, framework: &Framework<T>, interaction: &Interaction) -> bool {
         (self.predicate)(framework, interaction)
     }
