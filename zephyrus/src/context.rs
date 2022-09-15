@@ -1,7 +1,9 @@
+use parking_lot::Mutex;
 use crate::{
     builder::WrappedClient,
     command::CommandResult,
     twilight_exports::*,
+    waiter::ComponentWaiterWaker
 };
 
 use crate::iter::DataIterator;
@@ -57,6 +59,8 @@ pub struct SlashContext<'a, D> {
     pub interaction_client: InteractionClient<'a>,
     /// The data shared across the framework.
     pub data: &'a D,
+    /// Components waiting for an interaction.
+    pub waiters: &'a Mutex<ComponentWaiterWaker<D>>,
     /// The interaction itself.
     pub interaction: Interaction,
 }
@@ -68,6 +72,7 @@ impl<'a, D> Clone for SlashContext<'a, D> {
             application_id: self.application_id,
             interaction_client: self.http_client.inner().interaction(self.application_id),
             data: self.data,
+            waiters: self.waiters,
             interaction: self.interaction.clone(),
         }
     }
@@ -79,6 +84,7 @@ impl<'a, D> SlashContext<'a, D> {
         http_client: &'a WrappedClient,
         application_id: Id<ApplicationMarker>,
         data: &'a D,
+        waiters: &'a Mutex<ComponentWaiterWaker<D>>,
         interaction: Interaction,
     ) -> Self {
         let interaction_client = http_client.inner().interaction(application_id);
@@ -87,6 +93,7 @@ impl<'a, D> SlashContext<'a, D> {
             application_id,
             interaction_client,
             data,
+            waiters,
             interaction,
         }
     }

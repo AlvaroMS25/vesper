@@ -1,9 +1,8 @@
-use crate::context::AutocompleteContext;
 use crate::{
     argument::CommandArgument,
     builder::{FrameworkBuilder, WrappedClient},
     command::{Command, CommandMap},
-    context::SlashContext,
+    context::{AutocompleteContext, Focused, SlashContext},
     group::{GroupParent, ParentGroupMap, ParentType},
     hook::{AfterHook, BeforeHook},
     twilight_exports::{
@@ -12,9 +11,10 @@ use crate::{
         CommandOptionValue, GuildMarker, Id, Interaction, InteractionData, InteractionType, InteractionClient, InteractionResponse,
         InteractionResponseType, OptionsCommandOptionData,
     },
+    waiter::{ComponentWaiterWaker, new_pair}
 };
 use tracing::debug;
-use crate::prelude::Focused;
+use parking_lot::Mutex;
 
 macro_rules! extract {
     ($expr:expr => $variant:ident) => {
@@ -53,6 +53,7 @@ pub struct Framework<D> {
     pub before: Option<BeforeHook<D>>,
     /// A hook executed after command's execution.
     pub after: Option<AfterHook<D>>,
+    pub waiters: Mutex<Vec<ComponentWaiterWaker<D>>>
 }
 
 impl<D> Framework<D> {
@@ -66,6 +67,7 @@ impl<D> Framework<D> {
             groups: builder.groups,
             before: builder.before,
             after: builder.after,
+            waiters: Mutex::new(Vec::new())
         }
     }
 
