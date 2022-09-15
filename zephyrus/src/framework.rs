@@ -11,7 +11,7 @@ use crate::{
         CommandOptionValue, GuildMarker, Id, Interaction, InteractionData, InteractionType, InteractionClient, InteractionResponse,
         InteractionResponseType, OptionsCommandOptionData,
     },
-    waiter::{ComponentWaiterWaker, new_pair}
+    waiter::{WaiterWaker, new_pair}
 };
 use tracing::debug;
 use parking_lot::Mutex;
@@ -53,7 +53,7 @@ pub struct Framework<D> {
     pub before: Option<BeforeHook<D>>,
     /// A hook executed after command's execution.
     pub after: Option<AfterHook<D>>,
-    pub waiters: Mutex<Vec<ComponentWaiterWaker<D>>>
+    pub waiters: Mutex<Vec<WaiterWaker<D>>>
 }
 
 impl<D> Framework<D> {
