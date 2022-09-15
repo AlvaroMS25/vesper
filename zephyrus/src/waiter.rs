@@ -35,9 +35,9 @@ impl Future for ComponentWaiter {
     }
 }
 
-pub(crate) struct ComponentWaiterWaker<T> {
-    predicate: CheckFn<T>,
-    sender: Sender<MessageComponentInteractionData>
+pub struct ComponentWaiterWaker<T> {
+    pub predicate: CheckFn<T>,
+    pub sender: Sender<MessageComponentInteractionData>
 }
 
 impl<T> ComponentWaiterWaker<T> {
