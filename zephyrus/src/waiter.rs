@@ -1,10 +1,9 @@
 use std::{future::Future, task::{Context, Poll}};
 use std::pin::Pin;
 use tokio::sync::oneshot::{Sender, Receiver, channel};
-use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
-use crate::framework::Framework;
+use crate::{framework::Framework, twilight_exports::Interaction};
 
-type CheckFn<T> = for<'a> fn(&'a Framework<T>, &'a MessageComponentInteractionData) -> bool;
+type CheckFn<T> = for<'a> fn(&'a Framework<T>, &'a Interaction) -> bool;
 
 pub(crate) fn new_pair<T>(fun: CheckFn<T>) -> (ComponentWaiterWaker<T>, ComponentWaiter) {
     let (sender, receiver) = channel();
@@ -21,11 +20,11 @@ pub(crate) fn new_pair<T>(fun: CheckFn<T>) -> (ComponentWaiterWaker<T>, Componen
 }
 
 pub struct ComponentWaiter {
-    receiver: Receiver<MessageComponentInteractionData>
+    receiver: Receiver<Interaction>
 }
 
 impl Future for ComponentWaiter {
-    type Output = Result<MessageComponentInteractionData, Box<dyn std::error::Error + Send + Sync>>;
+    type Output = Result<Interaction, Box<dyn std::error::Error + Send + Sync>>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         Pin::new(&mut self.receiver).poll(cx)
@@ -37,15 +36,15 @@ impl Future for ComponentWaiter {
 
 pub struct ComponentWaiterWaker<T> {
     pub predicate: CheckFn<T>,
-    pub sender: Sender<MessageComponentInteractionData>
+    pub sender: Sender<Interaction>
 }
 
 impl<T> ComponentWaiterWaker<T> {
-    pub fn check(&self, framework: &Framework<T>, msg: &MessageComponentInteractionData) -> bool {
-        (self.predicate)(framework, msg)
+    pub fn check(&self, framework: &Framework<T>, interaction: &Interaction) -> bool {
+        (self.predicate)(framework, interaction)
     }
 
-    pub fn wake(self, interaction: MessageComponentInteractionData) {
+    pub fn wake(self, interaction: Interaction) {
         let _ = self.sender.send(interaction);
     }
 }
