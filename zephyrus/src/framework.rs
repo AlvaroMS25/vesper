@@ -11,7 +11,7 @@ use crate::{
         CommandOptionValue, GuildMarker, Id, Interaction, InteractionData, InteractionType, InteractionClient, InteractionResponse,
         InteractionResponseType, OptionsCommandOptionData,
     },
-    waiter::{WaiterWaker, new_pair}
+    waiter::WaiterWaker
 };
 use tracing::debug;
 use parking_lot::Mutex;

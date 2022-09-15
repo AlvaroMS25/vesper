@@ -3,11 +3,13 @@ use crate::{
     builder::WrappedClient,
     command::CommandResult,
     twilight_exports::*,
-    waiter::ComponentWaiterWaker
+    waiter::{InteractionWaiter, WaiterWaker}
 };
+use crate::framework::Framework;
 
 use crate::iter::DataIterator;
 use crate::parse::{Parse, ParseError};
+use crate::waiter::new_pair;
 
 #[derive(Debug, Clone)]
 pub struct Focused {
@@ -60,7 +62,7 @@ pub struct SlashContext<'a, D> {
     /// The data shared across the framework.
     pub data: &'a D,
     /// Components waiting for an interaction.
-    pub waiters: &'a Mutex<Vec<ComponentWaiterWaker<D>>>,
+    pub waiters: &'a Mutex<Vec<WaiterWaker<D>>>,
     /// The interaction itself.
     pub interaction: Interaction,
 }
@@ -84,7 +86,7 @@ impl<'a, D> SlashContext<'a, D> {
         http_client: &'a WrappedClient,
         application_id: Id<ApplicationMarker>,
         data: &'a D,
-        waiters: &'a Mutex<Vec<ComponentWaiterWaker<D>>>,
+        waiters: &'a Mutex<Vec<WaiterWaker<D>>>,
         interaction: Interaction,
     ) -> Self {
         let interaction_client = http_client.inner().interaction(application_id);
@@ -140,6 +142,13 @@ impl<'a, D> SlashContext<'a, D> {
             .await?
             .model()
             .await?)
+    }
+
+    pub fn wait_interaction(&self, fun: fn(&Framework<D>, &Interaction) -> bool) -> InteractionWaiter {
+        let (waker, waiter) = new_pair(fun);
+        let mut lock = self.waiters.lock();
+        lock.push(waker);
+        waiter
     }
 }
 
