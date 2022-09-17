@@ -144,7 +144,10 @@ impl<'a, D> SlashContext<'a, D> {
             .await?)
     }
 
-    pub fn wait_interaction(&self, fun: fn(&Framework<D>, &Interaction) -> bool) -> InteractionWaiter {
+    pub fn wait_interaction<F>(&self, fun: F) -> InteractionWaiter
+    where
+        F: Fn(&Framework<D>, &Interaction) -> bool + Send + 'static
+    {
         let (waker, waiter) = new_pair(fun);
         let mut lock = self.waiters.lock();
         lock.push(waker);

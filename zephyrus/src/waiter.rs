@@ -3,14 +3,15 @@ use std::pin::Pin;
 use tokio::sync::oneshot::{Sender, Receiver, channel};
 use crate::{framework::Framework, twilight_exports::Interaction};
 
-type CheckFn<T> = for<'a> fn(&'a Framework<T>, &'a Interaction) -> bool;
-
-pub(crate) fn new_pair<T>(fun: CheckFn<T>) -> (WaiterWaker<T>, InteractionWaiter) {
+pub(crate) fn new_pair<F, T>(fun: F) -> (WaiterWaker<T>, InteractionWaiter)
+where
+    F: Fn(&Framework<T>, &Interaction) -> bool + Send + 'static
+{
     let (sender, receiver) = channel();
 
     (
         WaiterWaker {
-            predicate: fun,
+            predicate: Box::new(fun),
             sender
         },
         InteractionWaiter {
@@ -35,7 +36,7 @@ impl Future for InteractionWaiter {
 }
 
 pub struct WaiterWaker<T> {
-    pub predicate: CheckFn<T>,
+    pub predicate: Box<dyn Fn(&Framework<T>, &Interaction) -> bool + Send + 'static>,
     pub sender: Sender<Interaction>
 }
 
