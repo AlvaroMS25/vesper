@@ -5,18 +5,18 @@ use crate::{
 };
 
 /// A pointer to a function used by [before hook](BeforeHook).
-pub(crate) type BeforeFun<D> = for<'a> fn(&'a SlashContext<'a, D>, &'a str) -> BoxFuture<'a, bool>;
+pub(crate) type BeforeFn<D> = for<'a> fn(&'a SlashContext<'a, D>, &'a str) -> BoxFuture<'a, bool>;
 /// A hook executed before command execution.
-pub struct BeforeHook<D>(pub BeforeFun<D>);
+pub struct BeforeHook<D>(pub BeforeFn<D>);
 
 /// A pointer to a function used by [after hook](AfterHook).
-pub(crate) type AfterFun<D> =
+pub(crate) type AfterFn<D> =
     for<'a> fn(&'a SlashContext<'a, D>, &'a str, CommandResult) -> BoxFuture<'a, ()>;
 /// A hook executed after command execution.
-pub struct AfterHook<D>(pub AfterFun<D>);
+pub struct AfterHook<D>(pub AfterFn<D>);
 
 /// A pointer to a function used by [autocomplete hook](AutocompleteHook)
-pub(crate) type AutocompleteFun<D> =
+pub(crate) type AutocompleteFn<D> =
     for<'a> fn(AutocompleteContext<'a, D>) -> BoxFuture<'a, Option<InteractionResponseData>>;
 /// A hook used to suggest inputs to the command caller.
-pub struct AutocompleteHook<D>(pub AutocompleteFun<D>);
+pub struct AutocompleteHook<D>(pub AutocompleteFn<D>);

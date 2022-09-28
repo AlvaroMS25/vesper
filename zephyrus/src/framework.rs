@@ -162,10 +162,10 @@ impl<D> Framework<D> {
                             let focused = self.get_focus(options)?;
                             let command = group.subcommands.get(next.name.as_str())?;
                             let position = command
-                                .fun_arguments
+                                .arguments
                                 .iter()
                                 .position(|arg| arg.name == focused.name)?;
-                            return Some((command.fun_arguments.get(position)?, focused!(&focused.value)));
+                            return Some((command.arguments.get(position)?, focused!(&focused.value)));
                         }
                     }
                 }
@@ -177,20 +177,20 @@ impl<D> Framework<D> {
                         let focused = self.get_focus(sc)?;
                         let command = group.get(outer.name.as_str())?;
                         let position = command
-                            .fun_arguments
+                            .arguments
                             .iter()
                             .position(|arg| arg.name == focused.name)?;
-                        return Some((command.fun_arguments.get(position)?, focused!(&focused.value)));
+                        return Some((command.arguments.get(position)?, focused!(&focused.value)));
                     }
                 }
                 _ => {
                     let focused = self.get_focus(&data.options)?;
                     let command = self.commands.get(data.name.as_str())?;
                     let position = command
-                        .fun_arguments
+                        .arguments
                         .iter()
                         .position(|arg| arg.name == focused.name)?;
-                    return Some((command.fun_arguments.get(position)?, focused!(&focused.value)));
+                    return Some((command.arguments.get(position)?, focused!(&focused.value)));
                 }
             }
         }
@@ -294,7 +294,7 @@ impl<D> Framework<D> {
         for cmd in self.commands.values() {
             let mut options = Vec::new();
 
-            for i in &cmd.fun_arguments {
+            for i in &cmd.arguments {
                 options.push(i.as_option());
             }
             let interaction_client = self.interaction_client();
@@ -336,7 +336,7 @@ impl<D> Framework<D> {
         for cmd in self.commands.values() {
             let mut options = Vec::new();
 
-            for i in &cmd.fun_arguments {
+            for i in &cmd.arguments {
                 options.push(i.as_option());
             }
             let interaction_client = self.interaction_client();
@@ -420,7 +420,7 @@ impl<D> Framework<D> {
         CommandOption::SubCommand(OptionsCommandOptionData {
             name: cmd.name.to_string(),
             description: cmd.description.to_string(),
-            options: self.arg_options(&cmd.fun_arguments),
+            options: self.arg_options(&cmd.arguments),
             ..Default::default()
         })
     }

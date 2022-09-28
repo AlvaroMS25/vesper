@@ -7,7 +7,7 @@ use std::error::Error;
 /// The result of a command execution.
 pub type CommandResult = Result<(), Box<dyn Error + Send + Sync>>;
 /// A pointer to a command function.
-pub(crate) type CommandFun<D> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, CommandResult>;
+pub(crate) type CommandFn<D> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, CommandResult>;
 /// A map of [commands](self::Command).
 pub type CommandMap<D> = HashMap<&'static str, Command<D>>;
 
@@ -18,20 +18,20 @@ pub struct Command<D> {
     /// The description of the commands.
     pub description: &'static str,
     /// All the arguments the command requires.
-    pub fun_arguments: Vec<CommandArgument<D>>,
+    pub arguments: Vec<CommandArgument<D>>,
     /// A pointer to this command function.
-    pub fun: CommandFun<D>,
+    pub fun: CommandFn<D>,
     /// The required permissions to use this command
     pub required_permissions: Option<Permissions>,
 }
 
 impl<D> Command<D> {
     /// Creates a new command.
-    pub fn new(fun: CommandFun<D>) -> Self {
+    pub fn new(fun: CommandFn<D>) -> Self {
         Self {
             name: Default::default(),
             description: Default::default(),
-            fun_arguments: Default::default(),
+            arguments: Default::default(),
             fun,
             required_permissions: Default::default(),
         }
@@ -51,7 +51,7 @@ impl<D> Command<D> {
 
     /// Adds an argument to the command.
     pub fn add_argument(mut self, arg: CommandArgument<D>) -> Self {
-        self.fun_arguments.push(arg);
+        self.arguments.push(arg);
         self
     }
 
