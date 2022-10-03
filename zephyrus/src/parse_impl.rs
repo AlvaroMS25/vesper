@@ -1,64 +1,14 @@
-use std::any::type_name;
 use crate::prelude::*;
 use crate::twilight_exports::*;
 
 const NUMBER_MAX_VALUE: i64 = 9007199254740991;
 
-fn error(type_name: &str, required: bool, why: &str) -> ParseError {
+pub(crate) fn error(type_name: &str, required: bool, why: &str) -> ParseError {
     ParseError::Parsing {
         argument_name: String::new(),
         required,
         type_: type_name.to_string(),
         error: why.to_string()
-    }
-}
-
-pub struct Range<T: Copy, const START: i64, const END: i64>(T);
-
-impl<T: Copy, const START: i64, const END: i64> std::ops::Deref for Range<T, START, END> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl<T: Copy, const START: i64, const END: i64> std::ops::DerefMut for Range<T, START, END> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-#[async_trait]
-impl<T, E: Copy, const START: i64, const END: i64> Parse<T> for Range<E, START, END>
-where
-    T: Send + Sync,
-    E: Parse<T>
-{
-    async fn parse(http_client: &WrappedClient, data: &T, value: Option<&CommandOptionValue>) -> Result<Self, ParseError> {
-        let value = E::parse(http_client, data, value).await?;
-        let v = unsafe { *(&value as *const E as *const i64) };
-
-        if v < START || v > END {
-            return Err(error(
-                &format!("Range<{}, {}, {}>", type_name::<E>(), START, END),
-                true,
-                "Input out of range"
-            ));
-        }
-
-        Ok(Self(value))
-    }
-
-    fn kind() -> CommandOptionType {
-        E::kind()
-    }
-
-    fn limits() -> Option<ArgumentLimits> {
-        use twilight_model::application::command::CommandOptionValue;
-        Some(ArgumentLimits {
-            min: Some(CommandOptionValue::Integer(START)),
-            max: Some(CommandOptionValue::Integer(END))
-        })
     }
 }
 

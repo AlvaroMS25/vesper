@@ -9,6 +9,7 @@ pub mod group;
 pub mod hook;
 pub mod iter;
 pub mod parse;
+pub mod range;
 mod waiter;
 
 pub use zephyrus_macros as macros;
@@ -24,7 +25,7 @@ pub mod prelude {
         context::{AutocompleteContext, Focused, SlashContext},
         framework::Framework,
         parse::{Parse, ParseError},
-        parse_impl::Range,
+        range::Range,
     };
     pub use async_trait::async_trait;
     pub use zephyrus_macros::*;
