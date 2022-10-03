@@ -1,6 +1,7 @@
 use crate::hook::AutocompleteHook;
 use crate::twilight_exports::*;
 use twilight_model::application::command::CommandOptionValue;
+use crate::parse::Parse;
 
 #[derive(Copy, Clone, Default)]
 pub struct ArgumentLimits {
@@ -93,36 +94,21 @@ impl<D> CommandArgument<D> {
     }
 }
 
-impl<D>
-    From<(
-        &'static str,
-        &'static str,
-        bool,
-        CommandOptionType,
-        Option<Vec<CommandOptionChoice>>,
-        Option<ArgumentLimits>,
-        Option<AutocompleteHook<D>>,
-    )> for CommandArgument<D>
-{
-    fn from(
-        (name, description, required, kind, choices, limits, autocomplete): (
-            &'static str,
-            &'static str,
-            bool,
-            CommandOptionType,
-            Option<Vec<CommandOptionChoice>>,
-            Option<ArgumentLimits>,
-            Option<AutocompleteHook<D>>,
-        ),
-    ) -> Self {
+impl<D: Send + Sync> CommandArgument<D> {
+    pub fn new<T: Parse<D>>(
+        name: &'static str,
+        description: &'static str,
+        autocomplete: Option<AutocompleteHook<D>>
+    ) -> Self
+    {
         Self {
             name,
             description,
-            required,
-            kind,
-            choices,
-            limits,
-            autocomplete,
+            required: T::required(),
+            kind: T::kind(),
+            choices: T::choices(),
+            limits: T::limits(),
+            autocomplete
         }
     }
 }
