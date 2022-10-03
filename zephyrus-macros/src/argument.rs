@@ -163,8 +163,8 @@ impl ToTokens for Argument<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let des = &self.description;
         let ty = &self.ty;
-        let parse_trait = crate::util::get_parse_trait();
         let tt = &self.trait_type;
+        let argument_path = quote::quote!(::zephyrus::argument::CommandArgument);
 
         let name = match &self.renaming {
             Some(rename) => rename.clone(),
@@ -173,28 +173,19 @@ impl ToTokens for Argument<'_> {
 
         if let Some(autocomplete) = &self.autocomplete {
             tokens.extend(quote::quote! {
-                .add_argument((
+                .add_argument(#argument_path::<#tt>::new::<#ty>(
                     #name,
                     #des,
-                    <#ty as #parse_trait<#tt>>::is_required(),
-                    <#ty as #parse_trait<#tt>>::option_type(),
-                    <#ty as #parse_trait<#tt>>::add_choices(),
-                    <#ty as #parse_trait<#tt>>::set_limits(),
                     Some(#autocomplete())
-                ).into())
+                ))
             });
         } else {
-            let autocomplete_hook = quote::quote!(::zephyrus::hook::AutocompleteHook);
             tokens.extend(quote::quote! {
-                .add_argument((
+                .add_argument(#argument_path::<#tt>::new::<#ty>(
                     #name,
                     #des,
-                    <#ty as #parse_trait<#tt>>::is_required(),
-                    <#ty as #parse_trait<#tt>>::option_type(),
-                    <#ty as #parse_trait<#tt>>::add_choices(),
-                    <#ty as #parse_trait<#tt>>::set_limits(),
-                    Option::<#autocomplete_hook<#tt>>::None
-                ).into())
+                    None
+                ))
             });
         }
     }
