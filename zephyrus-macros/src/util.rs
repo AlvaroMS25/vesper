@@ -11,11 +11,6 @@ pub fn get_futurize_macro() -> Path {
     parse2(quote::quote!(::zephyrus::macros::futurize)).unwrap()
 }
 
-/// Gets the path of the parse trait used by zephyrus to parse arguments
-pub fn get_parse_trait() -> Path {
-    parse2(quote::quote!(::zephyrus::prelude::Parse)).unwrap()
-}
-
 /// Gets the path of the command struct used internally by zephyrus
 pub fn get_command_path() -> Path {
     parse2(quote::quote!(::zephyrus::command::Command)).unwrap()
