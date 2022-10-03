@@ -104,7 +104,7 @@ pub fn parse_arguments<'a>(
     *block = parse2(quote::quote! {{
         let (#(#names),*) = {
             let data = match #ctx_ident.interaction.data.as_ref().unwrap() {
-                twilight_model::application::interaction::InteractionData::ApplicationCommand(data) => data,
+                ::zephyrus::twilight_exports::InteractionData::ApplicationCommand(data) => data,
                 _ => unreachable!()
             };
             #[allow(unused_mut)]
