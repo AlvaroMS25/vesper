@@ -13,20 +13,20 @@ pub trait Parse<T: Send + Sync>: Sized {
     ) -> Result<Self, ParseError>;
 
     /// Returns the option type this argument has.
-    fn option_type() -> CommandOptionType;
+    fn kind() -> CommandOptionType;
 
     /// Sets if the argument is required, by default is true.
-    fn is_required() -> bool {
+    fn required() -> bool {
         true
     }
 
     /// Adds the possible choices to the argument, this function is usually implemented by the
     /// derive macro, but can be overridden manually.
-    fn add_choices() -> Option<Vec<CommandOptionChoice>> {
+    fn choices() -> Option<Vec<CommandOptionChoice>> {
         None
     }
 
-    fn set_limits() -> Option<ArgumentLimits> {
+    fn limits() -> Option<ArgumentLimits> {
         None
     }
 }
