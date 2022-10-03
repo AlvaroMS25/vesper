@@ -1,6 +1,6 @@
 [package]
 name = "zephyrus"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["Alvaro <62391364+AlvaroMS25@users.noreply.github.com>"]
 edition = "2018"
 description = "A slash-command framework meant to be used with twilight"
@@ -14,7 +14,7 @@ categories = ["asynchronous"]
 
 [dependencies]
 async-trait = "0.1"
-zephyrus-macros = { git = "https://github.com/AlvaroMS25/zephyrus.git" }
+zephyrus-macros = "^0.4"
 parking_lot = "0.12"
 tracing = "0.1"
 twilight-model = "0.13"
