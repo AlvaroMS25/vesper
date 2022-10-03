@@ -49,11 +49,11 @@ where
         Ok(Self(value))
     }
 
-    fn option_type() -> CommandOptionType {
-        E::option_type()
+    fn kind() -> CommandOptionType {
+        E::kind()
     }
 
-    fn set_limits() -> Option<ArgumentLimits> {
+    fn limits() -> Option<ArgumentLimits> {
         use twilight_model::application::command::CommandOptionValue;
         Some(ArgumentLimits {
             min: Some(CommandOptionValue::Integer(START)),
@@ -75,7 +75,7 @@ impl<T: Send + Sync> Parse<T> for String {
         Err(error("String", true, "String expected"))
     }
 
-    fn option_type() -> CommandOptionType {
+    fn kind() -> CommandOptionType {
         CommandOptionType::String
     }
 }
@@ -93,7 +93,7 @@ impl<T: Send + Sync> Parse<T> for i64 {
         Err(error("i64", true, "Integer expected"))
     }
 
-    fn option_type() -> CommandOptionType {
+    fn kind() -> CommandOptionType {
         CommandOptionType::Integer
     }
 }
@@ -114,11 +114,11 @@ impl<T: Send + Sync> Parse<T> for u64 {
         Err(error("Integer", true, "Integer expected"))
     }
 
-    fn option_type() -> CommandOptionType {
+    fn kind() -> CommandOptionType {
         CommandOptionType::Integer
     }
 
-    fn set_limits() -> Option<ArgumentLimits> {
+    fn limits() -> Option<ArgumentLimits> {
         use twilight_model::application::command::CommandOptionValue;
         Some(ArgumentLimits {
             min: Some(CommandOptionValue::Integer(0)),
@@ -140,11 +140,11 @@ impl<T: Send + Sync> Parse<T> for f64 {
         Err(error("f64", true, "Number expected"))
     }
 
-    fn option_type() -> CommandOptionType {
+    fn kind() -> CommandOptionType {
         CommandOptionType::Number
     }
 
-    fn set_limits() -> Option<ArgumentLimits> {
+    fn limits() -> Option<ArgumentLimits> {
         use twilight_model::application::command::CommandOptionValue;
         Some(ArgumentLimits {
             min: Some(CommandOptionValue::Number(f64::MIN)),
@@ -169,11 +169,11 @@ impl<T: Send + Sync> Parse<T> for f32 {
         Err(error("f32", true, "Number expected"))
     }
 
-    fn option_type() -> CommandOptionType {
+    fn kind() -> CommandOptionType {
         CommandOptionType::Number
     }
 
-    fn set_limits() -> Option<ArgumentLimits> {
+    fn limits() -> Option<ArgumentLimits> {
         use twilight_model::application::command::CommandOptionValue;
         Some(ArgumentLimits {
             min: Some(CommandOptionValue::Number(f32::MIN as f64)),
@@ -195,7 +195,7 @@ impl<T: Send + Sync> Parse<T> for bool {
         Err(error("Boolean", true, "Boolean expected"))
     }
 
-    fn option_type() -> CommandOptionType {
+    fn kind() -> CommandOptionType {
         CommandOptionType::Boolean
     }
 }
@@ -214,7 +214,7 @@ impl<T: Send + Sync> Parse<T> for Id<ChannelMarker> {
         Err(error("Channel id", true, "Channel expected"))
     }
 
-    fn option_type() -> CommandOptionType {
+    fn kind() -> CommandOptionType {
         CommandOptionType::Channel
     }
 }
@@ -233,7 +233,7 @@ impl<T: Send + Sync> Parse<T> for Id<UserMarker> {
         Err(error("User id", true, "User expected"))
     }
 
-    fn option_type() -> CommandOptionType {
+    fn kind() -> CommandOptionType {
         CommandOptionType::User
     }
 }
@@ -252,7 +252,7 @@ impl<T: Send + Sync> Parse<T> for Id<RoleMarker> {
         Err(error("Role id", true, "Role expected"))
     }
 
-    fn option_type() -> CommandOptionType {
+    fn kind() -> CommandOptionType {
         CommandOptionType::Role
     }
 }
@@ -271,7 +271,7 @@ impl<T: Send + Sync> Parse<T> for Id<GenericMarker> {
         Err(error("Id", true, "Mentionable expected"))
     }
 
-    fn option_type() -> CommandOptionType {
+    fn kind() -> CommandOptionType {
         CommandOptionType::Mentionable
     }
 }
@@ -299,20 +299,20 @@ impl<T: Parse<E>, E: Send + Sync> Parse<E> for Option<T> {
         }
     }
 
-    fn option_type() -> CommandOptionType {
-        T::option_type()
+    fn kind() -> CommandOptionType {
+        T::kind()
     }
 
-    fn is_required() -> bool {
+    fn required() -> bool {
         false
     }
 
-    fn add_choices() -> Option<Vec<CommandOptionChoice>> {
-        T::add_choices()
+    fn choices() -> Option<Vec<CommandOptionChoice>> {
+        T::choices()
     }
 
-    fn set_limits() -> Option<ArgumentLimits> {
-        T::set_limits()
+    fn limits() -> Option<ArgumentLimits> {
+        T::limits()
     }
 }
 
@@ -332,20 +332,20 @@ where
         Ok(T::parse(http_client, data, value).await.map_err(From::from))
     }
 
-    fn option_type() -> CommandOptionType {
-        T::option_type()
+    fn kind() -> CommandOptionType {
+        T::kind()
     }
 
-    fn is_required() -> bool {
-        T::is_required()
+    fn required() -> bool {
+        T::required()
     }
 
-    fn add_choices() -> Option<Vec<CommandOptionChoice>> {
-        T::add_choices()
+    fn choices() -> Option<Vec<CommandOptionChoice>> {
+        T::choices()
     }
 
-    fn set_limits() -> Option<ArgumentLimits> {
-        T::set_limits()
+    fn limits() -> Option<ArgumentLimits> {
+        T::limits()
     }
 }
 
@@ -392,11 +392,11 @@ macro_rules! impl_derived_parse {
                     }
                 }
 
-                fn option_type() -> CommandOptionType {
-                    <$prim as Parse<T>>::option_type()
+                fn kind() -> CommandOptionType {
+                    <$prim as Parse<T>>::kind()
                 }
 
-                fn set_limits() -> Option<ArgumentLimits> {
+                fn limits() -> Option<ArgumentLimits> {
                     use twilight_model::application::command::CommandOptionValue;
                     Some(ArgumentLimits {
                         min: Some(CommandOptionValue::Integer(<$derived>::MIN as i64)),

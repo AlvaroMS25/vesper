@@ -102,10 +102,10 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
                         )
                     }
                 }
-                fn option_type() -> ::zephyrus::twilight_exports::CommandOptionType {
+                fn kind() -> ::zephyrus::twilight_exports::CommandOptionType {
                     ::zephyrus::twilight_exports::CommandOptionType::Integer
                 }
-                fn add_choices() -> Option<Vec<::zephyrus::twilight_exports::CommandOptionChoice>> {
+                fn choices() -> Option<Vec<::zephyrus::twilight_exports::CommandOptionChoice>> {
                     let mut choices = Vec::new();
 
                     #choice_stream;

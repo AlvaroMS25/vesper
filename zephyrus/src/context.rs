@@ -166,7 +166,7 @@ impl<D: Send + Sync> SlashContext<'_, D> {
         T: Parse<D>
     {
         let value = iterator.get(|s| s.name == name);
-        if value.is_none() && <T as Parse<D>>::is_required() {
+        if value.is_none() && <T as Parse<D>>::required() {
             Err(ParseError::StructureMismatch(format!("{} not found", name)))
         } else {
             <T as Parse<D>>::parse(self.http_client, self.data, value.map(|it| &it.value)).await
