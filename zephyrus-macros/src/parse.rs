@@ -82,6 +82,7 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
 
     Ok(quote::quote! {
         const _: () = {
+            #[automatically_derived]
             #[::zephyrus::prelude::async_trait]
             impl<T: Send + Sync + 'static> ::zephyrus::prelude::Parse<T> for #enum_name {
                 async fn parse(
