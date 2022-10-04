@@ -285,6 +285,7 @@ impl<D> Framework<D> {
         }
     }
 
+    /// Registers the commands provided to the framework in the specified guild.
     pub async fn register_guild_commands(
         &self,
         guild_id: Id<GuildMarker>,
@@ -328,6 +329,7 @@ impl<D> Framework<D> {
         Ok(commands)
     }
 
+    /// Registers the commands provided to the framework globally.
     pub async fn register_global_commands(
         &self,
     ) -> Result<Vec<TwilightCommand>, Box<dyn std::error::Error + Send + Sync>> {

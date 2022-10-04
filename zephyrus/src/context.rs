@@ -11,6 +11,7 @@ use crate::iter::DataIterator;
 use crate::parse::{Parse, ParseError};
 use crate::waiter::new_pair;
 
+/// The value the user is providing to the argument.
 #[derive(Debug, Clone)]
 pub struct Focused {
     pub input: String,

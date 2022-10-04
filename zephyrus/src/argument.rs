@@ -3,6 +3,8 @@ use crate::twilight_exports::*;
 use twilight_model::application::command::CommandOptionValue;
 use crate::parse::Parse;
 
+/// The constraints the arguments impose to the user.
+/// This is normally provided by implementing [parse](crate::parse::Parse) into a type.
 #[derive(Copy, Clone, Default)]
 pub struct ArgumentLimits {
     pub min: Option<CommandOptionValue>,
