@@ -42,10 +42,10 @@ impl<T: Number, const START: i64, const END: i64> DerefMut for Range<T, START, E
 }
 
 #[async_trait]
-impl<T, E: Number, const START: i64, const END: i64> Parse<T> for Range<E, START, END>
+impl<T, E, const START: i64, const END: i64> Parse<T> for Range<E, START, END>
     where
         T: Send + Sync,
-        E: Parse<T>
+        E: Parse<T> + Number
 {
     async fn parse(http_client: &WrappedClient, data: &T, value: Option<&CommandOptionValue>) -> Result<Self, ParseError> {
         let value = E::parse(http_client, data, value).await?;
