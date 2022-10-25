@@ -85,6 +85,11 @@ pub fn before(_: TokenStream, input: TokenStream) -> TokenStream {
     extract(before::before(input.into()))
 }
 
+#[proc_macro_attribute]
+pub fn check(attrs: TokenStream, input: TokenStream) -> TokenStream {
+    before(attrs, input)
+}
+
 /// Prepares the function to be used to autocomplete command arguments.
 #[proc_macro_attribute]
 pub fn autocomplete(_: TokenStream, input: TokenStream) -> TokenStream {

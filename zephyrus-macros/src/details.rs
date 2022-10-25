@@ -81,5 +81,11 @@ impl ToTokens for CommandDetails {
 
             tokens.extend(quote::quote!(.required_permissions(#permission_stream)));
         }
+
+        let checks = &self.checks;
+
+        tokens.extend(quote::quote! {
+            .checks(vec![#(#checks),*])
+        });
     }
 }

@@ -3,6 +3,7 @@ use crate::{
 };
 use std::collections::HashMap;
 use std::error::Error;
+use crate::hook::BeforeHook;
 
 /// The result of a command execution.
 pub type CommandResult = Result<(), Box<dyn Error + Send + Sync>>;
@@ -23,6 +24,7 @@ pub struct Command<D> {
     pub fun: CommandFn<D>,
     /// The required permissions to use this command
     pub required_permissions: Option<Permissions>,
+    pub checks: Vec<BeforeHook<D>>
 }
 
 impl<D> Command<D> {
@@ -34,6 +36,7 @@ impl<D> Command<D> {
             arguments: Default::default(),
             fun,
             required_permissions: Default::default(),
+            checks: Default::default()
         }
     }
 
@@ -52,6 +55,11 @@ impl<D> Command<D> {
     /// Adds an argument to the command.
     pub fn add_argument(mut self, arg: CommandArgument<D>) -> Self {
         self.arguments.push(arg);
+        self
+    }
+
+    pub fn checks(mut self, checks: Vec<BeforeHook<D>>) -> Self {
+        self.checks = checks;
         self
     }
 
