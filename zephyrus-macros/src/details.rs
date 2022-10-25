@@ -1,7 +1,7 @@
 use crate::attr::*;
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::ToTokens;
-use std::convert::TryInto;
+use std::convert::TryFrom;
 use syn::{spanned::Spanned, Attribute, Error, Result};
 
 #[derive(Default)]
@@ -10,6 +10,7 @@ pub struct CommandDetails {
     /// The description of this command
     pub description: String,
     pub required_permissions: Option<Vec<Ident>>,
+    pub checks: Vec<Ident>
 }
 
 impl CommandDetails {
@@ -28,14 +29,19 @@ impl CommandDetails {
                     }
 
                     s.description = {
-                        let a: &Attr = &attr.try_into()?;
+                        let a = Attr::try_from(attr)?;
                         a.parse_string()?
                     };
                 }
                 "required_permissions" => {
-                    let a: &Attr = &attr.try_into()?;
+                    let a = Attr::try_from(attr)?;
                     let permissions = a.parse_all()?;
                     s.required_permissions = Some(permissions);
+                },
+                "checks" => {
+                    let attr = Attr::try_from(attr)?;
+                    let checks = attr.parse_all()?;
+                    s.checks = checks;
                 }
                 _ => return Err(Error::new(attr.span(), "Attribute not recognized")),
             }
