@@ -9,7 +9,7 @@ mod autocomplete;
 mod before;
 mod command;
 mod futurize;
-mod options;
+mod details;
 mod parse;
 mod util;
 
