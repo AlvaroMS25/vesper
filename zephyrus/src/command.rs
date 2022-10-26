@@ -3,7 +3,7 @@ use crate::{
 };
 use std::collections::HashMap;
 use std::error::Error;
-use crate::hook::BeforeHook;
+use crate::hook::CheckHook;
 
 /// The result of a command execution.
 pub type CommandResult = Result<(), Box<dyn Error + Send + Sync>>;
@@ -24,7 +24,7 @@ pub struct Command<D> {
     pub fun: CommandFn<D>,
     /// The required permissions to use this command
     pub required_permissions: Option<Permissions>,
-    pub checks: Vec<BeforeHook<D>>
+    pub checks: Vec<CheckHook<D>>
 }
 
 impl<D> Command<D> {
@@ -58,7 +58,7 @@ impl<D> Command<D> {
         self
     }
 
-    pub fn checks(mut self, checks: Vec<BeforeHook<D>>) -> Self {
+    pub fn checks(mut self, checks: Vec<CheckHook<D>>) -> Self {
         self.checks = checks;
         self
     }
@@ -66,5 +66,22 @@ impl<D> Command<D> {
     pub fn required_permissions(mut self, permissions: Permissions) -> Self {
         self.required_permissions = Some(permissions);
         self
+    }
+
+    pub async fn run_checks(&self, context: &SlashContext<'_, D>) -> bool {
+        for check in &self.checks {
+            if !(check.0)(context).await {
+                return false;
+            }
+        }
+        true
+    }
+
+    pub async fn execute(&self, context: &SlashContext<'_, D>) -> Option<CommandResult> {
+        if self.run_checks(context).await {
+            Some((self.fun)(context).await)
+        } else {
+            None
+        }
     }
 }

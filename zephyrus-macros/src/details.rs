@@ -85,7 +85,7 @@ impl ToTokens for CommandDetails {
         let checks = &self.checks;
 
         tokens.extend(quote::quote! {
-            .checks(vec![#(#checks),*])
+            .checks(vec![#(#checks()),*])
         });
     }
 }

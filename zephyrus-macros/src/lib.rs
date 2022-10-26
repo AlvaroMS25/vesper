@@ -7,6 +7,7 @@ mod argument;
 mod attr;
 mod autocomplete;
 mod before;
+mod check;
 mod command;
 mod futurize;
 mod details;
@@ -15,6 +16,7 @@ mod util;
 
 /// Converts an `async` function into a normal function returning a
 /// `Pin<Box<dyn Future<Output = _> + '_>>`
+#[doc(hidden)]
 #[proc_macro_attribute]
 pub fn futurize(_: TokenStream, input: TokenStream) -> TokenStream {
     extract(futurize::futurize(input.into()))
@@ -86,8 +88,8 @@ pub fn before(_: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-pub fn check(attrs: TokenStream, input: TokenStream) -> TokenStream {
-    before(attrs, input)
+pub fn check(_: TokenStream, input: TokenStream) -> TokenStream {
+    extract(check::check(input.into()))
 }
 
 /// Prepares the function to be used to autocomplete command arguments.
