@@ -115,7 +115,7 @@ impl<D> GroupParentBuilder<D> {
     }
 
     /// Sets this parent group as [simple](self::ParentType::Simple), only allowing subcommands.
-    pub fn add_command(&mut self, fun: FnPointer<Command<D>>) -> &mut Self {
+    pub fn command(&mut self, fun: FnPointer<Command<D>>) -> &mut Self {
         let command = fun();
         if let ParentType::Simple(map) = &mut self.kind {
             map.insert(command.name, command);
@@ -174,7 +174,7 @@ impl<D> CommandGroupBuilder<D> {
     }
 
     /// Adds a command to this group.
-    pub fn add_command(&mut self, fun: FnPointer<Command<D>>) -> &mut Self {
+    pub fn command(&mut self, fun: FnPointer<Command<D>>) -> &mut Self {
         let command = fun();
         self.subcommands.insert(command.name, command);
         self
