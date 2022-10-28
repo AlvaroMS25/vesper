@@ -10,7 +10,8 @@ pub struct CommandDetails {
     /// The description of this command
     pub description: String,
     pub required_permissions: Option<Vec<Ident>>,
-    pub checks: Vec<Ident>
+    pub checks: Vec<Ident>,
+    pub error_handler: Option<Ident>
 }
 
 impl CommandDetails {
@@ -34,6 +35,9 @@ impl CommandDetails {
                     };
                 }
                 "required_permissions" => {
+                    if s.required_permissions.is_some() {
+                        return Err(Error::new(attr.span(), "Permissions already set"));
+                    }
                     let a = Attr::try_from(attr)?;
                     let permissions = a.parse_all()?;
                     s.required_permissions = Some(permissions);
@@ -41,8 +45,16 @@ impl CommandDetails {
                 "checks" => {
                     let attr = Attr::try_from(attr)?;
                     let checks = attr.parse_all()?;
-                    s.checks = checks;
-                }
+                    s.checks.extend(checks);
+                },
+                "error_handler" => {
+                    if s.error_handler.is_some() {
+                        return Err(Error::new(attr.span(), "Error handler already set"));
+                    }
+
+                    let attr = Attr::try_from(attr)?;
+                    s.error_handler = Some(attr.parse_identifier()?);
+                },
                 _ => return Err(Error::new(attr.span(), "Attribute not recognized")),
             }
 
@@ -87,5 +99,9 @@ impl ToTokens for CommandDetails {
         tokens.extend(quote::quote! {
             .checks(vec![#(#checks()),*])
         });
+
+        if let Some(error_handler) = &self.error_handler {
+            tokens.extend(quote::quote!(.error_handler(#error_handler)));
+        }
     }
 }

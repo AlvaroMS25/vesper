@@ -3,7 +3,7 @@ use crate::{
 };
 use std::collections::HashMap;
 use std::error::Error;
-use crate::hook::CheckHook;
+use crate::hook::{CheckHook, ErrorHook};
 
 /// The result of a command execution.
 pub type CommandResult = Result<(), Box<dyn Error + Send + Sync>>;
@@ -24,7 +24,8 @@ pub struct Command<D> {
     pub fun: CommandFn<D>,
     /// The required permissions to use this command
     pub required_permissions: Option<Permissions>,
-    pub checks: Vec<CheckHook<D>>
+    pub checks: Vec<CheckHook<D>>,
+    pub error_handler: Option<ErrorHook<D>>
 }
 
 impl<D> Command<D> {
@@ -36,7 +37,8 @@ impl<D> Command<D> {
             arguments: Default::default(),
             fun,
             required_permissions: Default::default(),
-            checks: Default::default()
+            checks: Default::default(),
+            error_handler: None
         }
     }
 
@@ -63,6 +65,11 @@ impl<D> Command<D> {
         self
     }
 
+    pub fn error_handler(mut self, hook: ErrorHook<D>) -> Self {
+        self.error_handler = Some(hook);
+        self
+    }
+
     pub fn required_permissions(mut self, permissions: Permissions) -> Self {
         self.required_permissions = Some(permissions);
         self
@@ -79,7 +86,14 @@ impl<D> Command<D> {
 
     pub async fn execute(&self, context: &SlashContext<'_, D>) -> Option<CommandResult> {
         if self.run_checks(context).await {
-            Some((self.fun)(context).await)
+            let output = (self.fun)(context).await;
+            if let Some(hook) = &self.error_handler {
+                (hook.0)(context, output).await;
+
+                None
+            } else {
+                Some(output)
+            }
         } else {
             None
         }

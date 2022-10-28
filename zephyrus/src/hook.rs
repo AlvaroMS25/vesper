@@ -24,3 +24,7 @@ pub struct AutocompleteHook<D>(pub AutocompleteFn<D>);
 pub(crate) type CheckFn<D> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, bool>;
 
 pub struct CheckHook<D>(pub CheckFn<D>);
+
+pub(crate) type ErrorFn<D> = for<'a> fn(&'a SlashContext<'a, D>, CommandResult) -> BoxFuture<'a, ()>;
+
+pub struct ErrorHook<D>(pub ErrorFn<D>);
