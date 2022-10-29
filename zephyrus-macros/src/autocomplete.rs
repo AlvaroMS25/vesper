@@ -16,7 +16,7 @@ pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
 
     let data_type = get_data_type_and_set_lifetime(&fun.sig)?;
     set_lifetime(&mut fun.sig)?;
-    let futurize = crate::util::get_futurize_macro();
+    let hook = crate::util::get_hook_macro();
     let path = quote::quote!(::zephyrus::hook::AutocompleteHook);
     let ident = fun.sig.ident.clone();
     let fn_ident = quote::format_ident!("_{}", ident);
@@ -27,7 +27,7 @@ pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
             #path(#fn_ident)
         }
 
-        #[#futurize]
+        #[#hook]
         #fun
     })
 }

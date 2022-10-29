@@ -10,8 +10,8 @@ mod before;
 mod check;
 mod command;
 mod error_handler;
-mod futurize;
 mod details;
+mod hook;
 mod parse;
 mod util;
 
@@ -19,8 +19,8 @@ mod util;
 /// `Pin<Box<dyn Future<Output = _> + '_>>`
 #[doc(hidden)]
 #[proc_macro_attribute]
-pub fn futurize(_: TokenStream, input: TokenStream) -> TokenStream {
-    extract(futurize::futurize(input.into()))
+pub fn hook(_: TokenStream, input: TokenStream) -> TokenStream {
+    extract(hook::hook(input.into()))
 }
 
 /// Converts an `async-compatible` function into a builder and modifies function's body

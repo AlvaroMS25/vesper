@@ -4,9 +4,9 @@ use syn::{
     ReturnType, Signature, Type,
 };
 
-/// The implementation of the futurize macro, this macro takes the given function and changes
+/// The implementation of the hook macro, this macro takes the given function and changes
 /// it's output and body to fit into a `Pin<Box<dyn Future>>`
-pub fn futurize(input: TokenStream2) -> Result<TokenStream2> {
+pub fn hook(input: TokenStream2) -> Result<TokenStream2> {
     let fun = parse2::<ItemFn>(input)?;
 
     let ItemFn {

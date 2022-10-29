@@ -30,8 +30,8 @@ pub fn check(input: TokenStream2) -> Result<TokenStream2> {
     crate::util::check_return_type(&sig.output, quote::quote!(bool))?;
 
     let (_, ty) = crate::util::get_context_type_and_ident(&sig)?;
-    // Get the futurize macro so we can fit the function into a normal fn pointer
-    let futurize = crate::util::get_futurize_macro();
+    // Get the hook macro so we can fit the function into a normal fn pointer
+    let hook = crate::util::get_hook_macro();
     let path = quote::quote!(::zephyrus::hook::CheckHook);
 
     Ok(quote::quote! {
@@ -39,7 +39,7 @@ pub fn check(input: TokenStream2) -> Result<TokenStream2> {
             #path(#fn_ident)
         }
 
-        #[#futurize]
+        #[#hook]
         #(#attrs)*
         #vis #sig #block
     })

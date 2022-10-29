@@ -43,8 +43,8 @@ pub fn command(macro_attrs: TokenStream2, input: TokenStream2) -> Result<TokenSt
     sig.ident = fn_ident.clone();
 
     let (context_ident, context_type) = util::get_context_type_and_ident(&sig)?;
-    // Get the futurize macro so we can fit the function into a normal fn pointer
-    let extract_output = util::get_futurize_macro();
+    // Get the hook macro so we can fit the function into a normal fn pointer
+    let extract_output = util::get_hook_macro();
     let command_path = util::get_command_path();
 
     let args = parse_arguments(&mut sig, &mut block, context_ident, &context_type)?;
