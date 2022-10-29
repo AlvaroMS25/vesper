@@ -3,7 +3,7 @@ use crate::{
 };
 use std::collections::HashMap;
 use std::error::Error;
-use crate::hook::{CheckHook, ErrorHook};
+use crate::hook::{CheckHook, ErrorHandlerHook};
 
 /// The result of a command execution.
 pub type CommandResult = Result<(), Box<dyn Error + Send + Sync>>;
@@ -25,7 +25,7 @@ pub struct Command<D> {
     /// The required permissions to use this command
     pub required_permissions: Option<Permissions>,
     pub checks: Vec<CheckHook<D>>,
-    pub error_handler: Option<ErrorHook<D>>
+    pub error_handler: Option<ErrorHandlerHook<D>>
 }
 
 impl<D> Command<D> {
@@ -65,7 +65,7 @@ impl<D> Command<D> {
         self
     }
 
-    pub fn error_handler(mut self, hook: ErrorHook<D>) -> Self {
+    pub fn error_handler(mut self, hook: ErrorHandlerHook<D>) -> Self {
         self.error_handler = Some(hook);
         self
     }
