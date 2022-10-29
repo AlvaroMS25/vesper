@@ -9,6 +9,7 @@ mod autocomplete;
 mod before;
 mod check;
 mod command;
+mod error_handler;
 mod futurize;
 mod details;
 mod parse;
