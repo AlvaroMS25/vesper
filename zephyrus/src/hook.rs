@@ -11,7 +11,7 @@ pub struct BeforeHook<D>(pub BeforeFn<D>);
 
 /// A pointer to a function used by [after hook](AfterHook).
 pub(crate) type AfterFn<D> =
-    for<'a> fn(&'a SlashContext<'a, D>, &'a str, CommandResult) -> BoxFuture<'a, ()>;
+    for<'a> fn(&'a SlashContext<'a, D>, &'a str, Option<CommandResult>) -> BoxFuture<'a, ()>;
 /// A hook executed after command execution.
 pub struct AfterHook<D>(pub AfterFn<D>);
 

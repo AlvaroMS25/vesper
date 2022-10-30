@@ -277,10 +277,9 @@ impl<D> Framework<D> {
         };
 
         if execute {
-            if let Some(result) = cmd.execute(&context).await {
-                if let Some(after) = &self.after {
-                    (after.0)(&context, cmd.name, result).await;
-                }
+            let result = cmd.execute(&context).await;
+            if let Some(after) = &self.after {
+                (after.0)(&context, cmd.name, result).await;
             }
         }
     }
