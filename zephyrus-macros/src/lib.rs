@@ -93,6 +93,11 @@ pub fn check(_: TokenStream, input: TokenStream) -> TokenStream {
     extract(check::check(input.into()))
 }
 
+#[proc_macro_attribute]
+pub fn error_handler(_: TokenStream, input: TokenStream) -> TokenStream {
+    extract(error_handler::error_handler(input.into()))
+}
+
 /// Prepares the function to be used to autocomplete command arguments.
 #[proc_macro_attribute]
 pub fn autocomplete(_: TokenStream, input: TokenStream) -> TokenStream {
