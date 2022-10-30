@@ -101,7 +101,7 @@ impl ToTokens for CommandDetails {
         });
 
         if let Some(error_handler) = &self.error_handler {
-            tokens.extend(quote::quote!(.error_handler(#error_handler)));
+            tokens.extend(quote::quote!(.error_handler(#error_handler())));
         }
     }
 }
