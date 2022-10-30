@@ -6,23 +6,23 @@ use crate::{
 use std::collections::HashMap;
 
 /// A map of [parent groups](self::GroupParent).
-pub type ParentGroupMap<D> = HashMap<&'static str, GroupParent<D>>;
+pub type ParentGroupMap<D, T, E> = HashMap<&'static str, GroupParent<D, T, E>>;
 /// A map of [command groups](self::CommandGroup).
-pub type GroupMap<D> = HashMap<&'static str, CommandGroup<D>>;
+pub type GroupMap<D, T, E> = HashMap<&'static str, CommandGroup<D, T, E>>;
 
 /// Types a [group parent](self::GroupParent) can be.
-pub enum ParentType<D> {
+pub enum ParentType<D, T, E> {
     /// Simple, the group only has subcommands.
-    Simple(CommandMap<D>),
+    Simple(CommandMap<D, T, E>),
     /// Group, the group has other groups inside of it.
-    Group(GroupMap<D>),
+    Group(GroupMap<D, T, E>),
 }
 
-impl<D> ParentType<D> {
+impl<D, T, E> ParentType<D, T, E> {
     /// Tries to get the [`map`](crate::command::CommandMap) of the given
     /// [parent type](self::ParentType), returning `Some` if the parent variant is
     /// [`simple`](self::ParentType::Simple).
-    pub fn as_simple(&self) -> Option<&CommandMap<D>> {
+    pub fn as_simple(&self) -> Option<&CommandMap<D, T, E>> {
         match self {
             Self::Simple(map) => Some(map),
             _ => None,
@@ -31,7 +31,7 @@ impl<D> ParentType<D> {
 
     /// Tries to get the [`group`](self::GroupMap) of the given [parent type](self::ParentType),
     /// returning `Some` if the parent variant is a [`group`](self::ParentType::Group).
-    pub fn as_group(&self) -> Option<&GroupMap<D>> {
+    pub fn as_group(&self) -> Option<&GroupMap<D, T, E>> {
         match self {
             Self::Group(group) => Some(group),
             _ => None,
@@ -42,7 +42,7 @@ impl<D> ParentType<D> {
 /// A parent of a group of sub commands, either a
 /// map of [commands](crate::command::Command) referred by discord as `SubCommand`
 /// or a map of [groups](self::CommandGroup) referred by discord as `SubCommandGroup`.
-pub struct GroupParent<D> {
+pub struct GroupParent<D, T, E> {
     /// The name of the upper command
     ///
     /// e.g.: /parent/<subcommand..>
@@ -52,20 +52,20 @@ pub struct GroupParent<D> {
     /// The description of the upper command.
     pub description: &'static str,
     /// This parent group child commands.
-    pub kind: ParentType<D>,
+    pub kind: ParentType<D, T, E>,
     /// The required permissions to execute commands inside this group
     pub required_permissions: Option<Permissions>,
 }
 
 /// A builder of a [group parent](self::GroupParent), see it for documentation.
-pub struct GroupParentBuilder<D> {
+pub struct GroupParentBuilder<D, T, E> {
     name: Option<&'static str>,
     description: Option<&'static str>,
-    kind: ParentType<D>,
+    kind: ParentType<D, T, E>,
     required_permissions: Option<Permissions>,
 }
 
-impl<D> GroupParentBuilder<D> {
+impl<D, T, E> GroupParentBuilder<D, T, E> {
     /// Creates a new builder.
     pub(crate) fn new() -> Self {
         Self {
@@ -97,7 +97,7 @@ impl<D> GroupParentBuilder<D> {
     /// allowing to create subcommand groups inside of it.
     pub fn group<F>(&mut self, fun: F) -> &mut Self
     where
-        F: FnOnce(&mut CommandGroupBuilder<D>) -> &mut CommandGroupBuilder<D>,
+        F: FnOnce(&mut CommandGroupBuilder<D, T, E>) -> &mut CommandGroupBuilder<D, T, E>,
     {
         let mut builder = CommandGroupBuilder::new();
         fun(&mut builder);
@@ -115,7 +115,7 @@ impl<D> GroupParentBuilder<D> {
     }
 
     /// Sets this parent group as [simple](self::ParentType::Simple), only allowing subcommands.
-    pub fn command(&mut self, fun: FnPointer<Command<D>>) -> &mut Self {
+    pub fn command(&mut self, fun: FnPointer<Command<D, T, E>>) -> &mut Self {
         let command = fun();
         if let ParentType::Simple(map) = &mut self.kind {
             map.insert(command.name, command);
@@ -128,7 +128,7 @@ impl<D> GroupParentBuilder<D> {
     }
 
     /// Builds this parent group, returning an [group parent](self::GroupParent).
-    pub fn build(self) -> GroupParent<D> {
+    pub fn build(self) -> GroupParent<D, T, E> {
         assert!(self.name.is_some() && self.description.is_some());
         GroupParent {
             name: self.name.unwrap(),
@@ -140,7 +140,7 @@ impl<D> GroupParentBuilder<D> {
 }
 
 /// A group of commands, referred by discord as `SubCommandGroup`.
-pub struct CommandGroup<D> {
+pub struct CommandGroup<D, T, E> {
     /// The upper command
     ///
     /// e.g.: /parent/command/<subcommand..>/<options..>
@@ -150,17 +150,17 @@ pub struct CommandGroup<D> {
     /// The description of this group.
     pub description: &'static str,
     /// The commands this group has as children.
-    pub subcommands: CommandMap<D>,
+    pub subcommands: CommandMap<D, T, E>,
 }
 
 /// A builder for a [CommandGroup](self::CommandGroup), see it for documentation.
-pub struct CommandGroupBuilder<D> {
+pub struct CommandGroupBuilder<D, T, E> {
     name: Option<&'static str>,
     description: Option<&'static str>,
-    subcommands: CommandMap<D>,
+    subcommands: CommandMap<D, T, E>,
 }
 
-impl<D> CommandGroupBuilder<D> {
+impl<D, T, E> CommandGroupBuilder<D, T, E> {
     /// Sets the upper command of this group.
     pub fn name(&mut self, name: &'static str) -> &mut Self {
         self.name = Some(name);
@@ -174,14 +174,14 @@ impl<D> CommandGroupBuilder<D> {
     }
 
     /// Adds a command to this group.
-    pub fn command(&mut self, fun: FnPointer<Command<D>>) -> &mut Self {
+    pub fn command(&mut self, fun: FnPointer<Command<D, T, E>>) -> &mut Self {
         let command = fun();
         self.subcommands.insert(command.name, command);
         self
     }
 
     /// Builds the builder into a [group](self::CommandGroup).
-    pub(crate) fn build(self) -> CommandGroup<D> {
+    pub(crate) fn build(self) -> CommandGroup<D, T, E> {
         assert!(self.name.is_some() && self.description.is_some());
 
         CommandGroup {

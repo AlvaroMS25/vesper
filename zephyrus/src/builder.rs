@@ -1,9 +1,10 @@
 use crate::{
     command::{Command, CommandMap},
-    framework::Framework,
+    framework::{DefaultError, Framework},
     group::{GroupParentBuilder, ParentGroupMap},
     hook::{AfterHook, BeforeHook},
     twilight_exports::{ApplicationMarker, Client, Id},
+    parse::ParseError
 };
 #[cfg(feature = "rc")]
 use std::rc::Rc;
@@ -77,7 +78,7 @@ impl From<Rc<Client>> for WrappedClient {
 pub(crate) type FnPointer<T> = fn() -> T;
 
 /// A builder used to set all options before framework initialization.
-pub struct FrameworkBuilder<D> {
+pub struct FrameworkBuilder<D, T = (), E = DefaultError> {
     /// The http client used by the framework.
     pub http_client: WrappedClient,
     /// The application id of the client.
@@ -85,16 +86,19 @@ pub struct FrameworkBuilder<D> {
     /// Data that will be available to all commands.
     pub data: D,
     /// The actual commands, only the simple ones.
-    pub commands: CommandMap<D>,
+    pub commands: CommandMap<D, T, E>,
     /// All groups containing commands.
-    pub groups: ParentGroupMap<D>,
+    pub groups: ParentGroupMap<D, T, E>,
     /// A hook executed before any command.
     pub before: Option<BeforeHook<D>>,
     /// A hook executed after command's completion.
-    pub after: Option<AfterHook<D>>,
+    pub after: Option<AfterHook<D, T, E>>,
 }
 
-impl<D: Sized> FrameworkBuilder<D> {
+impl<D, T, E> FrameworkBuilder<D, T, E>
+where
+    E: From<ParseError>
+{
     /// Creates a new [Builder](self::FrameworkBuilder).
     pub fn new(
         http_client: impl Into<WrappedClient>,
@@ -119,13 +123,13 @@ impl<D: Sized> FrameworkBuilder<D> {
     }
 
     /// Set the hook that will be executed after command's completion.
-    pub fn after(mut self, fun: FnPointer<AfterHook<D>>) -> Self {
+    pub fn after(mut self, fun: FnPointer<AfterHook<D, T, E>>) -> Self {
         self.after = Some(fun());
         self
     }
 
     /// Registers a new command.
-    pub fn command(mut self, fun: FnPointer<Command<D>>) -> Self {
+    pub fn command(mut self, fun: FnPointer<Command<D, T, E>>) -> Self {
         let cmd = fun();
         if self.commands.contains_key(cmd.name) || self.groups.contains_key(cmd.name) {
             panic!("{} already registered", cmd.name);
@@ -137,7 +141,7 @@ impl<D: Sized> FrameworkBuilder<D> {
     /// Registers a new group of commands.
     pub fn group<F>(mut self, fun: F) -> Self
     where
-        F: FnOnce(&mut GroupParentBuilder<D>) -> &mut GroupParentBuilder<D>,
+        F: FnOnce(&mut GroupParentBuilder<D, T, E>) -> &mut GroupParentBuilder<D, T, E>,
     {
         let mut builder = GroupParentBuilder::new();
         fun(&mut builder);
@@ -152,7 +156,7 @@ impl<D: Sized> FrameworkBuilder<D> {
     }
 
     /// Builds the framework, returning a [Framework](crate::framework::Framework).
-    pub fn build(self) -> Framework<D> {
+    pub fn build(self) -> Framework<D, T, E> {
         Framework::from_builder(self)
     }
 }

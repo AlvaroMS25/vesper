@@ -15,6 +15,7 @@ use crate::{
 };
 use tracing::debug;
 use parking_lot::Mutex;
+use crate::parse::ParseError;
 
 macro_rules! extract {
     ($expr:expr => $variant:ident) => {
@@ -37,8 +38,10 @@ macro_rules! focused {
     };
 }
 
+pub type DefaultError = Box<dyn std::error::Error + Send + Sync>;
+
 /// The framework used to dispatch slash commands.
-pub struct Framework<D> {
+pub struct Framework<D, T = (), E = DefaultError> {
     /// The http client used by the framework.
     pub http_client: WrappedClient,
     /// The application id of the client.
@@ -46,19 +49,22 @@ pub struct Framework<D> {
     /// Data shared across all command and hook invocations.
     pub data: D,
     /// A map of simple commands.
-    pub commands: CommandMap<D>,
+    pub commands: CommandMap<D, T, E>,
     /// A map of command groups including all children.
-    pub groups: ParentGroupMap<D>,
+    pub groups: ParentGroupMap<D, T, E>,
     /// A hook executed before the command.
     pub before: Option<BeforeHook<D>>,
     /// A hook executed after command's execution.
-    pub after: Option<AfterHook<D>>,
-    pub waiters: Mutex<Vec<WaiterWaker<D>>>
+    pub after: Option<AfterHook<D, T, E>>,
+    pub waiters: Mutex<Vec<WaiterWaker>>
 }
 
-impl<D> Framework<D> {
+impl<D, T, E> Framework<D, T, E>
+where
+    E: From<ParseError>
+{
     /// Creates a new [Framework](self::Framework) from the given builder.
-    pub(crate) fn from_builder(builder: FrameworkBuilder<D>) -> Self {
+    pub(crate) fn from_builder(builder: FrameworkBuilder<D, T, E>) -> Self {
         Self {
             http_client: builder.http_client,
             application_id: builder.application_id,
@@ -77,7 +83,7 @@ impl<D> Framework<D> {
         http_client: impl Into<WrappedClient>,
         application_id: Id<ApplicationMarker>,
         data: D,
-    ) -> FrameworkBuilder<D> {
+    ) -> FrameworkBuilder<D, T, E> {
         FrameworkBuilder::new(http_client, application_id, data)
     }
 
@@ -99,7 +105,7 @@ impl<D> Framework<D> {
             InteractionType::ApplicationCommandAutocomplete => self.try_autocomplete(interaction).await,
             InteractionType::MessageComponent => {
                 let mut lock = self.waiters.lock();
-                if let Some(position) = lock.iter().position(|waker| waker.check(self, &interaction)) {
+                if let Some(position) = lock.iter().position(|waker| waker.check(&interaction)) {
                     lock.remove(position).wake(interaction);
                 }
             }
@@ -210,7 +216,7 @@ impl<D> Framework<D> {
     /// Gets the command matching the given
     /// [ApplicationCommand](ApplicationCommand),
     /// returning `None` if no command matches the given interaction.
-    fn get_command(&self, interaction: &mut Interaction) -> Option<&Command<D>> {
+    fn get_command(&self, interaction: &mut Interaction) -> Option<&Command<D, T, E>> {
         let data = interaction.data.as_mut()?;
         let interaction_data = extract!(data => ApplicationCommand);
         if let Some(next) = self.get_next(&mut interaction_data.options) {
@@ -261,7 +267,7 @@ impl<D> Framework<D> {
     }
 
     /// Executes the given [command](crate::command::Command) and the hooks.
-    async fn execute(&self, cmd: &Command<D>, interaction: Interaction) {
+    async fn execute(&self, cmd: &Command<D, T, E>, interaction: Interaction) {
         let context = SlashContext::new(
             &self.http_client,
             self.application_id,
@@ -381,7 +387,7 @@ impl<D> Framework<D> {
         options
     }
 
-    fn create_group(&self, parent: &GroupParent<D>) -> Vec<CommandOption> {
+    fn create_group(&self, parent: &GroupParent<D, T, E>) -> Vec<CommandOption> {
         debug!("Registering group {}", parent.name);
 
         if let ParentType::Group(map) = &parent.kind {
@@ -415,7 +421,7 @@ impl<D> Framework<D> {
     }
 
     /// Creates a subcommand at the given scope.
-    fn create_subcommand(&self, cmd: &Command<D>) -> CommandOption {
+    fn create_subcommand(&self, cmd: &Command<D, T, E>) -> CommandOption {
         debug!("Registering {} subcommand", cmd.name);
 
         CommandOption::SubCommand(OptionsCommandOptionData {

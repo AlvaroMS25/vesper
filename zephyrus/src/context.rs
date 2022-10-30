@@ -1,11 +1,9 @@
 use parking_lot::Mutex;
 use crate::{
     builder::WrappedClient,
-    command::CommandResult,
     twilight_exports::*,
     waiter::{InteractionWaiter, WaiterWaker}
 };
-use crate::framework::Framework;
 
 use crate::iter::DataIterator;
 use crate::parse::{Parse, ParseError};
@@ -63,7 +61,7 @@ pub struct SlashContext<'a, D> {
     /// The data shared across the framework.
     pub data: &'a D,
     /// Components waiting for an interaction.
-    pub waiters: &'a Mutex<Vec<WaiterWaker<D>>>,
+    pub waiters: &'a Mutex<Vec<WaiterWaker>>,
     /// The interaction itself.
     pub interaction: Interaction,
 }
@@ -87,7 +85,7 @@ impl<'a, D> SlashContext<'a, D> {
         http_client: &'a WrappedClient,
         application_id: Id<ApplicationMarker>,
         data: &'a D,
-        waiters: &'a Mutex<Vec<WaiterWaker<D>>>,
+        waiters: &'a Mutex<Vec<WaiterWaker>>,
         interaction: Interaction,
     ) -> Self {
         let interaction_client = http_client.inner().interaction(application_id);
@@ -109,7 +107,10 @@ impl<'a, D> SlashContext<'a, D> {
     /// Responds to the interaction with an empty message to allow to respond later.
     ///
     /// When this method is used [update_response](Self::update_response) has to be used to edit the response.
-    pub async fn acknowledge(&self) -> CommandResult {
+    pub async fn acknowledge<E>(&self) -> Result<(), E>
+    where
+        E: From<twilight_http::Error>
+    {
         self.interaction_client
             .create_response(
                 self.interaction.id,
@@ -120,7 +121,8 @@ impl<'a, D> SlashContext<'a, D> {
                 },
             )
             .exec()
-            .await?;
+            .await
+            .map_err(From::from)?;
 
         Ok(())
     }
@@ -128,26 +130,29 @@ impl<'a, D> SlashContext<'a, D> {
     /// Updates the sent interaction, this method is a shortcut to twilight's
     /// [update_interaction_original](InteractionClient::update_response)
     /// but http is automatically provided.
-    pub async fn update_response<F>(
+    pub async fn update_response<F, E>(
         &'a self,
         fun: F,
-    ) -> Result<Message, Box<dyn std::error::Error + Send + Sync>>
+    ) -> Result<Message, E>
     where
         F: FnOnce(UpdateResponse<'a>) -> UpdateResponse<'a>,
+        E: From<DeserializeBodyError> + From<twilight_http::Error>
     {
         let update = fun(self
             .interaction_client
             .update_response(&self.interaction.token));
         Ok(update
             .exec()
-            .await?
+            .await
+            .map_err(<E as From<twilight_http::Error>>::from)?
             .model()
-            .await?)
+            .await
+            .map_err(<E as From<DeserializeBodyError>>::from)?)
     }
 
     pub fn wait_interaction<F>(&self, fun: F) -> InteractionWaiter
     where
-        F: Fn(&Framework<D>, &Interaction) -> bool + Send + 'static
+        F: Fn(&Interaction) -> bool + Send + 'static
     {
         let (waker, waiter) = new_pair(fun);
         let mut lock = self.waiters.lock();
@@ -158,24 +163,25 @@ impl<'a, D> SlashContext<'a, D> {
 
 impl<D: Send + Sync> SlashContext<'_, D> {
     #[doc(hidden)]
-    pub async fn named_parse<T>(
+    pub async fn named_parse<T, E>(
         &self,
         name: &str,
         iterator: &mut DataIterator<'_>
-    ) -> Result<T, ParseError>
+    ) -> Result<T, E>
     where
-        T: Parse<D>
+        T: Parse<D>,
+        E: From<ParseError>
     {
         let value = iterator.get(|s| s.name == name);
         if value.is_none() && <T as Parse<D>>::required() {
-            Err(ParseError::StructureMismatch(format!("{} not found", name)))
+            Err(ParseError::StructureMismatch(format!("{} not found", name)).into())
         } else {
             <T as Parse<D>>::parse(self.http_client, self.data, value.map(|it| &it.value)).await
                 .map_err(|mut err| {
                     if let ParseError::Parsing { argument_name, .. } = &mut err {
                         *argument_name = name.to_string();
                     }
-                    err
+                    err.into()
                 })
         }
     }

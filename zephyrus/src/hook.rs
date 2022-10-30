@@ -1,6 +1,6 @@
 use crate::context::AutocompleteContext;
 use crate::{
-    command::CommandResult, context::SlashContext, twilight_exports::InteractionResponseData,
+    context::SlashContext, twilight_exports::InteractionResponseData,
     BoxFuture,
 };
 
@@ -10,10 +10,10 @@ pub(crate) type BeforeFn<D> = for<'a> fn(&'a SlashContext<'a, D>, &'a str) -> Bo
 pub struct BeforeHook<D>(pub BeforeFn<D>);
 
 /// A pointer to a function used by [after hook](AfterHook).
-pub(crate) type AfterFn<D> =
-    for<'a> fn(&'a SlashContext<'a, D>, &'a str, Option<CommandResult>) -> BoxFuture<'a, ()>;
+pub(crate) type AfterFn<D, T, E> =
+    for<'a> fn(&'a SlashContext<'a, D>, &'a str, Option<Result<T, E>>) -> BoxFuture<'a, ()>;
 /// A hook executed after command execution.
-pub struct AfterHook<D>(pub AfterFn<D>);
+pub struct AfterHook<D, T, E>(pub AfterFn<D, T, E>);
 
 /// A pointer to a function used by [autocomplete hook](AutocompleteHook)
 pub(crate) type AutocompleteFn<D> =
@@ -25,6 +25,6 @@ pub(crate) type CheckFn<D> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a
 
 pub struct CheckHook<D>(pub CheckFn<D>);
 
-pub(crate) type ErrorHandlerFn<D> = for<'a> fn(&'a SlashContext<'a, D>, CommandResult) -> BoxFuture<'a, ()>;
+pub(crate) type ErrorHandlerFn<D, T, E> = for<'a> fn(&'a SlashContext<'a, D>, Result<T, E>) -> BoxFuture<'a, ()>;
 
-pub struct ErrorHandlerHook<D>(pub ErrorHandlerFn<D>);
+pub struct ErrorHandlerHook<D, T, E>(pub ErrorHandlerFn<D, T, E>);

@@ -1,11 +1,11 @@
 use std::{future::Future, task::{Context, Poll}};
 use std::pin::Pin;
 use tokio::sync::oneshot::{Sender, Receiver, channel};
-use crate::{framework::Framework, twilight_exports::Interaction};
+use crate::{twilight_exports::Interaction};
 
-pub(crate) fn new_pair<F, T>(fun: F) -> (WaiterWaker<T>, InteractionWaiter)
+pub(crate) fn new_pair<F>(fun: F) -> (WaiterWaker, InteractionWaiter)
 where
-    F: Fn(&Framework<T>, &Interaction) -> bool + Send + 'static
+    F: Fn(&Interaction) -> bool + Send + 'static
 {
     let (sender, receiver) = channel();
 
@@ -35,14 +35,14 @@ impl Future for InteractionWaiter {
     }
 }
 
-pub struct WaiterWaker<T> {
-    pub predicate: Box<dyn Fn(&Framework<T>, &Interaction) -> bool + Send + 'static>,
+pub struct WaiterWaker {
+    pub predicate: Box<dyn Fn(&Interaction) -> bool + Send + 'static>,
     pub sender: Sender<Interaction>
 }
 
-impl<T> WaiterWaker<T> {
-    pub fn check(&self, framework: &Framework<T>, interaction: &Interaction) -> bool {
-        (self.predicate)(framework, interaction)
+impl WaiterWaker {
+    pub fn check(&self, interaction: &Interaction) -> bool {
+        (self.predicate)(interaction)
     }
 
     pub fn wake(self, interaction: Interaction) {

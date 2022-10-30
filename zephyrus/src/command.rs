@@ -2,18 +2,15 @@ use crate::{
     argument::CommandArgument, context::SlashContext, twilight_exports::Permissions, BoxFuture,
 };
 use std::collections::HashMap;
-use std::error::Error;
 use crate::hook::{CheckHook, ErrorHandlerHook};
 
-/// The result of a command execution.
-pub type CommandResult = Result<(), Box<dyn Error + Send + Sync>>;
 /// A pointer to a command function.
-pub(crate) type CommandFn<D> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, CommandResult>;
+pub(crate) type CommandFn<D, T, E> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, Result<T, E>>;
 /// A map of [commands](self::Command).
-pub type CommandMap<D> = HashMap<&'static str, Command<D>>;
+pub type CommandMap<D, T, E> = HashMap<&'static str, Command<D, T, E>>;
 
 /// A command executed by the framework.
-pub struct Command<D> {
+pub struct Command<D, T, E> {
     /// The name of the command.
     pub name: &'static str,
     /// The description of the commands.
@@ -21,16 +18,16 @@ pub struct Command<D> {
     /// All the arguments the command requires.
     pub arguments: Vec<CommandArgument<D>>,
     /// A pointer to this command function.
-    pub fun: CommandFn<D>,
+    pub fun: CommandFn<D, T, E>,
     /// The required permissions to use this command
     pub required_permissions: Option<Permissions>,
     pub checks: Vec<CheckHook<D>>,
-    pub error_handler: Option<ErrorHandlerHook<D>>
+    pub error_handler: Option<ErrorHandlerHook<D, T, E>>
 }
 
-impl<D> Command<D> {
+impl<D, T, E> Command<D, T, E> {
     /// Creates a new command.
-    pub fn new(fun: CommandFn<D>) -> Self {
+    pub fn new(fun: CommandFn<D, T, E>) -> Self {
         Self {
             name: Default::default(),
             description: Default::default(),
@@ -65,7 +62,7 @@ impl<D> Command<D> {
         self
     }
 
-    pub fn error_handler(mut self, hook: ErrorHandlerHook<D>) -> Self {
+    pub fn error_handler(mut self, hook: ErrorHandlerHook<D, T, E>) -> Self {
         self.error_handler = Some(hook);
         self
     }
@@ -84,7 +81,7 @@ impl<D> Command<D> {
         true
     }
 
-    pub async fn execute(&self, context: &SlashContext<'_, D>) -> Option<CommandResult> {
+    pub async fn execute(&self, context: &SlashContext<'_, D>) -> Option<Result<T, E>> {
         if self.run_checks(context).await {
             let output = (self.fun)(context).await;
             if let Some(hook) = &self.error_handler {

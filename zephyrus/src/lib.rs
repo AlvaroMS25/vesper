@@ -21,7 +21,6 @@ pub mod prelude {
     pub use crate::{
         argument::ArgumentLimits,
         builder::{FrameworkBuilder, WrappedClient},
-        command::CommandResult,
         context::{AutocompleteContext, Focused, SlashContext},
         framework::Framework,
         parse::{Parse, ParseError},
@@ -35,6 +34,7 @@ pub mod twilight_exports {
     pub use twilight_http::{
         client::{Client, InteractionClient},
         request::application::interaction::UpdateResponse,
+        response::DeserializeBodyError
     };
     pub use twilight_model::{
         application::{
