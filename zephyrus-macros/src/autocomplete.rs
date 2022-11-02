@@ -37,7 +37,7 @@ fn get_data_type_and_set_lifetime(sig: &Signature) -> Result<Type> {
         None => {
             return Err(Error::new(
                 sig.inputs.span(),
-                "Expected AutocompleteContext as only paramenter",
+                "Expected AutocompleteContext as only parameter",
             ))
         }
         Some(c) => crate::util::get_pat(c)?,
