@@ -130,24 +130,21 @@ impl<'a, D> SlashContext<'a, D> {
     /// Updates the sent interaction, this method is a shortcut to twilight's
     /// [update_interaction_original](InteractionClient::update_response)
     /// but http is automatically provided.
-    pub async fn update_response<F, E>(
+    pub async fn update_response<F>(
         &'a self,
         fun: F,
-    ) -> Result<Message, E>
+    ) -> Result<Message, twilight_http::Error>
     where
         F: FnOnce(UpdateResponse<'a>) -> UpdateResponse<'a>,
-        E: From<DeserializeBodyError> + From<twilight_http::Error>
     {
         let update = fun(self
             .interaction_client
             .update_response(&self.interaction.token));
         Ok(update
             .exec()
-            .await
-            .map_err(<E as From<twilight_http::Error>>::from)?
+            .await?
             .model()
-            .await
-            .map_err(<E as From<DeserializeBodyError>>::from)?)
+            .await?)
     }
 
     pub fn wait_interaction<F>(&self, fun: F) -> InteractionWaiter
@@ -163,14 +160,13 @@ impl<'a, D> SlashContext<'a, D> {
 
 impl<D: Send + Sync> SlashContext<'_, D> {
     #[doc(hidden)]
-    pub async fn named_parse<T, E>(
+    pub async fn named_parse<T>(
         &self,
         name: &str,
         iterator: &mut DataIterator<'_>
-    ) -> Result<T, E>
+    ) -> Result<T, ParseError>
     where
-        T: Parse<D>,
-        E: From<ParseError>
+        T: Parse<D>
     {
         let value = iterator.get(|s| s.name == name);
         if value.is_none() && <T as Parse<D>>::required() {
