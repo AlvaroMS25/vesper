@@ -33,14 +33,14 @@ pub fn after(input: TokenStream2) -> Result<TokenStream2> {
     Check the return of the function, returning if it does not match, this function is required
     to return `()`
     */
-    crate::util::check_return_type(&sig.output, quote::quote!(()))?;
+    util::check_return_type(&sig.output, quote::quote!(()))?;
 
     let result_type = util::get_path(&util::get_pat(sig.inputs.iter().nth(2).unwrap())?.ty, false)?;
     let returnable = util::get_returnable_trait();
 
-    let (_, ty) = crate::util::get_context_type_and_ident(&sig)?;
+    let (_, ty) = util::get_context_type_and_ident(&sig)?;
     // Get the hook macro so we can fit the function into a normal fn pointer
-    let hook = crate::util::get_hook_macro();
+    let hook = util::get_hook_macro();
     let path = quote::quote!(::zephyrus::hook::AfterHook);
 
     Ok(quote::quote! {
