@@ -10,6 +10,10 @@ pub mod hook;
 pub mod iter;
 pub mod parse;
 pub mod range;
+
+#[doc(hidden)]
+pub mod returnable;
+
 mod waiter;
 
 pub use zephyrus_macros as macros;
@@ -22,7 +26,7 @@ pub mod prelude {
         argument::ArgumentLimits,
         builder::{FrameworkBuilder, WrappedClient},
         context::{AutocompleteContext, Focused, SlashContext},
-        framework::Framework,
+        framework::{DefaultCommandResult, Framework},
         parse::{Parse, ParseError},
         range::Range,
     };

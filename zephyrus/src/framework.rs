@@ -38,7 +38,11 @@ macro_rules! focused {
     };
 }
 
+/// The default error used by the framework.
 pub type DefaultError = Box<dyn std::error::Error + Send + Sync>;
+
+/// A generic return type for commands provided by the framework.
+pub type DefaultCommandResult = Result<(), DefaultError>;
 
 /// The framework used to dispatch slash commands.
 pub struct Framework<D, T = (), E = DefaultError> {
