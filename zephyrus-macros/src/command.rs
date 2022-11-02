@@ -36,7 +36,7 @@ pub fn command(macro_attrs: TokenStream2, input: TokenStream2) -> Result<TokenSt
     let fn_ident = quote::format_ident!("_{}", &sig.ident);
     sig.ident = fn_ident.clone();
 
-    let (context_ident, context_type) = util::get_context_type_and_ident(&sig)?;
+    let (context_ident, context_type) = get_context_type_and_ident(&sig)?;
     util::set_context_lifetime(&mut sig)?;
     let output = util::get_return_type(&sig)?;
     let returnable = util::get_returnable_trait();
@@ -128,4 +128,40 @@ pub fn parse_arguments<'a>(
     }})?;
 
     Ok(arguments)
+}
+
+
+/// Gets the identifier and the type of the first argument of a function, which must be an
+/// `SlashContext`
+pub fn get_context_type_and_ident(sig: &Signature) -> Result<(Ident, Type)> {
+    let arg = match sig.inputs.iter().next() {
+        None => {
+            return Err(Error::new(
+                sig.inputs.span(),
+                "Expected SlashContext as first parameter",
+            ))
+        }
+        Some(c) => c,
+    };
+
+    let ctx_ident = util::get_ident(&util::get_pat(arg)?.pat)?;
+
+    let res = util::get_bracketed_generic(arg, true, |ty| {
+        if let Type::Infer(_) = ty {
+            Err(Error::new(
+                sig.inputs.span(),
+                "SlashContext must have a known type",
+            ))
+        } else {
+            Ok(ty.clone())
+        }
+    });
+
+    let ty = match res {
+        Ok(None) => Err(Error::new(arg.span(), "SlashContext type must be set")),
+        Ok(Some(ty)) => Ok(ty),
+        Err(why) => Err(why)
+    }?;
+
+    Ok((ctx_ident, ty))
 }

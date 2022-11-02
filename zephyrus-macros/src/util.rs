@@ -103,8 +103,7 @@ pub fn get_return_type(sig: &Signature) -> Result<Box<Type>> {
     }
 }
 
-/// Gets the identifier and the type of the first argument of a function, which must be an
-/// `SlashContext`
+
 pub fn get_context_type_and_ident(sig: &Signature) -> Result<(Ident, Type)> {
     let ctx = match sig.inputs.iter().next() {
         None => {
@@ -181,6 +180,25 @@ pub fn set_context_lifetime(sig: &mut Signature) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub fn get_bracketed_generic<F>(arg: &FnArg, allow_references: bool, fun: F) -> Result<Option<Type>>
+where
+    F: Fn(&Type) -> Result<Type>
+{
+    let mut generics = get_generic_arguments(get_path(&get_pat(arg)?.ty, allow_references)?)?;
+
+    while let Some(next) = generics.next() {
+        match next {
+            GenericArgument::Lifetime(_) => (),
+            GenericArgument::Type(ty) => return Ok(Some(fun(ty)?)),
+            other => {
+                return Err(Error::new(other.span(), "Generic must be a type"))
+            }
+        }
+    }
+
+    Ok(None)
 }
 
 /// Checks whether the given return type is the same as the provided one
