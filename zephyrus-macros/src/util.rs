@@ -21,12 +21,18 @@ pub fn get_returnable_trait() -> Path {
 }
 
 /// Gets the path of the given type
-pub fn get_path(t: &Type) -> Result<&Path> {
+pub fn get_path(t: &Type, allow_references: bool) -> Result<&Path> {
     match t {
         // If the type is actually a path, just return it
         Type::Path(p) => Ok(&p.path),
         // If the type is a reference, call this function recursively until we get the path
-        Type::Reference(r) => get_path(&r.elem),
+        Type::Reference(r) => {
+            if allow_references {
+                get_path(&r.elem, allow_references)
+            } else {
+                Err(Error::new(r.span(), "References not allowed"))
+            }
+        },
         _ => Err(Error::new(
             t.span(),
             "parameter must be a path to a context type",
@@ -113,7 +119,7 @@ pub fn get_context_type_and_ident(sig: &Signature) -> Result<(Ident, Type)> {
     };
 
     let ctx_ident = get_ident(&ctx.pat)?;
-    let path = get_path(&ctx.ty)?;
+    let path = get_path(&ctx.ty, true)?;
     let mut args = get_generic_arguments(path)?;
 
     let ty = loop {

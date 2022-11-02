@@ -42,7 +42,7 @@ fn get_data_type_and_set_lifetime(sig: &Signature) -> Result<Type> {
         }
         Some(c) => crate::util::get_pat(c)?,
     };
-    let mut generics = crate::util::get_generic_arguments(crate::util::get_path(&ctx.ty)?)?;
+    let mut generics = crate::util::get_generic_arguments(crate::util::get_path(&ctx.ty, true)?)?;
 
     let ty = loop {
         match generics.next() {
