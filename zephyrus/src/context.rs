@@ -127,26 +127,6 @@ impl<'a, D> SlashContext<'a, D> {
         Ok(())
     }
 
-    /// Updates the sent interaction, this method is a shortcut to twilight's
-    /// [update_interaction_original](InteractionClient::update_response)
-    /// but http is automatically provided.
-    pub async fn update_response<F>(
-        &'a self,
-        fun: F,
-    ) -> Result<Message, twilight_http::Error>
-    where
-        F: FnOnce(UpdateResponse<'a>) -> UpdateResponse<'a>,
-    {
-        let update = fun(self
-            .interaction_client
-            .update_response(&self.interaction.token));
-        Ok(update
-            .exec()
-            .await?
-            .model()
-            .await?)
-    }
-
     pub fn wait_interaction<F>(&self, fun: F) -> InteractionWaiter
     where
         F: Fn(&Interaction) -> bool + Send + 'static
