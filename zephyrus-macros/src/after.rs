@@ -1,5 +1,6 @@
 use proc_macro2::TokenStream as TokenStream2;
 use syn::{parse2, spanned::Spanned, Error, ItemFn, Result};
+use crate::util;
 
 /// The implementation of after macro, this macro takes the given input, which must be another
 /// function and prepares it to be an after hook, wrapping it in a struct and providing a pointer
@@ -34,13 +35,16 @@ pub fn after(input: TokenStream2) -> Result<TokenStream2> {
     */
     crate::util::check_return_type(&sig.output, quote::quote!(()))?;
 
+    let result_type = util::get_path(&util::get_pat(sig.inputs.iter().nth(2).unwrap())?.ty, false)?;
+    let returnable = util::get_returnable_trait();
+
     let (_, ty) = crate::util::get_context_type_and_ident(&sig)?;
     // Get the hook macro so we can fit the function into a normal fn pointer
     let hook = crate::util::get_hook_macro();
     let path = quote::quote!(::zephyrus::hook::AfterHook);
 
     Ok(quote::quote! {
-        pub fn #ident() -> #path<#ty> {
+        pub fn #ident() -> #path<#ty, <#result_type as #returnable>::Ok, <#result_type as #returnable>::Err> {
             #path(#fn_ident)
         }
 
