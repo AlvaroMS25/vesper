@@ -106,7 +106,7 @@ pub fn get_context_type_and_ident(sig: &Signature) -> Result<(Ident, Type)> {
         None => {
             return Err(Error::new(
                 sig.inputs.span(),
-                "Expected SlashContext as first paramenter",
+                "Expected SlashContext as first parameter",
             ))
         }
         Some(c) => get_pat(c)?,
