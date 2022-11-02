@@ -16,6 +16,10 @@ pub fn get_command_path() -> Path {
     parse2(quote::quote!(::zephyrus::command::Command)).unwrap()
 }
 
+pub fn get_returnable_trait() -> Path {
+    parse2(quote::quote!(::zephyrus::returnable::Returnable)).unwrap()
+}
+
 /// Gets the path of the given type
 pub fn get_path(t: &Type) -> Result<&Path> {
     match t {
@@ -74,8 +78,7 @@ pub fn get_ident(p: &Pat) -> Result<Ident> {
     }
 }
 
-/// Gets the generic arguments of the given path, this is useful to extract the generic parameter
-/// used in `SlashContext<T>`
+/// Gets the generic arguments of the given path
 pub fn get_generic_arguments(path: &Path) -> Result<impl Iterator<Item = &GenericArgument> + '_> {
     match &path.segments.last().unwrap().arguments {
         PathArguments::None => Ok(Vec::new().into_iter()),
@@ -86,6 +89,13 @@ pub fn get_generic_arguments(path: &Path) -> Result<impl Iterator<Item = &Generi
             path.span(),
             "context type cannot have generic parameters in parenthesis",
         )),
+    }
+}
+
+pub fn get_return_type(sig: &Signature) -> Result<Box<Type>> {
+    match &sig.output {
+        ReturnType::Default => return Err(Error::new(sig.output.span(), "Return type must be a Result<T, E>")),
+        ReturnType::Type(_, kind) => Ok(kind.clone())
     }
 }
 

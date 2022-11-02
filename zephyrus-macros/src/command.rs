@@ -30,12 +30,6 @@ pub fn command(macro_attrs: TokenStream2, input: TokenStream2) -> Result<TokenSt
         parse2::<syn::LitStr>(macro_attrs)?.value()
     };
 
-    /*
-    Set the return type of the function, warning the user if the provided output does not match
-    the required one.
-    */
-    sig.output = parse2(quote::quote!(-> ::zephyrus::prelude::CommandResult))?;
-
     // The name of the function
     let ident = sig.ident.clone();
     // The name the function will have after macro execution
@@ -43,6 +37,9 @@ pub fn command(macro_attrs: TokenStream2, input: TokenStream2) -> Result<TokenSt
     sig.ident = fn_ident.clone();
 
     let (context_ident, context_type) = util::get_context_type_and_ident(&sig)?;
+    let output = util::get_return_type(&sig)?;
+    let returnable = util::get_returnable_trait();
+
     // Get the hook macro so we can fit the function into a normal fn pointer
     let extract_output = util::get_hook_macro();
     let command_path = util::get_command_path();
@@ -51,7 +48,7 @@ pub fn command(macro_attrs: TokenStream2, input: TokenStream2) -> Result<TokenSt
     let opts = CommandDetails::parse(&mut attrs)?;
 
     Ok(quote::quote! {
-        pub fn #ident() -> #command_path<#context_type> {
+        pub fn #ident() -> #command_path<#context_type, <#output as #returnable>::Ok, <#output as #returnable>::Err> {
             #command_path::new(#fn_ident)
                 .name(#name)
                 #opts
