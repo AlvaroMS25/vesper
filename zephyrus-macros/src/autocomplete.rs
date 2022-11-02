@@ -3,6 +3,7 @@ use syn::{
     parse2, spanned::Spanned, Error, GenericArgument, ItemFn, Lifetime, PathArguments, Result,
     Signature, Type,
 };
+use crate::util;
 
 pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
     let mut fun = parse2::<ItemFn>(input)?;
@@ -16,7 +17,7 @@ pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
 
     let data_type = get_data_type_and_set_lifetime(&fun.sig)?;
     set_lifetime(&mut fun.sig)?;
-    let hook = crate::util::get_hook_macro();
+    let hook = util::get_hook_macro();
     let path = quote::quote!(::zephyrus::hook::AutocompleteHook);
     let ident = fun.sig.ident.clone();
     let fn_ident = quote::format_ident!("_{}", ident);
@@ -40,9 +41,9 @@ fn get_data_type_and_set_lifetime(sig: &Signature) -> Result<Type> {
                 "Expected AutocompleteContext as only parameter",
             ))
         }
-        Some(c) => crate::util::get_pat(c)?,
+        Some(c) => util::get_pat(c)?,
     };
-    let mut generics = crate::util::get_generic_arguments(crate::util::get_path(&ctx.ty, true)?)?;
+    let mut generics = util::get_generic_arguments(crate::util::get_path(&ctx.ty, true)?)?;
 
     let ty = loop {
         match generics.next() {
@@ -81,12 +82,12 @@ fn get_data_type_and_set_lifetime(sig: &Signature) -> Result<Type> {
 
 fn set_lifetime(sig: &mut Signature) -> Result<()> {
     let lifetime = Lifetime::new("'future", Span::call_site());
-    let ctx = crate::util::get_pat_mut(sig.inputs.iter_mut().next().unwrap())?;
-    let path = crate::util::get_path_mut(&mut ctx.ty)?;
+    let ctx = util::get_pat_mut(sig.inputs.iter_mut().next().unwrap())?;
+    let path = util::get_path_mut(&mut ctx.ty)?;
     let mut insert_lifetime = true;
 
     {
-        let generics = crate::util::get_generic_arguments(path)?;
+        let generics = util::get_generic_arguments(path)?;
         for generic in generics {
             if let GenericArgument::Lifetime(inner) = generic {
                 if *inner == lifetime {

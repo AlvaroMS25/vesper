@@ -1,5 +1,6 @@
 use proc_macro2::TokenStream as TokenStream2;
 use syn::{parse2, spanned::Spanned, Error, ItemFn, Result};
+use crate::util;
 
 /// The implementation of before macro, this macro takes the given input, which must be another
 /// function and prepares it to be an before hook, wrapping it in a struct and providing a pointer
@@ -30,11 +31,11 @@ pub fn before(input: TokenStream2) -> Result<TokenStream2> {
         Check the return of the function, returning if it does not match, this function is required
         to return a `bool` indicating if the recognised command should be executed or not
     */
-    crate::util::check_return_type(&sig.output, quote::quote!(bool))?;
+    util::check_return_type(&sig.output, quote::quote!(bool))?;
 
-    let (_, ty) = crate::util::get_context_type_and_ident(&sig)?;
+    let (_, ty) = util::get_context_type_and_ident(&sig)?;
     // Get the hook macro so we can fit the function into a normal fn pointer
-    let hook = crate::util::get_hook_macro();
+    let hook = util::get_hook_macro();
     let path = quote::quote!(::zephyrus::hook::BeforeHook);
 
     Ok(quote::quote! {
