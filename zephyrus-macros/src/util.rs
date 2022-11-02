@@ -1,10 +1,8 @@
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::ToTokens;
 use syn::spanned::Spanned;
-use syn::{
-    parse2, Error, FnArg, GenericArgument, Pat, PatType, Path, PathArguments, Result, ReturnType,
-    Signature, Type,
-};
+use syn::{parse2, Error, FnArg, GenericArgument, Pat, PatType, Path, PathArguments, Result, ReturnType, Signature, Type, Lifetime};
+use crate::util;
 
 /// Gets the path of the futurize macro
 pub fn get_hook_macro() -> Path {
@@ -155,6 +153,34 @@ pub fn get_context_type_and_ident(sig: &Signature) -> Result<(Ident, Type)> {
     };
 
     Ok((ctx_ident, ty))
+}
+
+pub fn set_context_lifetime(sig: &mut Signature) -> Result<()> {
+    let lifetime = Lifetime::new("'future", Span::call_site());
+    let ctx = get_pat_mut(sig.inputs.iter_mut().next().unwrap())?;
+    let path = get_path_mut(&mut ctx.ty)?;
+    let mut insert_lifetime = true;
+
+    {
+        let generics = util::get_generic_arguments(path)?;
+        for generic in generics {
+            if let GenericArgument::Lifetime(inner) = generic {
+                if *inner == lifetime {
+                    insert_lifetime = false;
+                }
+            }
+        }
+    }
+
+    if insert_lifetime {
+        if let PathArguments::AngleBracketed(inner) =
+        &mut path.segments.last_mut().unwrap().arguments
+        {
+            inner.args.insert(0, GenericArgument::Lifetime(lifetime));
+        }
+    }
+
+    Ok(())
 }
 
 /// Checks whether the given return type is the same as the provided one

@@ -1,6 +1,6 @@
-use proc_macro2::{Span, TokenStream as TokenStream2};
+use proc_macro2::{TokenStream as TokenStream2};
 use syn::{
-    parse2, spanned::Spanned, Error, GenericArgument, ItemFn, Lifetime, PathArguments, Result,
+    parse2, spanned::Spanned, Error, GenericArgument, ItemFn, Result,
     Signature, Type,
 };
 use crate::util;
@@ -16,7 +16,7 @@ pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
     }
 
     let data_type = get_data_type_and_set_lifetime(&fun.sig)?;
-    set_lifetime(&mut fun.sig)?;
+    util::set_context_lifetime(&mut fun.sig)?;
     let hook = util::get_hook_macro();
     let path = quote::quote!(::zephyrus::hook::AutocompleteHook);
     let ident = fun.sig.ident.clone();
@@ -78,32 +78,4 @@ fn get_data_type_and_set_lifetime(sig: &Signature) -> Result<Type> {
     };
 
     Ok(ty)
-}
-
-fn set_lifetime(sig: &mut Signature) -> Result<()> {
-    let lifetime = Lifetime::new("'future", Span::call_site());
-    let ctx = util::get_pat_mut(sig.inputs.iter_mut().next().unwrap())?;
-    let path = util::get_path_mut(&mut ctx.ty)?;
-    let mut insert_lifetime = true;
-
-    {
-        let generics = util::get_generic_arguments(path)?;
-        for generic in generics {
-            if let GenericArgument::Lifetime(inner) = generic {
-                if *inner == lifetime {
-                    insert_lifetime = false;
-                }
-            }
-        }
-    }
-
-    if insert_lifetime {
-        if let PathArguments::AngleBracketed(inner) =
-            &mut path.segments.last_mut().unwrap().arguments
-        {
-            inner.args.insert(0, GenericArgument::Lifetime(lifetime));
-        }
-    }
-
-    Ok(())
 }
