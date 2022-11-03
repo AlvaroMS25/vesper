@@ -146,7 +146,7 @@ pub fn get_context_type_and_ident(sig: &Signature) -> Result<(Ident, Type)> {
 
     let ctx_ident = util::get_ident(&util::get_pat(arg)?.pat)?;
 
-    let res = util::get_bracketed_generic(arg, true, |ty| {
+    let ty = util::get_bracketed_generic(arg, true, |ty| {
         if let Type::Infer(_) = ty {
             Err(Error::new(
                 sig.inputs.span(),
@@ -155,12 +155,11 @@ pub fn get_context_type_and_ident(sig: &Signature) -> Result<(Ident, Type)> {
         } else {
             Ok(ty.clone())
         }
-    });
+    })?;
 
-    let ty = match res {
-        Ok(None) => Err(Error::new(arg.span(), "SlashContext type must be set")),
-        Ok(Some(ty)) => Ok(ty),
-        Err(why) => Err(why)
+    let ty = match ty {
+        None => Err(Error::new(arg.span(), "SlashContext type must be set")),
+        Some(ty) => Ok(ty),
     }?;
 
     Ok((ctx_ident, ty))
