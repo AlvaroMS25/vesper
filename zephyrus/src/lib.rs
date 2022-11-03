@@ -1,3 +1,5 @@
+#![doc = include_str!("../../README.md")]
+
 mod parse_impl;
 
 pub mod argument;

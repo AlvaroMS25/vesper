@@ -105,10 +105,7 @@ impl<'a, D> SlashContext<'a, D> {
     }
 
     /// Acknowledges the interaction, allowing to respond later.
-    pub async fn acknowledge<E>(&self) -> Result<(), E>
-    where
-        E: From<twilight_http::Error>
-    {
+    pub async fn acknowledge(&self) -> Result<(), twilight_http::Error> {
         self.interaction_client
             .create_response(
                 self.interaction.id,
@@ -119,8 +116,7 @@ impl<'a, D> SlashContext<'a, D> {
                 },
             )
             .exec()
-            .await
-            .map_err(From::from)?;
+            .await?;
 
         Ok(())
     }
