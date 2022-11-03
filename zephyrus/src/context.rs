@@ -104,9 +104,7 @@ impl<'a, D> SlashContext<'a, D> {
         self.http_client.inner()
     }
 
-    /// Responds to the interaction with an empty message to allow to respond later.
-    ///
-    /// When this method is used [update_response](Self::update_response) has to be used to edit the response.
+    /// Acknowledges the interaction, allowing to respond later.
     pub async fn acknowledge<E>(&self) -> Result<(), E>
     where
         E: From<twilight_http::Error>
