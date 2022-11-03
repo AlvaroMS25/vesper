@@ -15,7 +15,7 @@ pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
         ));
     }
 
-    let data_type = get_data_type_and_set_lifetime(&fun.sig)?;
+    let data_type = util::get_context_type(&fun.sig, false)?;
     util::set_lifetimes(&mut fun.sig)?;
     let hook = util::get_hook_macro();
     let path = quote::quote!(::zephyrus::hook::AutocompleteHook);
@@ -31,51 +31,4 @@ pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
         #[#hook]
         #fun
     })
-}
-
-fn get_data_type_and_set_lifetime(sig: &Signature) -> Result<Type> {
-    let ctx = match sig.inputs.iter().next() {
-        None => {
-            return Err(Error::new(
-                sig.inputs.span(),
-                "Expected AutocompleteContext as only parameter",
-            ))
-        }
-        Some(c) => util::get_pat(c)?,
-    };
-    let mut generics = util::get_generic_arguments(crate::util::get_path(&ctx.ty, true)?)?;
-
-    let ty = loop {
-        match generics.next() {
-            Some(GenericArgument::Lifetime(_)) => (),
-            Some(a) => {
-                break match a {
-                    GenericArgument::Type(t) => {
-                        if let Type::Infer(_) = t {
-                            return Err(Error::new(
-                                sig.inputs.span(),
-                                "AutocompleteContext must have a known type",
-                            ));
-                        } else {
-                            t.clone()
-                        }
-                    }
-                    _ => {
-                        return Err(Error::new(
-                            sig.inputs.span(),
-                            "AutocompleteContext type must be a type",
-                        ))
-                    }
-                }
-            }
-            None => {
-                return Err(Error::new(
-                    sig.inputs.span(),
-                    "AutocompleteContext type must be set",
-                ))
-            }
-        }
-    };
-
-    Ok(ty)
 }

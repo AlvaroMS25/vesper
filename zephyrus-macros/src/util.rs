@@ -154,6 +154,31 @@ pub fn get_context_type_and_ident(sig: &Signature) -> Result<(Ident, Type)> {
     Ok((ctx_ident, ty))
 }
 
+pub fn get_context_type(sig: &Signature, allow_references: bool) -> Result<Type> {
+    let arg = match sig.inputs.iter().next() {
+        None => {
+            return Err(Error::new(
+                sig.inputs.span(),
+                "Expected Context as first parameter",
+            ))
+        }
+        Some(c) => c,
+    };
+
+    let ty = util::get_bracketed_generic(arg, allow_references, |ty| {
+        if let Type::Infer(_) = ty {
+            Err(Error::new(ty.span(), "Context must have a known type"))
+        } else {
+            Ok(ty.clone())
+        }
+    })?;
+
+    match ty {
+        None => Err(Error::new(arg.span(), "Context type must be set")),
+        Some(ty) => Ok(ty),
+    }
+}
+
 pub fn set_lifetimes(sig: &mut Signature) -> Result<()> {
     let lifetime = Lifetime::new("'future", Span::call_site());
     let ctx = get_pat_mut(sig.inputs.iter_mut().next().unwrap())?;
