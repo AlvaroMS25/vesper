@@ -26,6 +26,7 @@ mod sealed {
 use sealed::Number;
 
 /// A range-like type used to constraint the input provided by the user.
+#[derive(Copy, Clone)]
 pub struct Range<T: Number, const START: i64, const END: i64>(T);
 
 impl<T: Number, const START: i64, const END: i64> Deref for Range<T, START, END> {
