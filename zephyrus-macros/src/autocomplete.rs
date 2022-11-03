@@ -16,7 +16,7 @@ pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
     }
 
     let data_type = get_data_type_and_set_lifetime(&fun.sig)?;
-    util::set_context_lifetime(&mut fun.sig)?;
+    util::set_lifetimes(&mut fun.sig)?;
     let hook = util::get_hook_macro();
     let path = quote::quote!(::zephyrus::hook::AutocompleteHook);
     let ident = fun.sig.ident.clone();
