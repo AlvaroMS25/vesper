@@ -11,7 +11,7 @@ pub mod iter;
 pub mod parse;
 pub mod range;
 
-/// Items used to extract generics from functions, not public API.
+// Items used to extract generics from functions, not public API.
 #[doc(hidden)]
 pub mod extract;
 
