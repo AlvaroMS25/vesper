@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream as TokenStream2;
-use syn::{parse2, spanned::Spanned, Error, ItemFn, Result, FnArg, Type};
+use syn::{parse2, spanned::Spanned, Error, ItemFn, Result, FnArg, Type, Path};
 use crate::util;
 
 /// The implementation of after macro, this macro takes the given input, which must be another
@@ -35,8 +35,9 @@ pub fn after(input: TokenStream2) -> Result<TokenStream2> {
     */
     util::check_return_type(&sig.output, quote::quote!(()))?;
 
-    let result_type = extract_result_from_option(sig.inputs.iter().nth(2).unwrap())?;
+    let result_type = util::get_path(&util::get_pat(sig.inputs.iter().nth(2).unwrap())?.ty, false)?;
     let returnable = util::get_returnable_trait();
+    let optional = parse2::<Path>(quote::quote!(::zephyrus::extract::Optional))?;
 
     let ty = util::get_context_type(&sig, true)?;
     // Get the hook macro so we can fit the function into a normal fn pointer
@@ -44,7 +45,12 @@ pub fn after(input: TokenStream2) -> Result<TokenStream2> {
     let path = quote::quote!(::zephyrus::hook::AfterHook);
 
     Ok(quote::quote! {
-        pub fn #ident() -> #path<#ty, <#result_type as #returnable>::Ok, <#result_type as #returnable>::Err> {
+        pub fn #ident()
+        -> #path<
+            #ty,
+            <<#result_type as #optional>::Inner as #returnable>::Ok,
+            <<#result_type as #optional>::Inner as #returnable>::Err
+        > {
             #path(#fn_ident)
         }
 
