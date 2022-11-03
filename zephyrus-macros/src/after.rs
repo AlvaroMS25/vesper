@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream as TokenStream2;
-use syn::{parse2, spanned::Spanned, Error, ItemFn, Result, FnArg, Type, Path};
+use syn::{parse2, spanned::Spanned, Error, ItemFn, Result, Path};
 use crate::util;
 
 /// The implementation of after macro, this macro takes the given input, which must be another
