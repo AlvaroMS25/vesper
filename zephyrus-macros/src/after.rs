@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream as TokenStream2;
-use syn::{parse2, spanned::Spanned, Error, ItemFn, Result};
+use syn::{parse2, spanned::Spanned, Error, ItemFn, Result, FnArg, Type};
 use crate::util;
 
 /// The implementation of after macro, this macro takes the given input, which must be another
@@ -35,7 +35,7 @@ pub fn after(input: TokenStream2) -> Result<TokenStream2> {
     */
     util::check_return_type(&sig.output, quote::quote!(()))?;
 
-    let result_type = util::get_path(&util::get_pat(sig.inputs.iter().nth(2).unwrap())?.ty, false)?;
+    let result_type = extract_result_from_option(sig.inputs.iter().nth(2).unwrap())?;
     let returnable = util::get_returnable_trait();
 
     let ty = util::get_context_type(&sig, true)?;

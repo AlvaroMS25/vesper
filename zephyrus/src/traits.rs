@@ -9,12 +9,13 @@ pub trait Returnable: sealed::Sealed {
     type Err;
 }
 
+pub trait Optional: sealed::Sealed {
+    type Inner;
+}
+
 impl<T, E> Returnable for Result<T, E> {
     type Ok = T;
     type Err = E;
 }
 
-impl<T: Returnable> Returnable for Option<T> {
-    type Ok = <T as Returnable>::Ok;
-    type Err = <T as Returnable>::Err;
-}
+impl<T> Optional for Option<T>
