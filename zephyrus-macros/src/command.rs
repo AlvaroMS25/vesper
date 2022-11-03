@@ -37,7 +37,7 @@ pub fn command(macro_attrs: TokenStream2, input: TokenStream2) -> Result<TokenSt
     sig.ident = fn_ident.clone();
 
     let (context_ident, context_type) = get_context_type_and_ident(&sig)?;
-    util::set_lifetimes(&mut sig)?;
+    util::set_context_lifetime(&mut sig)?;
     let output = util::get_return_type(&sig)?;
     let returnable = util::get_returnable_trait();
 

@@ -64,7 +64,7 @@ pub fn hook(input: TokenStream2) -> Result<TokenStream2> {
         }
     }
 
-    util::set_lifetimes(&mut sig)?;
+    util::set_context_lifetime(&mut sig)?;
 
     Ok(quote::quote! {
         #(#attrs)*

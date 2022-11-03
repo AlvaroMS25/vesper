@@ -128,7 +128,7 @@ pub fn get_context_type(sig: &Signature, allow_references: bool) -> Result<Type>
     }
 }
 
-pub fn set_lifetimes(sig: &mut Signature) -> Result<()> {
+pub fn set_context_lifetime(sig: &mut Signature) -> Result<()> {
     let lifetime = Lifetime::new("'future", Span::call_site());
     let ctx = get_pat_mut(sig.inputs.iter_mut().next().unwrap())?;
     let path = get_path_mut(&mut ctx.ty)?;
