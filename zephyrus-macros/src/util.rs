@@ -15,7 +15,7 @@ pub fn get_command_path() -> Path {
 }
 
 pub fn get_returnable_trait() -> Path {
-    parse2(quote::quote!(::zephyrus::returnable::Returnable)).unwrap()
+    parse2(quote::quote!(::zephyrus::extract::Returnable)).unwrap()
 }
 
 /// Gets the path of the given type

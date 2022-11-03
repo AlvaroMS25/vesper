@@ -1,7 +1,7 @@
 mod sealed {
     pub trait Sealed {}
     impl<T, E> Sealed for Result<T, E> {}
-    impl<T: Sealed> Sealed for Option<T> {}
+    impl<T> Sealed for Option<T> {}
 }
 
 pub trait Returnable: sealed::Sealed {
@@ -18,4 +18,6 @@ impl<T, E> Returnable for Result<T, E> {
     type Err = E;
 }
 
-impl<T> Optional for Option<T>
+impl<T> Optional for Option<T> {
+    type Inner = T;
+}
