@@ -103,57 +103,6 @@ pub fn get_return_type(sig: &Signature) -> Result<Box<Type>> {
     }
 }
 
-
-pub fn get_context_type_and_ident(sig: &Signature) -> Result<(Ident, Type)> {
-    let ctx = match sig.inputs.iter().next() {
-        None => {
-            return Err(Error::new(
-                sig.inputs.span(),
-                "Expected SlashContext as first parameter",
-            ))
-        }
-        Some(c) => get_pat(c)?,
-    };
-
-    let ctx_ident = get_ident(&ctx.pat)?;
-    let path = get_path(&ctx.ty, true)?;
-    let mut args = get_generic_arguments(path)?;
-
-    let ty = loop {
-        match args.next() {
-            Some(GenericArgument::Lifetime(_)) => (),
-            Some(a) => {
-                break match a {
-                    GenericArgument::Type(t) => {
-                        if let Type::Infer(_) = t {
-                            return Err(Error::new(
-                                sig.inputs.span(),
-                                "SlashContext must have a known type",
-                            ));
-                        } else {
-                            t.clone()
-                        }
-                    }
-                    _ => {
-                        return Err(Error::new(
-                            sig.inputs.span(),
-                            "SlashContext type must be a type",
-                        ))
-                    }
-                }
-            }
-            None => {
-                return Err(Error::new(
-                    sig.inputs.span(),
-                    "SlashContext type must be set",
-                ))
-            }
-        }
-    };
-
-    Ok((ctx_ident, ty))
-}
-
 pub fn get_context_type(sig: &Signature, allow_references: bool) -> Result<Type> {
     let arg = match sig.inputs.iter().next() {
         None => {

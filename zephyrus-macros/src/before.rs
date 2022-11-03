@@ -33,7 +33,7 @@ pub fn before(input: TokenStream2) -> Result<TokenStream2> {
     */
     util::check_return_type(&sig.output, quote::quote!(bool))?;
 
-    let (_, ty) = util::get_context_type_and_ident(&sig)?;
+    let ty = util::get_context_type(&sig, true)?;
     // Get the hook macro so we can fit the function into a normal fn pointer
     let hook = util::get_hook_macro();
     let path = quote::quote!(::zephyrus::hook::BeforeHook);
