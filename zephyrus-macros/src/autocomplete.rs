@@ -1,7 +1,6 @@
 use proc_macro2::{TokenStream as TokenStream2};
 use syn::{
-    parse2, spanned::Spanned, Error, GenericArgument, ItemFn, Result,
-    Signature, Type,
+    parse2, spanned::Spanned, Error, ItemFn, Result
 };
 use crate::util;
 
