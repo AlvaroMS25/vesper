@@ -3,7 +3,6 @@ use syn::{
     parse2, spanned::Spanned, Error, FnArg, GenericParam, ItemFn, Lifetime, LifetimeDef, Result,
     ReturnType, Type,
 };
-use crate::util;
 
 /// The implementation of the hook macro, this macro takes the given function and changes
 /// it's output and body to fit into a `Pin<Box<dyn Future>>`
@@ -63,8 +62,6 @@ pub fn hook(input: TokenStream2) -> Result<TokenStream2> {
             }
         }
     }
-
-    util::set_context_lifetime(&mut sig)?;
 
     Ok(quote::quote! {
         #(#attrs)*
