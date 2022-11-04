@@ -1,6 +1,5 @@
 use crate::{
-    builder::FnPointer,
-    command::{Command, CommandMap},
+    command::CommandMap,
     twilight_exports::Permissions,
 };
 use std::collections::HashMap;
@@ -57,88 +56,6 @@ pub struct GroupParent<D, T, E> {
     pub required_permissions: Option<Permissions>,
 }
 
-/// A builder of a [group parent](self::GroupParent), see it for documentation.
-pub struct GroupParentBuilder<D, T, E> {
-    name: Option<&'static str>,
-    description: Option<&'static str>,
-    kind: ParentType<D, T, E>,
-    required_permissions: Option<Permissions>,
-}
-
-impl<D, T, E> GroupParentBuilder<D, T, E> {
-    /// Creates a new builder.
-    pub(crate) fn new() -> Self {
-        Self {
-            name: None,
-            description: None,
-            kind: ParentType::Group(Default::default()),
-            required_permissions: None,
-        }
-    }
-
-    /// Sets the name of this parent group.
-    pub fn name(&mut self, name: &'static str) -> &mut Self {
-        self.name = Some(name);
-        self
-    }
-
-    /// Sets the description of this parent group.
-    pub fn description(&mut self, description: &'static str) -> &mut Self {
-        self.description = Some(description);
-        self
-    }
-
-    pub fn required_permissions(&mut self, permissions: Permissions) -> &mut Self {
-        self.required_permissions = Some(permissions);
-        self
-    }
-
-    /// Sets this parent group as a [group](self::ParentType::Group),
-    /// allowing to create subcommand groups inside of it.
-    pub fn group<F>(&mut self, fun: F) -> &mut Self
-    where
-        F: FnOnce(&mut CommandGroupBuilder<D, T, E>) -> &mut CommandGroupBuilder<D, T, E>,
-    {
-        let mut builder = CommandGroupBuilder::new();
-        fun(&mut builder);
-        let built = builder.build();
-
-        if let ParentType::Group(map) = &mut self.kind {
-            assert!(!map.contains_key(built.name));
-            map.insert(built.name, built);
-        } else {
-            let mut map = GroupMap::new();
-            map.insert(built.name, built);
-            self.kind = ParentType::Group(map);
-        }
-        self
-    }
-
-    /// Sets this parent group as [simple](self::ParentType::Simple), only allowing subcommands.
-    pub fn command(&mut self, fun: FnPointer<Command<D, T, E>>) -> &mut Self {
-        let command = fun();
-        if let ParentType::Simple(map) = &mut self.kind {
-            map.insert(command.name, command);
-        } else {
-            let mut map = CommandMap::new();
-            map.insert(command.name, command);
-            self.kind = ParentType::Simple(map);
-        }
-        self
-    }
-
-    /// Builds this parent group, returning a [group parent](self::GroupParent).
-    pub fn build(self) -> GroupParent<D, T, E> {
-        assert!(self.name.is_some() && self.description.is_some());
-        GroupParent {
-            name: self.name.unwrap(),
-            description: self.description.unwrap(),
-            kind: self.kind,
-            required_permissions: self.required_permissions,
-        }
-    }
-}
-
 /// A group of commands, referred by discord as `SubCommandGroup`.
 pub struct CommandGroup<D, T, E> {
     /// The upper command
@@ -151,52 +68,4 @@ pub struct CommandGroup<D, T, E> {
     pub description: &'static str,
     /// The commands this group has as children.
     pub subcommands: CommandMap<D, T, E>,
-}
-
-/// A builder for a [CommandGroup](self::CommandGroup), see it for documentation.
-pub struct CommandGroupBuilder<D, T, E> {
-    name: Option<&'static str>,
-    description: Option<&'static str>,
-    subcommands: CommandMap<D, T, E>,
-}
-
-impl<D, T, E> CommandGroupBuilder<D, T, E> {
-    /// Sets the upper command of this group.
-    pub fn name(&mut self, name: &'static str) -> &mut Self {
-        self.name = Some(name);
-        self
-    }
-
-    /// Sets the description of this group.
-    pub fn description(&mut self, description: &'static str) -> &mut Self {
-        self.description = Some(description);
-        self
-    }
-
-    /// Adds a command to this group.
-    pub fn command(&mut self, fun: FnPointer<Command<D, T, E>>) -> &mut Self {
-        let command = fun();
-        self.subcommands.insert(command.name, command);
-        self
-    }
-
-    /// Builds the builder into a [group](self::CommandGroup).
-    pub(crate) fn build(self) -> CommandGroup<D, T, E> {
-        assert!(self.name.is_some() && self.description.is_some());
-
-        CommandGroup {
-            name: self.name.unwrap(),
-            description: self.description.unwrap(),
-            subcommands: self.subcommands,
-        }
-    }
-
-    /// Creates a new builder.
-    pub(crate) fn new() -> Self {
-        Self {
-            name: None,
-            description: None,
-            subcommands: Default::default(),
-        }
-    }
 }
