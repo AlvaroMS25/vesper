@@ -127,7 +127,7 @@ impl<D, T, E> GroupParentBuilder<D, T, E> {
         self
     }
 
-    /// Builds this parent group, returning an [group parent](self::GroupParent).
+    /// Builds this parent group, returning a [group parent](self::GroupParent).
     pub fn build(self) -> GroupParent<D, T, E> {
         assert!(self.name.is_some() && self.description.is_some());
         GroupParent {
