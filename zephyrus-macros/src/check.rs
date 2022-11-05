@@ -24,11 +24,9 @@ pub fn check(input: TokenStream2) -> Result<TokenStream2> {
     // The name the function will have after this macro's execution
     let fn_ident = quote::format_ident!("_{}", &ident);
     sig.ident = fn_ident.clone();
-    /*
-        Check the return of the function, returning if it does not match, this function is required
-        to return a `bool` indicating if the recognised command should be executed or not
-    */
-    util::check_return_type(&sig.output, quote::quote!(bool))?;
+
+    let return_type = util::get_return_type(&sig)?;
+    let returnable = util::get_returnable_trait();
 
     let ty = util::get_context_type(&sig, true)?;
     // Get the hook macro so we can fit the function into a normal fn pointer
@@ -36,7 +34,7 @@ pub fn check(input: TokenStream2) -> Result<TokenStream2> {
     let path = quote::quote!(::zephyrus::hook::CheckHook);
 
     Ok(quote::quote! {
-        pub fn #ident() -> #path<#ty> {
+        pub fn #ident() -> #path<#ty, <#return_type as #returnable>::Err> {
             #path(#fn_ident)
         }
 

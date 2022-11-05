@@ -21,9 +21,9 @@ pub(crate) type AutocompleteFn<D> =
 /// A hook used to suggest inputs to the command caller.
 pub struct AutocompleteHook<D>(pub AutocompleteFn<D>);
 
-pub(crate) type CheckFn<D> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, bool>;
+pub(crate) type CheckFn<D, E> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, Result<bool, E>>;
 
-pub struct CheckHook<D>(pub CheckFn<D>);
+pub struct CheckHook<D, E>(pub CheckFn<D, E>);
 
 pub(crate) type ErrorHandlerFn<D, T, E> = for<'a> fn(&'a SlashContext<'a, D>, Result<T, E>) -> BoxFuture<'a, ()>;
 

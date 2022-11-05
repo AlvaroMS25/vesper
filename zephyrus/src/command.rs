@@ -21,7 +21,7 @@ pub struct Command<D, T, E> {
     pub fun: CommandFn<D, T, E>,
     /// The required permissions to use this command
     pub required_permissions: Option<Permissions>,
-    pub checks: Vec<CheckHook<D>>,
+    pub checks: Vec<CheckHook<D, E>>,
     pub error_handler: Option<ErrorHandlerHook<D, T, E>>
 }
 
@@ -57,7 +57,7 @@ impl<D, T, E> Command<D, T, E> {
         self
     }
 
-    pub fn checks(mut self, checks: Vec<CheckHook<D>>) -> Self {
+    pub fn checks(mut self, checks: Vec<CheckHook<D, E>>) -> Self {
         self.checks = checks;
         self
     }
@@ -72,27 +72,29 @@ impl<D, T, E> Command<D, T, E> {
         self
     }
 
-    pub async fn run_checks(&self, context: &SlashContext<'_, D>) -> bool {
+    pub async fn run_checks(&self, context: &SlashContext<'_, D>) -> Result<bool, E> {
         for check in &self.checks {
-            if !(check.0)(context).await {
-                return false;
+            if !(check.0)(context).await? {
+                return Ok(false);
             }
         }
-        true
+        Ok(true)
     }
 
     pub async fn execute(&self, context: &SlashContext<'_, D>) -> Option<Result<T, E>> {
-        if self.run_checks(context).await {
-            let output = (self.fun)(context).await;
-            if let Some(hook) = &self.error_handler {
-                (hook.0)(context, output).await;
+        match self.run_checks(context).await {
+            Ok(true) => {
+                let output = (self.fun)(context).await;
+                if let Some(hook) = &self.error_handler {
+                    (hook.0)(context, output).await;
 
-                None
-            } else {
-                Some(output)
-            }
-        } else {
-            None
+                    None
+                } else {
+                    Some(output)
+                }
+            },
+            Err(why) => Some(Err(why)),
+            _ => None
         }
     }
 }
