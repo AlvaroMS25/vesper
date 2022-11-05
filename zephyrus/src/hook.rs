@@ -25,6 +25,6 @@ pub(crate) type CheckFn<D, E> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture
 
 pub struct CheckHook<D, E>(pub CheckFn<D, E>);
 
-pub(crate) type ErrorHandlerFn<D, T, E> = for<'a> fn(&'a SlashContext<'a, D>, Result<T, E>) -> BoxFuture<'a, ()>;
+pub(crate) type ErrorHandlerFn<D, E> = for<'a> fn(&'a SlashContext<'a, D>, E) -> BoxFuture<'a, ()>;
 
-pub struct ErrorHandlerHook<D, T, E>(pub ErrorHandlerFn<D, T, E>);
+pub struct ErrorHandlerHook<D, E>(pub ErrorHandlerFn<D, E>);

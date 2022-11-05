@@ -22,7 +22,7 @@ pub struct Command<D, T, E> {
     /// The required permissions to use this command
     pub required_permissions: Option<Permissions>,
     pub checks: Vec<CheckHook<D, E>>,
-    pub error_handler: Option<ErrorHandlerHook<D, T, E>>
+    pub error_handler: Option<ErrorHandlerHook<D, E>>
 }
 
 impl<D, T, E> Command<D, T, E> {
@@ -62,7 +62,7 @@ impl<D, T, E> Command<D, T, E> {
         self
     }
 
-    pub fn error_handler(mut self, hook: ErrorHandlerHook<D, T, E>) -> Self {
+    pub fn error_handler(mut self, hook: ErrorHandlerHook<D, E>) -> Self {
         self.error_handler = Some(hook);
         self
     }
@@ -85,15 +85,24 @@ impl<D, T, E> Command<D, T, E> {
         match self.run_checks(context).await {
             Ok(true) => {
                 let output = (self.fun)(context).await;
+
+                match (&self.error_handler, output) {
+                    (Some(hook), Err(why)) => {
+                        (hook.0)(context, why).await;
+                        None
+                    },
+                    (_, output) => Some(output)
+                }
+            },
+            Err(why) => {
                 if let Some(hook) = &self.error_handler {
-                    (hook.0)(context, output).await;
+                    (hook.0)(context, why).await;
 
                     None
                 } else {
-                    Some(output)
+                    Some(Err(why))
                 }
             },
-            Err(why) => Some(Err(why)),
             _ => None
         }
     }
