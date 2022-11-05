@@ -28,7 +28,7 @@ pub fn get_path(t: &Type, allow_references: bool) -> Result<&Path> {
             if allow_references {
                 get_path(&r.elem, allow_references)
             } else {
-                Err(Error::new(r.span(), "References not allowed"))
+                Err(Error::new(r.span(), "Reference not allowed"))
             }
         },
         _ => Err(Error::new(
