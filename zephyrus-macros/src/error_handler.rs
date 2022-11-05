@@ -32,7 +32,7 @@ pub fn error_handler(input: TokenStream2) -> Result<TokenStream2> {
     */
     util::check_return_type(&sig.output, quote::quote!(()))?;
 
-    let result_type = util::get_path(&util::get_pat(sig.inputs.iter().nth(1).unwrap())?.ty, false)?;
+    let error_type = util::get_path(&util::get_pat(sig.inputs.iter().nth(1).unwrap())?.ty, false)?;
 
     let ty = util::get_context_type(&sig, true)?;
     // Get the hook macro so we can fit the function into a normal fn pointer
@@ -40,7 +40,7 @@ pub fn error_handler(input: TokenStream2) -> Result<TokenStream2> {
     let path = quote::quote!(::zephyrus::hook::ErrorHandlerHook);
 
     Ok(quote::quote! {
-        pub fn #ident() -> #path<#ty, #result_type> {
+        pub fn #ident() -> #path<#ty, #error_type> {
             #path(#fn_ident)
         }
 
