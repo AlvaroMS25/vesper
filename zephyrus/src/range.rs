@@ -60,8 +60,7 @@ impl<T, E, const START: i64, const END: i64> Parse<T> for Range<E, START, END>
         let v = unsafe { *(&value as *const E as *const i64) };
 
         if v < START || v > END {
-            return Err(error(
-                &format!("Range<{}, {}, {}>", type_name::<E>(), START, END),
+            return Err(error::<Self>(
                 true,
                 "Input out of range"
             ));
