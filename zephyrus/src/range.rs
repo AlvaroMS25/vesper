@@ -55,11 +55,8 @@ impl<T, E, const START: i64, const END: i64> Parse<T> for Range<E, START, END>
     async fn parse(http_client: &WrappedClient, data: &T, value: Option<&CommandOptionValue>) -> Result<Self, ParseError> {
         let value = E::parse(http_client, data, value).await?;
 
-        // SAFETY: The maximum value allowed by discord can be represented as an i64,
-        // so casting to it won't lead to losing any data.
-
         // SAFETY: Both the upper and lower values must be i64's and the Number trait is implemented
-        // only for integer numbers, so casting the value to an i64 won't lead to losing any data.
+        // only for integer numbers, so casting the value to an i64 is safe to do.
         let v = unsafe { *(&value as *const E as *const i64) };
 
         if v < START || v > END {
