@@ -7,7 +7,7 @@ pub(crate) fn error<T>(required: bool, why: &str) -> ParseError {
     ParseError::Parsing {
         argument_name: String::new(),
         required,
-        type_: std::any::type_name::<T>().to_string(),
+        argument_type: std::any::type_name::<T>().to_string(),
         error: why.to_string()
     }
 }
