@@ -57,6 +57,9 @@ impl<T, E, const START: i64, const END: i64> Parse<T> for Range<E, START, END>
 
         // SAFETY: The maximum value allowed by discord can be represented as an i64,
         // so casting to it won't lead to losing any data.
+
+        // SAFETY: Both the upper and lower values must be i64's and the Number trait is implemented
+        // only for integer numbers, so casting the value to an i64 won't lead to losing any data.
         let v = unsafe { *(&value as *const E as *const i64) };
 
         if v < START || v > END {
