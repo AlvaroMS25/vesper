@@ -3,7 +3,7 @@ use crate::twilight_exports::*;
 
 const NUMBER_MAX_VALUE: i64 = 9007199254740991;
 
-pub(crate) fn error<T>(required: bool, why: &str) -> ParseError {
+pub(crate) fn error(type_name: &str, required: bool, why: &str) -> ParseError {
     ParseError::Parsing {
         argument_name: String::new(),
         required,
@@ -22,7 +22,7 @@ impl<T: Send + Sync> Parse<T> for String {
         if let Some(CommandOptionValue::String(s)) = value {
             return Ok(s.to_owned());
         }
-        Err(error::<Self>(true, "String expected"))
+        Err(error("String", true, "String expected"))
     }
 
     fn kind() -> CommandOptionType {
@@ -40,7 +40,7 @@ impl<T: Send + Sync> Parse<T> for i64 {
         if let Some(CommandOptionValue::Integer(i)) = value {
             return Ok(*i);
         }
-        Err(error::<Self>(true, "Integer expected"))
+        Err(error("i64", true, "Integer expected"))
     }
 
     fn kind() -> CommandOptionType {
@@ -57,11 +57,11 @@ impl<T: Send + Sync> Parse<T> for u64 {
     ) -> Result<Self, ParseError> {
         if let Some(CommandOptionValue::Integer(i)) = value {
             if *i < 0 {
-                return Err(error::<Self>(true, "Input out of range"))
+                return Err(error("u64", true, "Input out of range"))
             }
             return Ok(*i as u64);
         }
-        Err(error::<Self>(true, "Integer expected"))
+        Err(error("Integer", true, "Integer expected"))
     }
 
     fn kind() -> CommandOptionType {
@@ -87,7 +87,7 @@ impl<T: Send + Sync> Parse<T> for f64 {
         if let Some(CommandOptionValue::Number(i)) = value {
             return Ok(*i);
         }
-        Err(error::<Self>(true, "Number expected"))
+        Err(error("f64", true, "Number expected"))
     }
 
     fn kind() -> CommandOptionType {
@@ -112,11 +112,11 @@ impl<T: Send + Sync> Parse<T> for f32 {
     ) -> Result<Self, ParseError> {
         if let Some(CommandOptionValue::Number(i)) = value {
             if *i > f32::MAX as f64 || *i < f32::MIN as f64 {
-                return Err(error::<Self>(true, "Input out of range"))
+                return Err(error("f32", true, "Input out of range"))
             }
             return Ok(*i as f32);
         }
-        Err(error::<Self>(true, "Number expected"))
+        Err(error("f32", true, "Number expected"))
     }
 
     fn kind() -> CommandOptionType {
@@ -142,7 +142,7 @@ impl<T: Send + Sync> Parse<T> for bool {
         if let Some(CommandOptionValue::Boolean(i)) = value {
             return Ok(*i);
         }
-        Err(error::<Self>(true, "Boolean expected"))
+        Err(error("Boolean", true, "Boolean expected"))
     }
 
     fn kind() -> CommandOptionType {
@@ -161,7 +161,7 @@ impl<T: Send + Sync> Parse<T> for Id<ChannelMarker> {
             return Ok(*channel);
         }
 
-        Err(error::<Self>(true, "Channel expected"))
+        Err(error("Channel id", true, "Channel expected"))
     }
 
     fn kind() -> CommandOptionType {
@@ -180,7 +180,7 @@ impl<T: Send + Sync> Parse<T> for Id<UserMarker> {
             return Ok(*user);
         }
 
-        Err(error::<Self>(true, "User expected"))
+        Err(error("User id", true, "User expected"))
     }
 
     fn kind() -> CommandOptionType {
@@ -199,7 +199,7 @@ impl<T: Send + Sync> Parse<T> for Id<RoleMarker> {
             return Ok(*role);
         }
 
-        Err(error::<Self>(true, "Role expected"))
+        Err(error("Role id", true, "Role expected"))
     }
 
     fn kind() -> CommandOptionType {
@@ -218,7 +218,7 @@ impl<T: Send + Sync> Parse<T> for Id<GenericMarker> {
             return Ok(*id);
         }
 
-        Err(error::<Self>(true, "Mentionable expected"))
+        Err(error("Id", true, "Mentionable expected"))
     }
 
     fn kind() -> CommandOptionType {
@@ -312,7 +312,8 @@ macro_rules! impl_derived_parse {
                     let p = <$prim>::parse(http_client, data, value).await?;
 
                     if p > <$derived>::MAX as $prim {
-                        Err(error::<$derived>(
+                        Err(error(
+                            stringify!($derived),
                             true,
                             concat!(
                                 "Failed to parse to ",
@@ -324,7 +325,8 @@ macro_rules! impl_derived_parse {
                             )
                         ))
                     } else if p < <$derived>::MIN as $prim {
-                        Err(error::<$derived>(
+                        Err(error(
+                            stringify!($derived),
                             true,
                             concat!(
                                 "Failed to parse to ",
