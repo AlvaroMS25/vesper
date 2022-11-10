@@ -44,7 +44,7 @@ impl<D, T, E> ParentType<D, T, E> {
 pub struct GroupParent<D, T, E> {
     /// The name of the upper command
     ///
-    /// e.g.: /parent/<subcommand..>
+    /// e.g.: /parent <subcommand..>
     ///
     /// where `parent` is `name`.
     pub name: &'static str,
@@ -60,7 +60,7 @@ pub struct GroupParent<D, T, E> {
 pub struct CommandGroup<D, T, E> {
     /// The upper command
     ///
-    /// e.g.: /parent/command/<subcommand..>/<options..>
+    /// e.g.: /parent command <subcommand..> <options..>
     ///
     /// where `command` is `name`.
     pub name: &'static str,

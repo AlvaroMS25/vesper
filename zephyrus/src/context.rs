@@ -121,6 +121,8 @@ impl<'a, D> SlashContext<'a, D> {
         Ok(())
     }
 
+    /// Returns a waiter used to wait for a specific interaction which satisfies the provided
+    /// closure.
     pub fn wait_interaction<F>(&self, fun: F) -> InteractionWaiter
     where
         F: Fn(&Interaction) -> bool + Send + 'static

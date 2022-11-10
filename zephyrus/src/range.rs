@@ -25,7 +25,11 @@ mod sealed {
 
 use sealed::Number;
 
-/// A range-like type used to constraint the input provided by the user.
+/// A range-like type used to constraint the input provided by the user. This is equivalent to
+/// using a [RangeInclusive], but implements the [parse] trait.
+///
+/// [RangeInclusive]: std::ops::RangeInclusive
+/// [parse]: Parse
 #[derive(Copy, Clone)]
 pub struct Range<T: Number, const START: i64, const END: i64>(T);
 

@@ -11,7 +11,7 @@ pub struct ArgumentLimits {
     pub max: Option<CommandOptionValue>
 }
 
-/// A command argument.
+/// A structure representing a command argument.
 pub struct CommandArgument<D> {
     /// Argument name.
     pub name: &'static str,
@@ -30,6 +30,7 @@ pub struct CommandArgument<D> {
 }
 
 impl<D> CommandArgument<D> {
+    /// Converts the argument into a twilight's [command option](CommandOption)
     pub fn as_option(&self) -> CommandOption {
         match self.kind {
             CommandOptionType::String => CommandOption::String(ChoiceCommandOptionData {
