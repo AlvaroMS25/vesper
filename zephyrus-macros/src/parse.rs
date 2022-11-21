@@ -22,11 +22,13 @@ impl Variant {
         let value = &self.value;
         let index = self.index as i64;
         tokens.extend(quote::quote! {
-            choices.push(::zephyrus::twilight_exports::CommandOptionChoice::Int {
-                name: #value.to_string(),
-                value: #index,
-                name_localizations: None
-            });
+            choices.push(::zephyrus::twilight_exports::CommandOptionChoice::Integer(
+                ::zephyrus::twilight_exports::CommandOptionChoiceData {
+                    name: #value.to_string(),
+                    value: #index,
+                    name_localizations: None
+                })
+            );
         })
     }
 }

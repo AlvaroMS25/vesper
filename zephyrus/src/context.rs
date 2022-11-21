@@ -119,7 +119,6 @@ impl<'a, D> SlashContext<'a, D> {
                     data: None,
                 },
             )
-            .exec()
             .await?;
 
         Ok(())
@@ -139,7 +138,6 @@ impl<'a, D> SlashContext<'a, D> {
             .interaction_client
             .update_response(&self.interaction.token));
         Ok(update
-            .exec()
             .await?
             .model()
             .await?)
