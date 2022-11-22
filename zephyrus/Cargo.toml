@@ -1,6 +1,6 @@
 [package]
 name = "zephyrus"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Alvaro <62391364+AlvaroMS25@users.noreply.github.com>"]
 edition = "2018"
 description = "A slash-command framework meant to be used with twilight"
