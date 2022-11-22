@@ -45,19 +45,11 @@ pub mod twilight_exports {
     };
     pub use twilight_model::{
         application::{
-            command::{
-                BaseCommandOptionData, ChannelCommandOptionData, ChoiceCommandOptionData, Command,
-                CommandOption, CommandOptionChoice, CommandOptionType, NumberCommandOptionData,
-                OptionsCommandOptionData,
-            },
+            command::{Command, CommandOption, CommandOptionChoice, CommandOptionChoiceData, CommandOptionType},
             interaction::{
-                application_command::{
-                    CommandData, CommandDataOption, CommandOptionValue,
-                },
+                application_command::{CommandData, CommandDataOption, CommandOptionValue},
                 message_component::MessageComponentInteractionData,
-                Interaction,
-                InteractionType,
-                InteractionData
+                Interaction, InteractionData, InteractionType,
             },
         },
         channel::Message,

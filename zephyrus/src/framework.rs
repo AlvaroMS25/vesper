@@ -9,7 +9,7 @@ use crate::{
         ApplicationMarker, Client,
         Command as TwilightCommand, CommandData, CommandDataOption, CommandOption, CommandOptionType,
         CommandOptionValue, GuildMarker, Id, Interaction, InteractionData, InteractionType, InteractionClient, InteractionResponse,
-        InteractionResponseType, OptionsCommandOptionData,
+        InteractionResponseType,
     },
     waiter::WaiterWaker
 };
@@ -146,7 +146,6 @@ where
                             data,
                         },
                     )
-                    .exec()
                     .await;
             }
         }
@@ -317,7 +316,7 @@ where
                 command = command.default_member_permissions(*permissions);
             }
 
-            commands.push(command.exec().await?.model().await?);
+            commands.push(command.await?.model().await?);
         }
 
         for group in self.groups.values() {
@@ -332,7 +331,7 @@ where
                 command = command.default_member_permissions(*permissions);
             }
 
-            commands.push(command.exec().await?.model().await?);
+            commands.push(command.await?.model().await?);
         }
 
         Ok(commands)
@@ -360,7 +359,7 @@ where
                 command = command.default_member_permissions(*permissions);
             }
 
-            commands.push(command.exec().await?.model().await?);
+            commands.push(command.await?.model().await?);
         }
 
         for group in self.groups.values() {
@@ -375,7 +374,7 @@ where
                 command = command.default_member_permissions(*permissions);
             }
 
-            commands.push(command.exec().await?.model().await?);
+            commands.push(command.await?.model().await?);
         }
 
         Ok(commands)
@@ -404,12 +403,22 @@ where
                     subcommands.push(self.create_subcommand(sub))
                 }
 
-                subgroups.push(CommandOption::SubCommandGroup(OptionsCommandOptionData {
+                subgroups.push(CommandOption {
+                    kind: CommandOptionType::SubCommandGroup,
                     name: group.name.to_string(),
                     description: group.description.to_string(),
-                    options: subcommands,
-                    ..Default::default()
-                }));
+                    options: Some(subcommands),
+                    autocomplete: None,
+                    choices: None,
+                    required: None,
+                    channel_types: None,
+                    description_localizations: None,
+                    max_length: None,
+                    max_value: None,
+                    min_length: None,
+                    min_value: None,
+                    name_localizations: None,
+                });
             }
             subgroups
         } else if let ParentType::Simple(map) = &parent.kind {
@@ -428,11 +437,21 @@ where
     fn create_subcommand(&self, cmd: &Command<D, T, E>) -> CommandOption {
         debug!("Registering {} subcommand", cmd.name);
 
-        CommandOption::SubCommand(OptionsCommandOptionData {
+        CommandOption {
+            kind: CommandOptionType::SubCommand,
             name: cmd.name.to_string(),
             description: cmd.description.to_string(),
-            options: self.arg_options(&cmd.arguments),
-            ..Default::default()
-        })
+            options: Some(self.arg_options(&cmd.arguments)),
+            autocomplete: None,
+            choices: None,
+            required: None,
+            channel_types: None,
+            description_localizations: None,
+            max_length: None,
+            max_value: None,
+            min_length: None,
+            min_value: None,
+            name_localizations: None,
+        }
     }
 }

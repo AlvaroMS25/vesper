@@ -1,10 +1,10 @@
 [package]
 name = "zephyrus"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Alvaro <62391364+AlvaroMS25@users.noreply.github.com>"]
 edition = "2018"
 description = "A slash-command framework meant to be used with twilight"
-readme = "../README.md"
+readme = "README.md"
 repository = "https://github.com/AlvaroMS25/zephyrus"
 license = "MIT"
 keywords = ["async", "twilight", "discord", "slash-command"]
@@ -14,12 +14,11 @@ categories = ["asynchronous"]
 
 [dependencies]
 async-trait = "0.1"
-#zephyrus-macros = "^0.4"
-zephyrus-macros = { path = "../zephyrus-macros" }
+zephyrus-macros = "0.5"
 parking_lot = "0.12"
 tracing = "0.1"
-twilight-model = "0.13"
-twilight-http = "0.13"
+twilight-model = "0.14"
+twilight-http = "0.14"
 
 [dependencies.tokio]
 version = "1"

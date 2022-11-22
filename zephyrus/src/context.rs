@@ -115,7 +115,6 @@ impl<'a, D> SlashContext<'a, D> {
                     data: None,
                 },
             )
-            .exec()
             .await?;
 
         Ok(())
