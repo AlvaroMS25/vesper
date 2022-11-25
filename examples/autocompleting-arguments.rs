@@ -3,6 +3,7 @@ use std::sync::Arc;
 use futures_util::StreamExt;
 use twilight_gateway::Cluster;
 use twilight_http::Client;
+use twilight_model::application::command::{CommandOptionChoice, CommandOptionChoiceData};
 use twilight_model::gateway::event::Event;
 use twilight_model::gateway::Intents;
 use twilight_model::http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType};
@@ -25,7 +26,7 @@ async fn main() {
     cluster.up().await;
 
     let framework = Framework::builder(http_client, Id::new(application_id), ())
-        .command(hello)
+        .command(random_number)
         .build();
 
     while let Some((_, event)) = events.next().await {
@@ -38,4 +39,42 @@ async fn main() {
             _ => ()
         }
     }
+}
+
+#[autocomplete]
+async fn generate_random(_ctx: AutocompleteContext<()>) -> Option<InteractionResponseData> {
+    Some(InteractionResponseData {
+        choices: Some((0..5)
+            .map(|_| rand::random::<u8>())
+            .map(|item| {
+                CommandOptionChoice::Integer(CommandOptionChoiceData {
+                    name: item.to_string(),
+                    name_localizations: None,
+                    value: item as i64
+                })
+            })
+            .collect()),
+        ..Default::default()
+    })
+}
+
+#[command]
+#[description = "Uses autocompletion to provide a random list of numbers"]
+async fn random_number(
+    ctx: &SlashContext<()>,
+    #[autocomplete(generate_random)] #[description = "A number to repeat"] num: u8
+) -> CommandResult
+{
+    ctx.interaction_client.create_response(
+        ctx.interaction.id,
+        &ctx.interaction.token,
+        &InteractionResponse {
+            kind: InteractionResponseType::ChannelMessageWithSource,
+            data: Some(InteractionResponseData {
+                content: Some(format!("The number is {num}")),
+                ..Default::default()
+            })
+        }
+    ).await?;
+    Ok(())
 }
