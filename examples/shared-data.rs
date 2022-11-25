@@ -14,7 +14,7 @@ struct Shared {
     count: AtomicUsize
 }
 
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main]
 async fn main() {
     let token = env::var("DISCORD_TOKEN").unwrap();
     let application_id = env::var("DISCORD_APPLICATION_ID").unwrap().parse::<u64>().unwrap();
