@@ -1,0 +1,38 @@
+[package]
+name = "zephyrus-examples"
+edition = "2021"
+version = "0.0.0"
+publish = false
+
+[dependencies]
+futures-util = "0.3"
+rand = "0.8"
+tokio = { version = "1", features = ["full"]}
+twilight-http = "0.14.0"
+twilight-model = "0.14.0"
+twilight-gateway = "0.14.0"
+zephyrus = "0.5.0"
+
+[[example]]
+name = "basic-bot"
+path = "basic-bot.rs"
+
+[[example]]
+name = "using-groups"
+path = "using-groups.rs"
+
+[[example]]
+name = "shared-data"
+path = "shared-data.rs"
+
+[[example]]
+name = "using-hooks"
+path = "using-hooks.rs"
+
+[[example]]
+name = "autocompleting-arguments"
+path = "autocompleting-arguments.rs"
+
+[[example]]
+name = "using-dedicated-tasks"
+path = "using-dedicated-tasks.rs"
