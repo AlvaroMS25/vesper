@@ -11,7 +11,7 @@ tokio = { version = "1", features = ["full"]}
 twilight-http = "0.14.0"
 twilight-model = "0.14.0"
 twilight-gateway = "0.14.0"
-zephyrus = "0.5.0"
+zephyrus = { path = "../zephyrus" }
 
 [[example]]
 name = "basic-bot"
