@@ -42,7 +42,7 @@ async fn main() {
 
 #[command]
 #[description = "Says hello"]
-async fn hello(ctx: &SlashContext<()>) -> CommandResult {
+async fn hello(ctx: &SlashContext<()>) -> DefaultCommandResult {
     ctx.interaction_client.create_response(
         ctx.interaction.id,
         &ctx.interaction.token,

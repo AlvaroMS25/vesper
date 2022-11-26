@@ -7,6 +7,7 @@ use twilight_model::gateway::event::Event;
 use twilight_model::gateway::Intents;
 use twilight_model::http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType};
 use twilight_model::id::Id;
+use zephyrus::framework::DefaultError;
 use zephyrus::prelude::*;
 
 #[tokio::main]
@@ -53,13 +54,13 @@ async fn before_hook(_ctx: &SlashContext<()>, command_name: &str) -> bool {
 // The result field will be some only if the command returned no errors or if the command has
 // no custom error handler set.
 #[after]
-async fn after_hook(_ctx: &SlashContext<()>, command_name: &str, result: Option<CommandResult>) {
+async fn after_hook(_ctx: &SlashContext<()>, command_name: &str, result: Option<DefaultCommandResult>) {
     println!("{command_name} finished, returned value: {result:?}");
 }
 
 #[command]
 #[description = "Says hello"]
-async fn hello(ctx: &SlashContext<()>) -> CommandResult {
+async fn hello(ctx: &SlashContext<()>) -> DefaultCommandResult {
     ctx.interaction_client.create_response(
         ctx.interaction.id,
         &ctx.interaction.token,
@@ -76,7 +77,7 @@ async fn hello(ctx: &SlashContext<()>) -> CommandResult {
 }
 
 #[error_handler]
-async fn handle_error(_ctx: &SlashContext<()>, result: CommandResult) {
+async fn handle_error(_ctx: &SlashContext<()>, result: DefaultError) {
     println!("Command had an error: {result:?}");
 }
 
@@ -87,12 +88,12 @@ async fn handle_error(_ctx: &SlashContext<()>, result: CommandResult) {
 // case is only if the command is executed outside of a guild. Otherwise the result argument
 // will be `None`, as the error will be consumed at the custom error handler.
 #[error_handler(handle_error)]
-async fn raises_error(ctx: &SlashContext<()>) -> CommandResult {
+async fn raises_error(ctx: &SlashContext<()>) -> DefaultCommandResult {
     ctx.acknowledge().await?;
     if !ctx.interaction.is_guild() {
-        ctx.update_response(|res| {
-            res.content(Some("This command can only be used in guilds")).unwrap()
-        }).await?;
+        ctx.interaction_client.update_response(&ctx.interaction.token)
+            .content(Some("This command can only be used in guilds")).unwrap()
+            .await?;
 
         return Ok(())
     }

@@ -50,7 +50,7 @@ async fn main() {
 
 #[command]
 #[description = "Says where the client is running"]
-async fn state(ctx: &SlashContext<()>) -> CommandResult {
+async fn state(ctx: &SlashContext<()>) -> DefaultCommandResult {
     ctx.interaction_client.create_response(
         ctx.interaction.id,
         &ctx.interaction.token,

@@ -10,7 +10,7 @@ use twilight_model::http::interaction::{InteractionResponse, InteractionResponse
 use twilight_model::id::Id;
 use zephyrus::prelude::*;
 
-struct Shared {
+pub struct Shared {
     count: AtomicUsize
 }
 
@@ -58,7 +58,7 @@ async fn main() {
 
 #[command]
 #[description = "Shows the current count value"]
-async fn show(ctx: &SlashContext<Shared>) -> CommandResult {
+async fn show(ctx: &SlashContext<Shared>) -> DefaultCommandResult {
     let current = ctx.data.count.load(Ordering::Relaxed);
 
     ctx.interaction_client.create_response(
@@ -78,7 +78,7 @@ async fn show(ctx: &SlashContext<Shared>) -> CommandResult {
 
 #[command]
 #[description = "Increments the count by one"]
-async fn increment_one(ctx: &SlashContext<Shared>) -> CommandResult {
+async fn increment_one(ctx: &SlashContext<Shared>) -> DefaultCommandResult {
     ctx.data.count.fetch_add(1, Ordering::Relaxed);
 
     ctx.interaction_client.create_response(
@@ -101,7 +101,7 @@ async fn increment_one(ctx: &SlashContext<Shared>) -> CommandResult {
 async fn increment_many(
     ctx: &SlashContext<Shared>,
     #[description = "How many numbers to add to count"] many: usize
-) -> CommandResult
+) -> DefaultCommandResult
 {
     ctx.data.count.fetch_add(many, Ordering::Relaxed);
 

@@ -63,7 +63,7 @@ async fn generate_random(_ctx: AutocompleteContext<()>) -> Option<InteractionRes
 async fn random_number(
     ctx: &SlashContext<()>,
     #[autocomplete(generate_random)] #[description = "A number to repeat"] num: u8
-) -> CommandResult
+) -> DefaultCommandResult
 {
     ctx.interaction_client.create_response(
         ctx.interaction.id,

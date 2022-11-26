@@ -38,7 +38,7 @@ async fn main() {
                 .description("Generates random things")
                 // Here, by setting another group, we are specifying this is a subcommand group.
                 .group(|subgroup| {
-                    group.name("integer")
+                    subgroup.name("integer")
                         .description("Generates random integers")
                         .command(number_between)
                 })
@@ -67,7 +67,7 @@ async fn main() {
 async fn repeat(
     ctx: &SlashContext<()>,
     #[description = "Message to repeat"] message: String
-) -> CommandResult
+) -> DefaultCommandResult
 {
     ctx.interaction_client.create_response(
         ctx.interaction.id,
@@ -90,7 +90,7 @@ async fn number_between(
     ctx: &SlashContext<()>,
     #[description = "The starting number of the range"] start: Range<i8, 0, 30>,
     #[description = "The end number of the range"] end: Range<i8, 50, 100>
-) -> CommandResult
+) -> DefaultCommandResult
 {
     // Range implements deref to the specified type, so it can be used like a normal number.
     let num = rand::thread_rng().gen_range(*start..=*end);
@@ -114,7 +114,7 @@ async fn number_between(
 // if nothing is provided, the function name is used as the command name.
 #[command("char")]
 #[description = "Generates a random char"]
-async fn random_char(ctx: &SlashContext<()>) -> CommandResult {
+async fn random_char(ctx: &SlashContext<()>) -> DefaultCommandResult {
     let char = rand::random::<char>();
 
     ctx.interaction_client.create_response(
