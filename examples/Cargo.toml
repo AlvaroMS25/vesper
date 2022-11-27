@@ -36,3 +36,7 @@ path = "autocompleting-arguments.rs"
 [[example]]
 name = "using-dedicated-tasks"
 path = "using-dedicated-tasks.rs"
+
+[[example]]
+name = "custom-types"
+path = "custom-types.rs"
