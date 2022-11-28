@@ -30,6 +30,10 @@ name = "using-hooks"
 path = "using-hooks.rs"
 
 [[example]]
+name = "using-checks"
+path = "using-checks.rs"
+
+[[example]]
 name = "autocompleting-arguments"
 path = "autocompleting-arguments.rs"
 
