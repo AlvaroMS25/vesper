@@ -3,7 +3,7 @@ use crate::{
     builder::{FrameworkBuilder, WrappedClient},
     command::{Command, CommandMap},
     context::{AutocompleteContext, Focused, SlashContext},
-    group::{GroupParent, ParentGroupMap, ParentType},
+    group::{GroupParent, GroupParentMap, ParentType},
     hook::{AfterHook, BeforeHook},
     twilight_exports::{
         ApplicationMarker, Client,
@@ -55,7 +55,7 @@ pub struct Framework<D, T = (), E = DefaultError> {
     /// A map of simple commands.
     pub commands: CommandMap<D, T, E>,
     /// A map of command groups including all children.
-    pub groups: ParentGroupMap<D, T, E>,
+    pub groups: GroupParentMap<D, T, E>,
     /// A hook executed before the command.
     pub before: Option<BeforeHook<D>>,
     /// A hook executed after command's execution.

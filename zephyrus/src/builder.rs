@@ -88,7 +88,7 @@ pub struct FrameworkBuilder<D, T = (), E = DefaultError> {
     /// The actual commands, only the simple ones.
     pub commands: CommandMap<D, T, E>,
     /// All groups containing commands.
-    pub groups: ParentGroupMap<D, T, E>,
+    pub groups: GroupParentMap<D, T, E>,
     /// A hook executed before any command.
     pub before: Option<BeforeHook<D>>,
     /// A hook executed after command's completion.
@@ -211,7 +211,7 @@ impl<D, T, E> GroupParentBuilder<D, T, E> {
             assert!(!map.contains_key(built.name));
             map.insert(built.name, built);
         } else {
-            let mut map = GroupMap::new();
+            let mut map = CommandGroupMap::new();
             map.insert(built.name, built);
             self.kind = ParentType::Group(map);
         }

@@ -5,16 +5,16 @@ use crate::{
 use std::collections::HashMap;
 
 /// A map of [parent groups](self::GroupParent).
-pub type ParentGroupMap<D, T, E> = HashMap<&'static str, GroupParent<D, T, E>>;
+pub type GroupParentMap<D, T, E> = HashMap<&'static str, GroupParent<D, T, E>>;
 /// A map of [command groups](self::CommandGroup).
-pub type GroupMap<D, T, E> = HashMap<&'static str, CommandGroup<D, T, E>>;
+pub type CommandGroupMap<D, T, E> = HashMap<&'static str, CommandGroup<D, T, E>>;
 
 /// Types a [group parent](self::GroupParent) can be.
 pub enum ParentType<D, T, E> {
     /// Simple, the group only has subcommands.
     Simple(CommandMap<D, T, E>),
     /// Group, the group has other groups inside of it.
-    Group(GroupMap<D, T, E>),
+    Group(CommandGroupMap<D, T, E>),
 }
 
 impl<D, T, E> ParentType<D, T, E> {
@@ -28,9 +28,9 @@ impl<D, T, E> ParentType<D, T, E> {
         }
     }
 
-    /// Tries to get the [`group`](self::GroupMap) of the given [parent type](self::ParentType),
+    /// Tries to get the [`group`](self::CommandGroupMap) of the given [parent type](self::ParentType),
     /// returning `Some` if the parent variant is a [`group`](self::ParentType::Group).
-    pub fn as_group(&self) -> Option<&GroupMap<D, T, E>> {
+    pub fn as_group(&self) -> Option<&CommandGroupMap<D, T, E>> {
         match self {
             Self::Group(group) => Some(group),
             _ => None,
