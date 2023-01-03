@@ -104,6 +104,13 @@ impl<'a, D> SlashContext<'a, D> {
         self.http_client.inner()
     }
 
+    /// Gets a mutable reference to the [interaction](Interaction) owned by the context.
+    pub fn interaction_mut(&self) -> &mut Interaction {
+        // SAFETY: The interaction itself is owned by the context, so only the thread executing
+        // the command / hook can access it at a time.
+        unsafe { &mut *(&self.interaction as *const Interaction as *mut Interaction) }
+    }
+
     /// Acknowledges the interaction, allowing to respond later.
     pub async fn acknowledge(&self) -> Result<(), twilight_http::Error> {
         self.interaction_client
