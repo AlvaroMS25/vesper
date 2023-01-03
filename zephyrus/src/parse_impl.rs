@@ -151,6 +151,25 @@ impl<T: Send + Sync> Parse<T> for bool {
 }
 
 #[async_trait]
+impl<T: Send + Sync> Parse<T> for Id<AttachmentMarker> {
+    async fn parse(
+        _: &WrappedClient,
+        _: &T,
+        value: Option<&CommandOptionValue>
+    ) -> Result<Self, ParseError> {
+        if let Some(CommandOptionValue::Attachment(attachment)) = value {
+            return Ok(*attachment);
+        }
+
+        Err(error("Attachment id", true, "Attachment expected"))
+    }
+
+    fn kind() -> CommandOptionType {
+        CommandOptionType::Attachment
+    }
+}
+
+#[async_trait]
 impl<T: Send + Sync> Parse<T> for Id<ChannelMarker> {
     async fn parse(
         _: &WrappedClient,

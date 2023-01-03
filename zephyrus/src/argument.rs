@@ -161,6 +161,22 @@ impl<D> CommandArgument<D> {
                 name_localizations: None,
                 options: None,
             },
+            CommandOptionType::Attachment => CommandOption {
+                kind: CommandOptionType::Attachment,
+                autocomplete: None,
+                channel_types: None,
+                choices: None,
+                description: self.description.to_string(),
+                description_localizations: None,
+                max_length: None,
+                max_value: None,
+                min_length: None,
+                min_value: None,
+                name: self.name.to_string(),
+                name_localizations: None,
+                options: None,
+                required: Some(self.required)
+            },
             _ => unreachable!(),
         }
     }

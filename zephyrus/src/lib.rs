@@ -60,8 +60,8 @@ pub mod twilight_exports {
         },
         id::{
             marker::{
-                ApplicationMarker, ChannelMarker, GenericMarker, GuildMarker, MessageMarker,
-                RoleMarker, UserMarker,
+                ApplicationMarker, AttachmentMarker, ChannelMarker, GenericMarker, GuildMarker,
+                MessageMarker, RoleMarker, UserMarker,
             },
             Id,
         },
