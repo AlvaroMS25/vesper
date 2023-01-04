@@ -12,6 +12,10 @@ categories = ["asynchronous"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [dependencies]
 async-trait = "0.1"
 zephyrus-macros = { path = "../zephyrus-macros", version = "0.6" }
