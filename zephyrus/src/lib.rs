@@ -47,7 +47,7 @@ pub mod twilight_exports {
         application::{
             command::{Command, CommandOption, CommandOptionChoice, CommandOptionChoiceData, CommandOptionType},
             interaction::{
-                application_command::{CommandData, CommandDataOption, CommandOptionValue},
+                application_command::{CommandData, CommandDataOption, CommandOptionValue, CommandInteractionDataResolved},
                 message_component::MessageComponentInteractionData,
                 Interaction, InteractionData, InteractionType,
             },

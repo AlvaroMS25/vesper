@@ -140,13 +140,13 @@ impl<'a, D> SlashContext<'a, D> {
     }
 }
 
-impl<D: Send + Sync> SlashContext<'_, D> {
+impl<'a, D: Send + Sync> SlashContext<'a, D> {
     #[doc(hidden)]
     pub async fn named_parse<T>(
         &self,
         name: &str,
-        iterator: &mut DataIterator<'_>
-    ) -> Result<T, ParseError>
+        mut iterator: DataIterator<'a>
+    ) -> Result<(T, DataIterator<'a>), ParseError>
     where
         T: Parse<D>
     {
@@ -154,13 +154,18 @@ impl<D: Send + Sync> SlashContext<'_, D> {
         if value.is_none() && <T as Parse<D>>::required() {
             Err(ParseError::StructureMismatch(format!("{} not found", name)).into())
         } else {
-            <T as Parse<D>>::parse(self.http_client, self.data, value.map(|it| &it.value)).await
+            Ok((T::parse(
+                self.http_client,
+                self.data,
+                value.map(|it| &it.value),
+                iterator.resolved())
+                .await
                 .map_err(|mut err| {
                     if let ParseError::Parsing { argument_name, .. } = &mut err {
                         *argument_name = name.to_string();
                     }
-                    err.into()
-                })
+                    err
+                })?, iterator))
         }
     }
 }

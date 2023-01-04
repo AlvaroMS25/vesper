@@ -52,8 +52,13 @@ impl<T, E, const START: i64, const END: i64> Parse<T> for Range<E, START, END>
         T: Send + Sync,
         E: Parse<T> + Number
 {
-    async fn parse(http_client: &WrappedClient, data: &T, value: Option<&CommandOptionValue>) -> Result<Self, ParseError> {
-        let value = E::parse(http_client, data, value).await?;
+    async fn parse(
+        http_client: &WrappedClient,
+        data: &T,
+        value: Option<&CommandOptionValue>,
+        resolved: Option<&mut CommandInteractionDataResolved>
+    ) -> Result<Self, ParseError> {
+        let value = E::parse(http_client, data, value, resolved).await?;
 
         // SAFETY: Both the upper and lower values must be i64's and the Number trait is implemented
         // only for integer numbers, so casting the value to an i64 is safe to do.

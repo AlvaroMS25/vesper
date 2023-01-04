@@ -91,9 +91,10 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
                     http_client: &::zephyrus::builder::WrappedClient,
                     data: &T,
                     value: Option<&::zephyrus::twilight_exports::CommandOptionValue>,
+                    resolved: Option<&mut ::zephyrus::twilight_exports::CommandInteractionDataResolved>
                 ) -> Result<Self, ::zephyrus::prelude::ParseError>
                 {
-                    let num = usize::parse(http_client, data, value).await?;
+                    let num = usize::parse(http_client, data, value, resolved).await?;
                     match num {
                         #parse_stream
                         _ => return Err(::zephyrus::parse::ParseError::Parsing {

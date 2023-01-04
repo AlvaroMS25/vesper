@@ -1,14 +1,29 @@
-use crate::twilight_exports::CommandDataOption;
+use crate::context::SlashContext;
+use crate::twilight_exports::{InteractionData, CommandDataOption, CommandInteractionDataResolved};
 
 /// An iterator used to iterate through slash command options.
 pub struct DataIterator<'a> {
     src: Vec<&'a CommandDataOption>,
+    resolved: &'a mut Option<CommandInteractionDataResolved>
 }
 
 impl<'a> DataIterator<'a> {
     /// Creates a new [iterator](self::DataIterator) at the given source.
-    pub fn new(src: Vec<&'a CommandDataOption>) -> Self {
-        Self { src }
+    pub fn new<T>(ctx: &'a SlashContext<'a, T>) -> Self {
+        let data = match ctx.interaction_mut().data.as_mut().unwrap() {
+            InteractionData::ApplicationCommand(data) => data,
+            _ => unreachable!()
+        };
+
+        let options = data
+            .options
+            .iter()
+            .collect::<Vec<_>>();
+
+        Self {
+            src: options,
+            resolved: &mut data.resolved
+        }
     }
 }
 
@@ -44,6 +59,10 @@ impl<'a> DataIterator<'a> {
         } else {
             None
         }
+    }
+
+    pub fn resolved(&mut self) -> Option<&mut CommandInteractionDataResolved> {
+        self.resolved.as_mut()
     }
 }
 

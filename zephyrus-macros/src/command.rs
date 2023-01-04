@@ -99,20 +99,10 @@ pub fn parse_arguments<'a>(
     // Modify the block to parse arguments
     *block = parse2(quote::quote! {{
         let (#(#names),*) = {
-            let data = match #ctx_ident.interaction.data.as_ref().unwrap() {
-                ::zephyrus::twilight_exports::InteractionData::ApplicationCommand(data) => data,
-                _ => unreachable!()
-            };
-            #[allow(unused_mut)]
-            let mut __options = ::zephyrus::iter::DataIterator::new(
-                data
-                .options
-                .iter()
-                .collect::<Vec<_>>()
-            );
+            let __options = ::zephyrus::iter::DataIterator::new(#ctx_ident);
 
-            #(let #names: #types =
-                #ctx_ident.named_parse(#renames, &mut __options).await?;)*
+            #(let (#names, __options) =
+                #ctx_ident.named_parse::<#types>(#renames, __options).await?;)*
 
             if __options.len() > 0 {
                 return Err(
