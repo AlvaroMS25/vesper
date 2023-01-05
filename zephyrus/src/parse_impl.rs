@@ -1,3 +1,6 @@
+use twilight_model::channel::Attachment;
+use twilight_model::guild::Role;
+use twilight_model::user::User;
 use crate::prelude::*;
 use crate::twilight_exports::*;
 
@@ -177,6 +180,26 @@ impl<T: Send + Sync> Parse<T> for Id<AttachmentMarker> {
 }
 
 #[async_trait]
+impl<T: Send + Sync> Parse<T> for Attachment {
+    async fn parse(
+        http_client: &WrappedClient,
+        data: &T,
+        value: Option<&CommandOptionValue>,
+        resolved: Option<&mut CommandInteractionDataResolved>
+    ) -> Result<Self, ParseError> {
+        let id = <Id<AttachmentMarker> as Parse<T>>::parse(http_client, data, value, None).await?;
+
+        resolved.map(|item| item.attachments.remove(&id))
+            .flatten()
+            .ok_or_else(|| error("Attachment", true, "Attachment expected"))
+    }
+
+    fn kind() -> CommandOptionType {
+        <Id<AttachmentMarker> as Parse<T>>::kind()
+    }
+}
+
+#[async_trait]
 impl<T: Send + Sync> Parse<T> for Id<ChannelMarker> {
     async fn parse(
         _: &WrappedClient,
@@ -217,6 +240,26 @@ impl<T: Send + Sync> Parse<T> for Id<UserMarker> {
 }
 
 #[async_trait]
+impl<T: Send + Sync> Parse<T> for User {
+    async fn parse(
+        http_client: &WrappedClient,
+        data: &T,
+        value: Option<&CommandOptionValue>,
+        resolved: Option<&mut CommandInteractionDataResolved>
+    ) -> Result<Self, ParseError> {
+        let id = <Id<UserMarker> as Parse<T>>::parse(http_client, data, value, None).await?;
+
+        resolved.map(|items| items.users.remove(&id))
+            .flatten()
+            .ok_or_else(|| error("User", true, "User expected"))
+    }
+
+    fn kind() -> CommandOptionType {
+        <Id<UserMarker> as Parse<T>>::kind()
+    }
+}
+
+#[async_trait]
 impl<T: Send + Sync> Parse<T> for Id<RoleMarker> {
     async fn parse(
         _: &WrappedClient,
@@ -233,6 +276,26 @@ impl<T: Send + Sync> Parse<T> for Id<RoleMarker> {
 
     fn kind() -> CommandOptionType {
         CommandOptionType::Role
+    }
+}
+
+#[async_trait]
+impl<T: Send + Sync> Parse<T> for Role {
+    async fn parse(
+        http_client: &WrappedClient,
+        data: &T,
+        value: Option<&CommandOptionValue>,
+        resolved: Option<&mut CommandInteractionDataResolved>
+    ) -> Result<Self, ParseError> {
+        let id = <Id<RoleMarker> as Parse<T>>::parse(http_client, data, value, None).await?;
+
+        resolved.map(|items| items.roles.remove(&id))
+            .flatten()
+            .ok_or_else(|| error("Role", true, "Role expected"))
+    }
+
+    fn kind() -> CommandOptionType {
+        <Id<RoleMarker> as Parse<T>>::kind()
     }
 }
 
