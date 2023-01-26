@@ -1,6 +1,6 @@
 use std::{future::Future, task::{Context, Poll}};
 use std::pin::Pin;
-use tokio::sync::oneshot::{Sender, Receiver, channel};
+use tokio::sync::oneshot::{Sender, Receiver, channel, error::RecvError};
 use crate::{twilight_exports::Interaction};
 
 pub(crate) fn new_pair<F>(fun: F) -> (WaiterWaker, InteractionWaiter)
@@ -25,13 +25,10 @@ pub struct InteractionWaiter {
 }
 
 impl Future for InteractionWaiter {
-    type Output = Result<Interaction, Box<dyn std::error::Error + Send + Sync>>;
+    type Output = Result<Interaction, RecvError>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         Pin::new(&mut self.receiver).poll(cx)
-            .map_err(|e| {
-                Box::new(e) as Box<_>
-            })
     }
 }
 
