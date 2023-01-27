@@ -23,6 +23,7 @@ parking_lot = "0.12"
 tracing = "0.1"
 twilight-model = "0.14"
 twilight-http = "0.14"
+pin-project-lite = "0.2.9"
 
 [dependencies.tokio]
 version = "1"
