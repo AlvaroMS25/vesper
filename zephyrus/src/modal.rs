@@ -5,7 +5,7 @@ use std::task::{Context, Poll, ready};
 use tokio::sync::oneshot::error::RecvError;
 use crate::context::SlashContext;
 use crate::waiter::InteractionWaiter;
-use crate::twilight_exports::{Interaction, InteractionResponse, InteractionResponseType};
+use crate::twilight_exports::{Interaction, InteractionClient, InteractionResponse, InteractionResponseType};
 use std::{error::Error as StdError, fmt::{Display, Formatter, Result as FmtResult}};
 use twilight_http::response::marker::EmptyBody;
 use twilight_http::response::ResponseFuture;
@@ -31,28 +31,31 @@ impl Display for ModalError {
 
 impl StdError for ModalError {}
 
-pub struct Modal<'ctx, D, S> {
+pub struct Modal<'ctx, S> {
     pub(crate) waiter: Option<InteractionWaiter>,
     pub(crate) interaction: Option<Interaction>,
-    pub(crate) context: &'ctx SlashContext<'ctx, D>,
+    pub(crate) http_client: &'ctx InteractionClient<'ctx>,
     pub(crate) acknowledge: Option<ResponseFuture<EmptyBody>>,
-    pub(crate) _marker: PhantomData<(D, S)>,
+    pub(crate) _marker: PhantomData<S>,
 }
 
-impl<'ctx, D, S> Modal<'ctx, D, S> {
-    pub(crate) fn new(waiter: InteractionWaiter, ctx: &'ctx SlashContext<'ctx, D>) -> Modal<'ctx, D, S>
+impl<'ctx, S> Modal<'ctx, S> {
+    pub(crate) fn new(
+        waiter: InteractionWaiter,
+        http_client: &'ctx InteractionClient<'ctx>
+    ) -> Modal<'ctx, S>
     {
         Self {
             waiter: Some(waiter),
             interaction: None,
-            context: ctx,
+            http_client,
             acknowledge: None,
             _marker: PhantomData,
         }
     }
 }
 
-impl<'ctx, D, S> Future for Modal<'ctx, D, S>
+impl<'ctx, S> Future for Modal<'ctx, S>
 where
     S: ParseModal,
 {
@@ -71,7 +74,7 @@ where
 
         if this.acknowledge.is_none() {
             let interaction = this.interaction.as_ref().unwrap();
-            let response = this.context.interaction_client.create_response(
+            let response = this.http_client.create_response(
                 interaction.id,
                 &interaction.token,
                 &InteractionResponse {
