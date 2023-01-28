@@ -107,7 +107,7 @@ where
         match interaction.kind {
             InteractionType::ApplicationCommand => self.try_execute(interaction).await,
             InteractionType::ApplicationCommandAutocomplete => self.try_autocomplete(interaction).await,
-            InteractionType::MessageComponent => {
+            InteractionType::MessageComponent | InteractionType::ModalSubmit => {
                 let mut lock = self.waiters.lock();
                 if let Some(position) = lock.iter().position(|waker| waker.check(&interaction)) {
                     lock.remove(position).wake(interaction);
