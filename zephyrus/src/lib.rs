@@ -10,6 +10,7 @@ pub mod framework;
 pub mod group;
 pub mod hook;
 pub mod iter;
+pub mod modal;
 pub mod parse;
 pub mod range;
 
@@ -30,6 +31,7 @@ pub mod prelude {
         builder::{FrameworkBuilder, WrappedClient},
         context::{AutocompleteContext, Focused, SlashContext},
         framework::{DefaultCommandResult, Framework},
+        modal::*,
         parse::{Parse, ParseError},
         range::Range,
     };
