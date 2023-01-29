@@ -12,6 +12,8 @@ mod command;
 mod error_handler;
 mod details;
 mod hook;
+mod modal;
+mod optional;
 mod parse;
 mod util;
 
@@ -107,6 +109,19 @@ pub fn autocomplete(_: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_derive(Parse, attributes(rename))]
 pub fn parse(input: TokenStream) -> TokenStream {
     extract(parse::parse(input.into()))
+}
+
+#[proc_macro_derive(
+    CreateModal,
+    attributes(label, max_length, min_length, placeholder, multiline, default)
+)]
+pub fn create_modal(input: TokenStream) -> TokenStream {
+    extract(modal::create_modal(input.into()))
+}
+
+#[proc_macro_derive(ParseModal)]
+pub fn parse_modal(input: TokenStream) -> TokenStream {
+    extract(modal::parse_modal(input.into()))
 }
 
 /// Extracts the given result, throwing a compile error if an error is given.

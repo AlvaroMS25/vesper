@@ -2,6 +2,10 @@ mod sealed {
     pub trait Sealed {}
     impl<T, E> Sealed for Result<T, E> {}
     impl<T> Sealed for Option<T> {}
+
+    pub trait SealedDataOption: Sized {}
+    impl SealedDataOption for String {}
+    impl SealedDataOption for Option<String> {}
 }
 
 /// Defines what items are allowed to be returned from a command function. Since a command
@@ -20,6 +24,11 @@ pub trait Optional: sealed::Sealed {
     type Inner;
 }
 
+pub trait ModalDataOption: sealed::SealedDataOption {
+    fn required() -> bool;
+    fn parse(item: Option<String>) -> Self;
+}
+
 impl<T, E> Returnable for Result<T, E> {
     type Ok = T;
     type Err = E;
@@ -27,4 +36,24 @@ impl<T, E> Returnable for Result<T, E> {
 
 impl<T> Optional for Option<T> {
     type Inner = T;
+}
+
+impl ModalDataOption for Option<String> {
+    fn required() -> bool {
+        false
+    }
+
+    fn parse(item: Option<String>) -> Self {
+        item
+    }
+}
+
+impl ModalDataOption for String {
+    fn required() -> bool {
+        true
+    }
+
+    fn parse(item: Option<String>) -> Self {
+        item.expect("Item can't be null")
+    }
 }
