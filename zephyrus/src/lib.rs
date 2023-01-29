@@ -54,7 +54,7 @@ pub mod twilight_exports {
                 Interaction, InteractionData, InteractionType,
             },
         },
-        channel::Message,
+        channel::{Message, message::{Component, component::{TextInput, TextInputStyle}}},
         gateway::payload::incoming::InteractionCreate,
         guild::Permissions,
         http::interaction::{
