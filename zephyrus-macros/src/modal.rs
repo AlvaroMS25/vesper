@@ -1,8 +1,7 @@
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::ToTokens;
-use syn::{parse2, spanned::Spanned, Block, Error, ItemFn, Result, Signature, Type, DeriveInput, Fields, FieldsNamed, Data};
-use crate::{argument::Argument, details::CommandDetails, util};
-use crate::attr::Attr;
+use syn::{parse2, spanned::Spanned, Error, Result, Type, DeriveInput, Fields, FieldsNamed, Data};
+use crate::{attr::{self, Attr}, util::unique};
 use crate::optional::Optional;
 
 struct Modal {
@@ -13,7 +12,7 @@ struct Modal {
 struct Field {
     kind: Type,
     ident: Ident,
-    label: Optional<Ident>,
+    label: Optional<String>,
     placeholder: Optional<String>,
     paragraph: bool,
     max_length: Optional<u16>,
@@ -21,17 +20,33 @@ struct Field {
     value: Optional<String>
 }
 
+struct FieldParser<'a>(&'a Field);
+
 impl Modal {
     fn new(input: &DeriveInput, fields: FieldsNamed) -> Result<Self> {
-        for attribute in input.attrs {
-            let attr = crate::attr::parse_attribute(&attribute)?;
+        let mut title = None;
+        let mut this = Self {
+            title: input.ident.to_string(),
+            fields: Vec::with_capacity(fields.named.len())
+        };
+
+        for attribute in &input.attrs {
+            let attr = attr::parse_attribute(attribute)?;
 
             if attr.path.get_ident().unwrap().to_string().as_str() == "title" {
-
+                unique(&mut title, attr.parse_string()?, "title", &attr.path)?;
             }
         }
 
-        todo!()
+        if let Some(title) = title {
+            this.title = title;
+        }
+
+        for field in fields.named {
+            this.fields.push(Field::new(field)?);
+        }
+
+        Ok(this)
     }
 }
 
@@ -50,19 +65,22 @@ impl Field {
 
 
         for attribute in field.attrs {
-            this.parse(crate::attr::parse_attribute(&attribute)?)
+            this.parse(attr::parse_attribute(&attribute)?)?;
         }
 
         Ok(this)
     }
 
     fn parse(&mut self, attr: Attr) -> Result<()> {
+        let span = attr.path.span();
         match attr.path.get_ident().unwrap().to_string().as_str() {
             "label" => {
-                self.label = Some(attr.parse_identifier()?).into();
+                unique(&mut self.label, attr.parse_string()?, "label", span)?;
+                //self.label = Some(attr.parse_string()?).into();
             },
             "placeholder" => {
-                self.placeholder = Some(attr.parse_string()?).into();
+                unique(&mut self.placeholder, attr.parse_string()?, "placeholder", span)?;
+                //self.placeholder = Some(attr.parse_string()?).into();
             },
             "paragraph" => {
                 self.paragraph = true;
@@ -72,17 +90,20 @@ impl Field {
                     .parse::<u16>()
                     .expect("Not a valid number");
 
-                self.max_length = Some(length).into();
+                unique(&mut self.max_length, length, "max_length", span)?;
+                //self.max_length = Some(length).into();
             },
             "min_length" => {
                 let length = attr.parse_identifier()?.to_string()
                     .parse::<u16>()
                     .expect("Not a valid number");
 
-                self.min_length = Some(length).into();
+                unique(&mut self.min_length, length, "min_length", span)?;
+                //self.min_length = Some(length).into();
             },
             "value" => {
-                self.value = Some(attr.parse_string()?).into();
+                unique(&mut self.value, attr.parse_string()?, "value", span)?;
+                //self.value = Some(attr.parse_string()?).into();
             }
             _ => {}
         }
@@ -105,10 +126,10 @@ impl ToTokens for Field {
         } = &self;
 
         let ident = ident.to_string();
-        let label = label.map(ToString::to_string).unwrap_or(ident.clone());
+        let label = label.as_ref().map(|l| l.clone()).unwrap_or(ident.clone());
         let label_ref = &label;
 
-        let style = if paragraph {
+        let style = if *paragraph {
             quote::quote!(TextInputStyle::Paragraph)
         } else {
             quote::quote!(TextInputStyle::Short)
@@ -116,15 +137,32 @@ impl ToTokens for Field {
 
         tokens.extend(quote::quote! {
             Component::ActionRow(ActionRow {
-                custom_id: String::from(#label_ref),
-                label: String::from(#label),
-                placeholder: #placeholder,
-                style: #style,
-                max_length: #max_length,
-                min_length: #min_length,
-                required: <#kind as ModalDataOption>::required(),
-                value: #value
+                components: vec![
+                    Component::TextInput(TextInput {
+                        custom_id: String::from(#label_ref),
+                        label: String::from(#label),
+                        placeholder: #placeholder,
+                        style: #style,
+                        max_length: #max_length,
+                        min_length: #min_length,
+                        required: Some(<#kind as ModalDataOption>::required()),
+                        value: #value
+                    })
+                ]
             })
+        })
+    }
+}
+
+impl<'a> ToTokens for FieldParser<'a> {
+    fn to_tokens(&self, tokens: &mut TokenStream2) {
+        let ident = &self.0.ident;
+        let label = &self.0.label.as_ref().unwrap();
+
+        tokens.extend(quote::quote! {
+            #label => {
+                #ident = component.value;
+            }
         })
     }
 }
@@ -155,21 +193,34 @@ fn fields(data: Data, derive_span: impl Spanned) -> Result<FieldsNamed> {
     }
 }
 
-pub fn create_modal(input: TokenStream2) -> Result<TokenStream2> {
+pub fn modal(input: TokenStream2) -> Result<TokenStream2> {
     let derive = parse2::<DeriveInput>(input)?;
-    let fields = fields(derive.data, &derive)?;
+    let fields = fields(derive.data.clone(), &derive)?;
     let struct_ident = &derive.ident;
 
-    let Modal { title, fields } = Modal::new(&derive, fields);
+    let Modal { title, fields } = Modal::new(&derive, fields)?;
+    let parsers = fields.iter()
+        .map(FieldParser)
+        .collect::<Vec<FieldParser>>();
+    let field_names = fields.iter()
+        .map(|field| &field.ident)
+        .collect::<Vec<&Ident>>();
+    let field_types = fields.iter()
+        .map(|field| &field.kind)
+        .collect::<Vec<&Type>>();
+
     Ok(quote::quote! {
         const _: () = {
-            use ::#crate::{
+            use ::zephyrus::{
                 context::SlashContext,
-                extract: ModalDataOption,
+                extract::ModalDataOption,
                 twilight_exports::{
+                    Interaction,
+                    InteractionData,
                     InteractionResponse,
                     InteractionResponseData,
                     InteractionResponseType,
+                    ActionRow,
                     Component,
                     TextInput,
                     TextInputStyle
@@ -177,22 +228,40 @@ pub fn create_modal(input: TokenStream2) -> Result<TokenStream2> {
             };
 
             #[automatically_derived]
-            impl<D> ::#crate::modal::CreateModal<D> for #struct_ident {
-                fn create(ctx: SlashContext<'_, D>, custom_id: String) -> InteractionResponse {
+            impl<D> ::zephyrus::modal::Modal<D> for #struct_ident {
+                fn create(ctx: &SlashContext<'_, D>, custom_id: String) -> InteractionResponse {
                     InteractionResponse {
                         kind: InteractionResponseType::Modal,
                         data: Some(InteractionResponseData {
                             custom_id: Some(custom_id),
-                            title: Some(#title),
-                            components: Some(vec![#(#fields),*])
+                            title: Some(String::from(#title)),
+                            components: Some(vec![#(#fields),*]),
+                            ..std::default::Default::default()
                         })
                     }
                 }
-            }
-        }
-    })
-}
 
-pub fn parse_modal(input: TokenStream2) -> Result<TokenStream2> {
-    todo!()
+                fn parse(interaction: Interaction) -> Self {
+                    let Some(InteractionData::ModalSubmit(modal)) = interaction.data else {
+                        unreachable!();
+                    };
+
+                    #(let mut #field_names = None;)*
+
+                    for row in modal.components {
+                        for component in row.components {
+                            match component.custom_id.as_str() {
+                                #(#parsers,)*
+                                _ => panic!("Unrecognized field")
+                            }
+                        }
+                    }
+
+                    Self {
+                        #(#field_names: <#field_types as ModalDataOption>::parse(#field_names)),*
+                    }
+                }
+            }
+        };
+    })
 }

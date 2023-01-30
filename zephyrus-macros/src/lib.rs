@@ -112,16 +112,11 @@ pub fn parse(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_derive(
-    CreateModal,
-    attributes(label, max_length, min_length, placeholder, multiline, default)
+    Modal,
+    attributes(title, label, max_length, min_length, paragraph, placeholder, multiline, default)
 )]
-pub fn create_modal(input: TokenStream) -> TokenStream {
-    extract(modal::create_modal(input.into()))
-}
-
-#[proc_macro_derive(ParseModal)]
-pub fn parse_modal(input: TokenStream) -> TokenStream {
-    extract(modal::parse_modal(input.into()))
+pub fn modal(input: TokenStream) -> TokenStream {
+    extract(modal::modal(input.into()))
 }
 
 /// Extracts the given result, throwing a compile error if an error is given.
