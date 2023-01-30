@@ -44,7 +44,11 @@ impl ModalDataOption for Option<String> {
     }
 
     fn parse(item: Option<String>) -> Self {
-        item
+        if item.as_ref()?.is_empty() {
+            None
+        } else {
+            item
+        }
     }
 }
 

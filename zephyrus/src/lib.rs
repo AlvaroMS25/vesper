@@ -50,11 +50,12 @@ pub mod twilight_exports {
             command::{Command, CommandOption, CommandOptionChoice, CommandOptionChoiceData, CommandOptionType},
             interaction::{
                 application_command::{CommandData, CommandDataOption, CommandOptionValue, CommandInteractionDataResolved},
+                modal::ModalInteractionData,
                 message_component::MessageComponentInteractionData,
                 Interaction, InteractionData, InteractionType,
             },
         },
-        channel::{Message, message::{Component, component::{TextInput, TextInputStyle}}},
+        channel::{Message, message::{Component, component::{ActionRow, TextInput, TextInputStyle}}},
         gateway::payload::incoming::InteractionCreate,
         guild::Permissions,
         http::interaction::{

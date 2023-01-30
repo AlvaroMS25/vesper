@@ -6,7 +6,7 @@ use crate::{
 };
 
 use crate::iter::DataIterator;
-use crate::modal::{CreateModal, Modal};
+use crate::modal::{Modal, WaitModal};
 use crate::parse::{Parse, ParseError};
 use crate::waiter::new_pair;
 
@@ -128,9 +128,9 @@ impl<'a, D> SlashContext<'a, D> {
         Ok(())
     }
 
-    pub async fn create_modal<M>(&self) -> Result<Modal<M>, twilight_http::Error>
+    pub async fn create_modal<M>(&self) -> Result<WaitModal<M>, twilight_http::Error>
     where
-        M: CreateModal<D>
+        M: Modal<D>
     {
         let modal_id = self.interaction.id.to_string();
         self.interaction_client.create_response(
@@ -147,7 +147,7 @@ impl<'a, D> SlashContext<'a, D> {
             data.custom_id == modal_id
         });
 
-        Ok(Modal::new(waiter, &self.interaction_client))
+        Ok(WaitModal::new(waiter, &self.interaction_client, M::parse))
     }
 
     /// Returns a waiter used to wait for a specific interaction which satisfies the provided

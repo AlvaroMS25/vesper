@@ -31,34 +31,34 @@ impl Display for ModalError {
 
 impl StdError for ModalError {}
 
-pub struct Modal<'ctx, S> {
+pub struct WaitModal<'ctx, S> {
     pub(crate) waiter: Option<InteractionWaiter>,
     pub(crate) interaction: Option<Interaction>,
     pub(crate) http_client: &'ctx InteractionClient<'ctx>,
     pub(crate) acknowledge: Option<ResponseFuture<EmptyBody>>,
+    pub(crate) parse_fn: fn(Interaction) -> S,
     pub(crate) _marker: PhantomData<S>,
 }
 
-impl<'ctx, S> Modal<'ctx, S> {
+impl<'ctx, S> WaitModal<'ctx, S> {
     pub(crate) fn new(
         waiter: InteractionWaiter,
-        http_client: &'ctx InteractionClient<'ctx>
-    ) -> Modal<'ctx, S>
+        http_client: &'ctx InteractionClient<'ctx>,
+        parse_fn: fn(Interaction) -> S,
+    ) -> WaitModal<'ctx, S>
     {
         Self {
             waiter: Some(waiter),
             interaction: None,
             http_client,
             acknowledge: None,
+            parse_fn,
             _marker: PhantomData,
         }
     }
 }
 
-impl<'ctx, S> Future for Modal<'ctx, S>
-where
-    S: ParseModal,
-{
+impl<'ctx, S> Future for WaitModal<'ctx, S> {
     type Output = Result<S, ModalError>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -89,14 +89,11 @@ where
         ready!(Pin::new(this.acknowledge.as_mut().unwrap()).poll(cx))
             .map_err(ModalError::Http)?;
 
-        Poll::Ready(Ok(S::parse(this.interaction.take().unwrap())))
+        Poll::Ready(Ok((this.parse_fn)(this.interaction.take().unwrap())))
     }
 }
 
-pub trait ParseModal: Sized {
-    fn parse(interaction: Interaction) -> Self;
-}
-
-pub trait CreateModal<D>: ParseModal {
+pub trait Modal<D> {
     fn create(ctx: &SlashContext<'_, D>, custom_id: String) -> InteractionResponse;
+    fn parse(interaction: Interaction) -> Self;
 }
