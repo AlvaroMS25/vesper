@@ -1,3 +1,4 @@
+use std::ops::{Deref, DerefMut};
 use proc_macro2::TokenStream;
 use quote::ToTokens;
 
@@ -17,5 +18,19 @@ impl<T: ToTokens> ToTokens for Optional<T> {
 impl<T: ToTokens> From<Option<T>> for Optional<T> {
     fn from(value: Option<T>) -> Self {
         Self(value)
+    }
+}
+
+impl<T> Deref for Optional<T> {
+    type Target = Option<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> DerefMut for Optional<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
