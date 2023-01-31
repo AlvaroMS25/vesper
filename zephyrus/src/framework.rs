@@ -67,7 +67,6 @@ impl<D, T, E> Framework<D, T, E>
 where
     E: From<ParseError>
 {
-    /// Creates a new [Framework](self::Framework) from the given builder.
     pub(crate) fn from_builder(builder: FrameworkBuilder<D, T, E>) -> Self {
         Self {
             http_client: builder.http_client,
@@ -117,8 +116,6 @@ where
         }
     }
 
-    /// Tries to execute a command based on the given
-    /// [ApplicationCommand](ApplicationCommand).
     async fn try_execute(&self, mut interaction: Interaction) {
         if let Some(command) = self.get_command(&mut interaction) {
             self.execute(command, interaction).await;

@@ -113,6 +113,29 @@ impl<'a, D> SlashContext<'a, D> {
     }
 
     /// Acknowledges the interaction, allowing to respond later.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use zephyrus::prelude::*;
+    ///
+    /// #[command]
+    /// #[description = "My command description"]
+    /// async fn my_command(ctx: &SlashContext<()>) -> DefaultCommandResult {
+    ///     // Acknowledge the interaction, this way we can respond to it later.
+    ///     ctx.acknowledge().await?;
+    ///
+    ///     // Do something here
+    ///
+    ///     // Now edit the interaction
+    ///     ctx.interaction_client.update_response(&ctx.interaction.token)
+    ///         .content(Some("Hello world"))
+    ///         .unwrap()
+    ///         .await?;
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
     pub async fn acknowledge(&self) -> Result<(), twilight_http::Error> {
         self.interaction_client
             .create_response(
@@ -128,6 +151,36 @@ impl<'a, D> SlashContext<'a, D> {
         Ok(())
     }
 
+    /// Creates a modal that will be prompted to the user in discord, returning a [`WaitModal`] that
+    /// can be `.await`ed to retrieve the user input. If the returned [`WaitModal`] is not awaited,
+    /// the modal will not close when submitted and the user won't be able to submit the modal.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use zephyrus::prelude::*;
+    ///
+    /// #[derive(Debug, Modal)]
+    /// struct MyModal {
+    ///     #[paragraph]
+    ///     field: String
+    /// }
+    ///
+    /// #[command]
+    /// #[description = "My command description"]
+    /// async fn my_command(ctx: &SlashContext<()>) -> DefaultCommandResult {
+    ///     let modal = ctx.create_modal::<MyModal>().await?;
+    ///
+    ///     // Here we can do something quick.
+    ///
+    ///     // Now we await the modal, allowing the user to submit the modal and getting the data
+    ///     let data = modal.await?;
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// [`WaitModal`]: WaitModal
     pub async fn create_modal<M>(&self) -> Result<WaitModal<M>, twilight_http::Error>
     where
         M: Modal<D>

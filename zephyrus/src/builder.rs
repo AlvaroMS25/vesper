@@ -21,6 +21,7 @@ pub enum WrappedClient {
 }
 
 impl WrappedClient {
+    /// Returns the underlying http client.
     pub fn inner(&self) -> &Client {
         match self {
             Self::Arc(c) => c,
@@ -117,12 +118,64 @@ where
     }
 
     /// Set the hook that will be executed before commands.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use zephyrus::prelude::*;
+    /// use twilight_http::Client;
+    /// use std::sync::Arc;
+    /// use twilight_model::id::Id;
+    ///
+    /// #[before]
+    /// async fn before_hook(ctx: &SlashContext<()>, command_name: &str) -> bool {
+    ///     println!("Executing command {command_name}");
+    ///     true
+    /// }
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let token = std::env::var("DISCORD_TOKEN").unwrap();
+    ///     let app_id = std::env::var("DISCORD_APP_ID").unwrap().parse::<u64>().unwrap();
+    ///     let http_client = Arc::new(Client::new(token));
+    ///
+    ///     let framework = Framework::builder(http_client, Id::new(app_id), ())
+    ///         .before(before_hook)
+    ///         .build();
+    /// }
+    /// ```
     pub fn before(mut self, fun: FnPointer<BeforeHook<D>>) -> Self {
         self.before = Some(fun());
         self
     }
 
     /// Set the hook that will be executed after command's completion.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use zephyrus::prelude::*;
+    /// use twilight_http::Client;
+    /// use std::sync::Arc;
+    /// use twilight_model::id::Id;
+    ///
+    /// #[after]
+    /// async fn after_hook(ctx: &SlashContext<()>, command_name: &str) -> bool {
+    ///     println!("Executing command {command_name}");
+    ///     true
+    /// }
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let token = std::env::var("DISCORD_TOKEN").unwrap();
+    ///     let app_id = std::env::var("DISCORD_APP_ID").unwrap().parse::<u64>().unwrap();
+    ///     let http_client = Arc::new(Client::new(token));
+    ///
+    ///     let framework = Framework::builder(http_client, Id::new(app_id), ())
+    ///         .after(after_hook)
+    ///         .build();
+    /// }
+    /// ```
     pub fn after(mut self, fun: FnPointer<AfterHook<D, T, E>>) -> Self {
         self.after = Some(fun());
         self

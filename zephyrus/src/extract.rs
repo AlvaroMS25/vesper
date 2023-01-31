@@ -24,6 +24,7 @@ pub trait Optional: sealed::Sealed {
     type Inner;
 }
 
+/// Defines what data types can be used when creating a modal.
 pub trait ModalDataOption: sealed::SealedDataOption {
     fn required() -> bool;
     fn parse(item: Option<String>) -> Self;
