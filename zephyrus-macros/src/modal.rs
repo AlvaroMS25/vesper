@@ -76,11 +76,9 @@ impl Field {
         match attr.path.get_ident().unwrap().to_string().as_str() {
             "label" => {
                 unique(&mut self.label, attr.parse_string()?, "label", span)?;
-                //self.label = Some(attr.parse_string()?).into();
             },
             "placeholder" => {
                 unique(&mut self.placeholder, attr.parse_string()?, "placeholder", span)?;
-                //self.placeholder = Some(attr.parse_string()?).into();
             },
             "paragraph" => {
                 self.paragraph = true;
@@ -91,7 +89,6 @@ impl Field {
                     .expect("Not a valid number");
 
                 unique(&mut self.max_length, length, "max_length", span)?;
-                //self.max_length = Some(length).into();
             },
             "min_length" => {
                 let length = attr.parse_identifier()?.to_string()
@@ -99,11 +96,9 @@ impl Field {
                     .expect("Not a valid number");
 
                 unique(&mut self.min_length, length, "min_length", span)?;
-                //self.min_length = Some(length).into();
             },
             "value" => {
                 unique(&mut self.value, attr.parse_string()?, "value", span)?;
-                //self.value = Some(attr.parse_string()?).into();
             }
             _ => {}
         }
