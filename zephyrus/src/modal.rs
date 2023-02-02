@@ -93,7 +93,15 @@ impl<'ctx, S> Future for WaitModal<'ctx, S> {
     }
 }
 
+/// Trait used to define modals that can be sent to discord and parsed by the framework.
+///
+/// This trait is normally implemented using the [`Modal`] derive macro, refer to it to see full
+/// documentation about its usage and attributes.
+///
+/// [`Modal`]: crate::macros::Modal
 pub trait Modal<D> {
+    /// Creates the modal, returning the response needed to send it to discord.
     fn create(ctx: &SlashContext<'_, D>, custom_id: String) -> InteractionResponse;
+    /// Parses the provided interaction into the modal;
     fn parse(interaction: Interaction) -> Self;
 }

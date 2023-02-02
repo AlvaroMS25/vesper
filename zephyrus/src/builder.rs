@@ -119,12 +119,11 @@ where
 
     /// Set the hook that will be executed before commands.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```rust
     /// use zephyrus::prelude::*;
     /// use twilight_http::Client;
-    /// use std::sync::Arc;
     /// use twilight_model::id::Id;
     ///
     /// #[before]
@@ -137,7 +136,7 @@ where
     /// async fn main() {
     ///     let token = std::env::var("DISCORD_TOKEN").unwrap();
     ///     let app_id = std::env::var("DISCORD_APP_ID").unwrap().parse::<u64>().unwrap();
-    ///     let http_client = Arc::new(Client::new(token));
+    ///     let http_client = Client::new(token);
     ///
     ///     let framework = Framework::builder(http_client, Id::new(app_id), ())
     ///         .before(before_hook)
@@ -151,12 +150,11 @@ where
 
     /// Set the hook that will be executed after command's completion.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```rust
     /// use zephyrus::prelude::*;
     /// use twilight_http::Client;
-    /// use std::sync::Arc;
     /// use twilight_model::id::Id;
     ///
     /// #[after]
@@ -169,7 +167,7 @@ where
     /// async fn main() {
     ///     let token = std::env::var("DISCORD_TOKEN").unwrap();
     ///     let app_id = std::env::var("DISCORD_APP_ID").unwrap().parse::<u64>().unwrap();
-    ///     let http_client = Arc::new(Client::new(token));
+    ///     let http_client = Client::new(token);
     ///
     ///     let framework = Framework::builder(http_client, Id::new(app_id), ())
     ///         .after(after_hook)
@@ -181,7 +179,54 @@ where
         self
     }
 
-    /// Registers a new command.
+    /// Registers a new command in the framework.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use zephyrus::prelude::*;
+    /// use twilight_http::Client;
+    /// use twilight_model::id::Id;
+    ///
+    ///#[command]
+    ///#[description = "Says Hello world!"]
+    ///async fn hello_world(ctx: &SlashContext<()>) -> DefaultCommandResult {
+    ///     ctx.acknowledge().await?;
+    ///     ctx.interaction_client.update_response(&ctx.interaction.token)
+    ///         .content(Some("Hello world!"))
+    ///         .unwrap()
+    ///         .await?;
+    ///
+    ///     Ok(())
+    ///}
+    ///
+    ///#[command]
+    ///#[description = "Repeats something"]
+    ///async fn repeat_content(
+    ///     ctx: &SlashContext<()>,
+    ///     #[rename = "content"] #[description = "The content"] c: String
+    ///) -> DefaultCommandResult
+    ///{
+    ///     ctx.acknowledge().await?;
+    ///     ctx.interaction_client.update_response(&ctx.interaction.token)
+    ///         .content(Some(&c))
+    ///         .unwrap()
+    ///         .await?;
+    ///     Ok(())
+    ///}
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let token = std::env::var("DISCORD_TOKEN").unwrap();
+    ///     let app_id = std::env::var("DISCORD_APP_ID").unwrap().parse::<u64>().unwrap();
+    ///     let http_client = Client::new(token.clone());
+    ///
+    ///     let framework = Framework::builder(http_client, Id::new(app_id), ())
+    ///         .command(hello_world)
+    ///         .command(repeat_content)
+    ///         .build();
+    /// }
+    /// ```
     pub fn command(mut self, fun: FnPointer<Command<D, T, E>>) -> Self {
         let cmd = fun();
         if self.commands.contains_key(cmd.name) || self.groups.contains_key(cmd.name) {
