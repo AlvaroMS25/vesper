@@ -68,6 +68,10 @@ impl Field {
             this.parse(attr::parse_attribute(&attribute)?)?;
         }
 
+        if this.label.is_none() {
+            *this.label = Some(this.ident.to_string());
+        }
+
         Ok(this)
     }
 
@@ -111,7 +115,7 @@ impl ToTokens for Field {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
         let Self {
             kind,
-            ident,
+            ident: _,
             label,
             placeholder,
             paragraph,
@@ -119,10 +123,9 @@ impl ToTokens for Field {
             min_length,
             value
         } = &self;
-
-        let ident = ident.to_string();
-        let label = label.as_ref().map(|l| l.clone()).unwrap_or(ident.clone());
+        let label = label.as_ref().unwrap();
         let label_ref = &label;
+        let placeholder = (*placeholder).clone().map(|p| quote::quote!(String::from(#p)));
 
         let style = if *paragraph {
             quote::quote!(TextInputStyle::Paragraph)

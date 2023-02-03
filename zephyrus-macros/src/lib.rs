@@ -113,7 +113,7 @@ pub fn parse(input: TokenStream) -> TokenStream {
 
 #[proc_macro_derive(
     Modal,
-    attributes(title, label, max_length, min_length, paragraph, placeholder, multiline, default)
+    attributes(title, label, max_length, min_length, paragraph, placeholder, default)
 )]
 pub fn modal(input: TokenStream) -> TokenStream {
     extract(modal::modal(input.into()))

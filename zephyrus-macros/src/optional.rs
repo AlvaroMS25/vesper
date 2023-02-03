@@ -34,3 +34,12 @@ impl<T> DerefMut for Optional<T> {
         &mut self.0
     }
 }
+
+impl<T> Optional<T> {
+    pub fn map<F, R>(self, fun: F) -> Optional<R>
+    where
+        F: FnOnce(T) -> R
+    {
+        Optional(self.0.map(fun))
+    }
+}
