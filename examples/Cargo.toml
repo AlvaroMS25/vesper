@@ -44,3 +44,7 @@ path = "using-dedicated-tasks.rs"
 [[example]]
 name = "custom-types"
 path = "custom-types.rs"
+
+[[example]]
+name = "using-modals"
+path = "using-modals.rs"
