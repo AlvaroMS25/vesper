@@ -24,6 +24,13 @@ struct FieldParser<'a>(&'a Field);
 
 impl Modal {
     fn new(input: &DeriveInput, fields: FieldsNamed) -> Result<Self> {
+        if fields.named.len() > 5 || fields.named.len() < 1 {
+            return Err(Error::new(
+                fields.span(),
+                "Modals must have between 1 and 5 fields"
+            ));
+        }
+
         let mut title = None;
         let mut this = Self {
             title: input.ident.to_string(),
