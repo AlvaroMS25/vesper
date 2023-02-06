@@ -88,18 +88,10 @@ impl Field {
                 self.paragraph = true;
             },
             "max_length" => {
-                let length = attr.parse_identifier()?.to_string()
-                    .parse::<u16>()
-                    .expect("Not a valid number");
-
-                unique(&mut self.max_length, length, "max_length", span)?;
+                unique(&mut self.max_length, attr.parse_number::<u16>()?, "max_length", span)?;
             },
             "min_length" => {
-                let length = attr.parse_identifier()?.to_string()
-                    .parse::<u16>()
-                    .expect("Not a valid number");
-
-                unique(&mut self.min_length, length, "min_length", span)?;
+                unique(&mut self.min_length, attr.parse_number::<u16>()?, "min_length", span)?;
             },
             "value" => {
                 unique(&mut self.value, attr.parse_string()?, "value", span)?;
