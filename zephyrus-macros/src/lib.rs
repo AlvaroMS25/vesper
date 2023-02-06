@@ -164,7 +164,7 @@ pub fn parse(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 ///
-/// - `#[max_length = x]` || `#[min_length = y]`: These attributes allow to set a maximum/minimum
+/// - `#[max_length = x]` and `#[min_length = y]`: These attributes allow to set a maximum/minimum
 /// amount of characters a field can have.
 ///
 /// ## Example
