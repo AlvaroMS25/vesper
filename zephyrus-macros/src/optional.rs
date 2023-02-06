@@ -35,6 +35,12 @@ impl<T> DerefMut for Optional<T> {
     }
 }
 
+impl<T: Clone> Clone for Optional<T> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
 impl<T> Optional<T> {
     pub fn map<F, R>(self, fun: F) -> Optional<R>
     where
