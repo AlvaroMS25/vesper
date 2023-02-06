@@ -199,25 +199,9 @@ pub fn parse(input: TokenStream) -> TokenStream {
 ///     optional_item: Option<String> // <- This one will be shown as a single line one.
 /// }
 /// ```
-///
-/// - `#[default = "<DEFAULT_VALUE>`: This attribute will set a default value for the specified
-/// field, so if the user doesn't modify it, the default value will be returned from the modal.
-///
-/// ## Example
-///
-/// ```rust
-/// use zephyrus::prelude::*;
-///
-/// #[derive(Modal)]
-/// struct MyModal {
-///     #[default = "This is a default value"]
-///     something: String, // <- This field will have "This is a default value" as the initial value.
-///     optional_item: Option<String> // <- This field will not have a default value.
-/// }
-/// ```
 #[proc_macro_derive(
     Modal,
-    attributes(title, label, max_length, min_length, paragraph, placeholder, default)
+    attributes(title, label, max_length, min_length, paragraph, placeholder)
 )]
 pub fn modal(input: TokenStream) -> TokenStream {
     extract(modal::modal(input.into()))
