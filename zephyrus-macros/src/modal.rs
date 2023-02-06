@@ -125,7 +125,7 @@ impl ToTokens for Field {
         } = &self;
         let label = label.as_ref().unwrap();
         let label_ref = &label;
-        let placeholder = (*placeholder).clone().map(|p| quote::quote!(String::from(#p)));
+        let placeholder = placeholder.clone().map(|p| quote::quote!(String::from(#p)));
 
         let style = if *paragraph {
             quote::quote!(TextInputStyle::Paragraph)
