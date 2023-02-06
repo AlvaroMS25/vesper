@@ -1,6 +1,7 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::ToTokens;
 use std::convert::TryFrom;
+use std::str::FromStr;
 use syn::spanned::Spanned;
 use syn::{Attribute, Error, Lit, Meta, NestedMeta, Path, Result};
 
@@ -117,6 +118,20 @@ impl Attr {
             Ok(match value {
                 Value::Lit(Lit::Bool(b)) => b.value,
                 _ => return Err(Error::new(value.span(), "Argument must be a boolean")),
+            })
+        })
+    }
+
+    #[allow(dead_code)]
+    pub fn parse_number<T>(&self) -> Result<T>
+    where
+        T: FromStr,
+        T::Err: std::fmt::Display
+    {
+        self.parse_value(|value| {
+            Ok(match value {
+                Value::Lit(Lit::Int(lit)) => lit.base10_parse()?,
+                _ => Err(Error::new(value.span(), "Argument must be a number"))?
             })
         })
     }
