@@ -21,8 +21,8 @@ async-trait = "0.1"
 zephyrus-macros = { path = "../zephyrus-macros", version = "0.8" }
 parking_lot = "0.12"
 tracing = "0.1"
-twilight-model = "0.14"
-twilight-http = "0.14"
+twilight-model = "0.15"
+twilight-http = "0.15"
 
 [dependencies.tokio]
 version = "1"
