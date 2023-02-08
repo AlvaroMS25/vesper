@@ -31,6 +31,14 @@ impl Display for ModalError {
 
 impl StdError for ModalError {}
 
+/// A waiter used to retrieve the input of a command. This can be obtained by using
+/// [SlashContext::create_modal](SlashContext::create_modal).
+///
+/// To retrieve the input of the modal, `.await` the waiter.
+///
+/// If the waiter is never awaited, the user won't be able to submit the modal, and will have to
+/// close it without submitting.
+#[must_use = "Modals cannot be submitted if the waiter is not awaited"]
 pub struct WaitModal<'ctx, S> {
     pub(crate) waiter: Option<InteractionWaiter>,
     pub(crate) interaction: Option<Interaction>,
