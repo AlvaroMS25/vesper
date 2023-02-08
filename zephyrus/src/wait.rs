@@ -20,6 +20,28 @@ where
     )
 }
 
+/// A waiter used to wait for an interaction.
+///
+/// The waiter implements [`Future`], so in order to retrieve the interaction, just await the waiter.
+///
+/// # Examples:
+///
+/// ```rust
+/// use zephyrus::prelude::{command, SlashContext, DefaultCommandResult};
+///
+/// #[command]
+/// #[description = "My Command"]
+/// async fn my_command(ctx: &SlashContext<()>) -> DefaultCommandResult {
+///     ctx.acknowledge().await?;
+///     let interaction = ctx.wait_interaction(|interaction| {
+///         // predicate here
+///     }).await?;
+///
+///     Ok(())
+/// }
+/// ```
+///
+/// [`Future`]: Future
 pub struct InteractionWaiter {
     receiver: Receiver<Interaction>
 }
@@ -32,7 +54,10 @@ impl Future for InteractionWaiter {
     }
 }
 
-pub(crate) struct WaiterWaker {
+
+/// A waker used to notify its associate [`waiter`] when the predicate has been satisfied and
+/// deliver the interaction.
+pub struct WaiterWaker {
     pub predicate: Box<dyn Fn(&Interaction) -> bool + Send + 'static>,
     pub sender: Sender<Interaction>
 }
