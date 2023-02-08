@@ -4,7 +4,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll, ready};
 use tokio::sync::oneshot::error::RecvError;
 use crate::context::SlashContext;
-use crate::waiter::InteractionWaiter;
+use crate::wait::InteractionWaiter;
 use crate::twilight_exports::{Interaction, InteractionClient, InteractionResponse, InteractionResponseType};
 use std::{error::Error as StdError, fmt::{Display, Formatter, Result as FmtResult}};
 use twilight_http::response::marker::EmptyBody;

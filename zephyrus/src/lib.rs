@@ -13,12 +13,11 @@ pub mod iter;
 pub mod modal;
 pub mod parse;
 pub mod range;
+pub mod wait;
 
 // Items used to extract generics from functions, not public API.
 #[doc(hidden)]
 pub mod extract;
-
-pub mod waiter;
 
 pub use zephyrus_macros as macros;
 
