@@ -18,7 +18,7 @@ pub mod range;
 #[doc(hidden)]
 pub mod extract;
 
-mod waiter;
+pub mod waiter;
 
 pub use zephyrus_macros as macros;
 
