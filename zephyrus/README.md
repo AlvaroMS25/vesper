@@ -28,12 +28,16 @@ use std::sync::Arc;
 use futures::StreamExt;
 use twilight_gateway::{Cluster, cluster::Events};
 use twilight_http::Client;
-use twilight_model::{application::callback::{CallbackData, InteractionResponse}, gateway::{event::Event, Intents}, id::{ApplicationId, GuildId}};
+use twilight_model::gateway::event::Event;
+use twilight_model::gateway::Intents;
+use twilight_model::http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType};
+use twilight_model::id::Id;
+use twilight_model::id::marker::{ApplicationMarker, GuildMarker};
 use zephyrus::prelude::*;
 
 #[command]
 #[description = "Says hello"]
-async fn hello(ctx: &SlashContext<()>) -> CommandResult {
+async fn hello(ctx: &SlashContext<()>) -> DefaultCommandResult {
     ctx.interaction_client.create_response(
         ctx.interaction.id,
         &ctx.interaction.token,
@@ -44,18 +48,18 @@ async fn hello(ctx: &SlashContext<()>) -> CommandResult {
                 ..Default::default()
             })
         }
-    ).exec().await?;
+    ).await?;
 
     Ok(())
 }
 
-async fn handle_events(http_client: Arc<Client>, mut events: Events) {
-    let framework = Arc::new(Framework::builder(http_client, ())
+async fn handle_events(http_client: Arc<Client>, mut events: Events, app_id: Id<ApplicationMarker>) {
+    let framework = Arc::new(Framework::builder(http_client, app_id, ())
         .command(hello)
         .build());
 
     // Zephyrus can register commands in guilds or globally.
-    framework.register_guild_commands(GuildId::new("<GUILD_ID>").unwrap()).await.unwrap();
+    framework.register_guild_commands(Id::<GuildMarker>::new("<GUILD_ID>")).await.unwrap();
 
     while let Some((_, event)) = events.next().await {
         match event {
@@ -74,6 +78,7 @@ async fn handle_events(http_client: Arc<Client>, mut events: Events) {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let token = std::env::var("DISCORD_TOKEN")?;
+    let app_id = Id::<ApplicationMarker>::new(std::env::var("APP_ID")?.parse()?);
     let client = Arc::new(Client::builder().token(token.clone()).build());
 
     let (cluster, events) = Cluster::builder(token, Intents::empty())
@@ -82,7 +87,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .await?;
 
     cluster.up().await;
-    handle_events(client, events).await;
+    handle_events(client, events, app_id).await;
 
     Ok(())
 }
@@ -103,7 +108,7 @@ async fn command(
     ctx: &SlashContext</* Your type of context*/>, // The context must always be the first parameter.
     #[description = "A description for the argument"] some_arg: String,
     #[rename = "other_arg"] #[description = "other description"] other: Option<UserId>
-) -> CommandResult 
+) -> DefaultCommandResult 
 {
     // Command body
     
@@ -151,7 +156,7 @@ enum Choices {
 async fn choices(
     ctx: &SlashContext<()>,
     #[description = "Some description"] choice: Choices
-) -> CommandResult
+) -> DefaultCommandResult
 {
     // Command body
     Ok(())
@@ -169,7 +174,7 @@ Here, take a look at this example. We'll use as the base an empty command like t
 async fn some_command(
     ctx: &SlashCommand</* Some type */>,
     #[autocomplete = "autocomplete_arg"] #[description = "Some description"] arg: String
-) -> CommandResult
+) -> DefaultCommandResult
 {
     // Logic goes here
     Ok(())
@@ -202,7 +207,7 @@ a look at what it would look like to create a command needing `MANAGE_CHANNELS` 
 #[command]
 #[description = "Super cool command"]
 #[required_permissions(MANAGE_CHANNELS, MANAGE_MESSAGES)]
-async fn super_cool_command(ctx: &SlashContext</* Your type */>) -> CommandResult {
+async fn super_cool_command(ctx: &SlashContext</* Your type */>) -> DefaultCommandResult {
     // Body
     Ok(())
 }
@@ -219,7 +224,7 @@ To give examples, let's say we have created the following command:
 ```rust
 #[command]
 #[description = "Something"]
-async fn something(ctx: &SlashContext</* Your type */>) -> CommandResult {
+async fn something(ctx: &SlashContext</* Your type */>) -> DefaultCommandResult {
     // Command block
     Ok(())
 }
@@ -273,7 +278,7 @@ async fn main() {
 ***
 
 # Hooks
-There are two hooks available, `before` and `after`.
+There are three hooks available, `before`, `after` and `error_handler`.
 
 ## Before
 
@@ -281,7 +286,7 @@ The before hook is triggered before the command and has to return a `bool` indic
 
 ```rust
 #[before]
-async fn before_check(ctx: &SlashContext</*Your type*/>, command_name: &str) -> bool {
+async fn before_hook(ctx: &SlashContext</*Your type*/>, command_name: &str) -> bool {
     // Do something
     
     true // <- if we return true, the command will be executed normally.
@@ -291,11 +296,114 @@ async fn before_check(ctx: &SlashContext</*Your type*/>, command_name: &str) -> 
 
 ## After
 
-The after hook is triggered after the command execution and it provides the result of the command.
+The after hook is triggered after the command execution, and it provides the result of the command.
 
 ```rust
 #[after]
-async fn after_handler(ctx: &SlashContext</* Your type */>, command_name: &str, result: CommandResult) {
+async fn after_hook(ctx: &SlashContext</* Your type */>, command_name: &str, result: Option<DefaultCommandResult>) {
     // Do something with the result.
 }
 ```
+
+## Specific error handling
+
+Commands can have specific error handlers. When an error handler is set to a command, if the command (or any of its checks)
+fails, the error handler will be called, and the `after` hook will receive `None` as the third argument. However, in case
+the command execution finishes without raising errors, the `after` hook will receive the result of the command.
+
+Let's take a look at a simple implementation:
+
+```rust
+#[error_handler]
+async fn handle_ban_error(_ctx: &SlashContext</* Some type */>, error: DefaultError) {
+    println!("The ban command had an error");
+    
+    // Handle the error
+}
+
+
+#[command]
+#[description = "Tries to ban the bot itself, raising an error"]
+#[error_handler(handle_ban_error)]
+async fn ban_itself(ctx: &SlashContext</* Some type */>) -> DefaultCommandResult {
+    // A bot cannot ban itself, so this will result in an error.
+    ctx.http_client().ban(ctx.interaction.guild_id.unwrap(), Id::new(ctx.application_id.get()))
+        .await?;
+    
+    Ok(())
+}
+```
+
+Since the command will always fail because a bot cannot ban itself, the error handler will be called everytime the command
+executes, thus passing `None` to the `after` hook if set.
+
+***
+
+# Checks
+
+Checks are pretty similar to the ``Before`` hook, but unlike it, they are not global. Instead, they need to be assigned
+to each command.
+
+Let's take a look on how to use it:
+
+Let's create some checks like this:
+
+```rust
+#[check]
+async fn only_guilds(ctx: &SlashContext</* Some type */>) -> Result<bool, DefaultError> {
+    // Only execute the command if we are inside a guild.
+    Ok(ctx.interaction.guild_id.is_some())
+}
+
+#[check]
+async fn other_check(_ctx: &SlashContext</* Some type */>) -> Result<bool, DefaultError> {
+    // Some other check here.
+    Ok(true)
+}
+```
+
+Then we can assign them to our command using the ``check`` attribute, which accepts a comma separated list of checks:
+```rust
+#[command]
+#[description = "Some description"]
+#[checks(only_guilds, other_check)]
+async fn my_command(ctx: &SlashContext</* Some type */>) -> DefaultCommandResult {
+    // Do something
+    Ok(())
+}
+```
+
+***
+
+# Using custom return types
+
+The framework allows the user to specify what types to return from command/checks execution. The framework definition is
+like this:
+
+```rust
+pub struct Framework<D, T = (), E = DefaultError>
+```
+
+Where `D` is the type of the data held by the framework and `T` and `E` are the return types of a command in form of
+`Result<T, E>`, however, specifying custom types is optional, and the framework provides a `DefaultCommandResult` and
+`DefaultError` for those who don't want to have a custom error.
+
+The types of the `after`, `error_handler` and `check` hook arguments change accordingly to the generics specified in 
+the framework, so their signatures could be interpreted like this:
+
+After hook:
+```rust
+async fn(&SlashContext</* Some type */>, &str, Option<Result<T, E>>)
+```
+
+Error handler hook:
+```rust
+async fn(&SlashContext</* Some type */>, E)
+```
+
+Command checks:
+```rust
+async fn(&SlashContext</* Some type */>) -> Result<bool, E>
+```
+
+Note that those are not the real signatures, since the functions return `Box`ed futures.
