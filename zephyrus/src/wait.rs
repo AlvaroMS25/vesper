@@ -32,7 +32,7 @@ impl Future for InteractionWaiter {
     }
 }
 
-pub struct WaiterWaker {
+pub(crate) struct WaiterWaker {
     pub predicate: Box<dyn Fn(&Interaction) -> bool + Send + 'static>,
     pub sender: Sender<Interaction>
 }
