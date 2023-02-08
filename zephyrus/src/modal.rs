@@ -99,6 +99,10 @@ impl<'ctx, S> Future for WaitModal<'ctx, S> {
 /// documentation about its usage and attributes.
 pub trait Modal<D> {
     /// Creates the modal, returning the response needed to send it to discord.
+    ///
+    /// The framework provides as a custom id the interaction id converted to a string, this custom
+    /// id must be used as the response custom id in order for the framework to retrieve the modal
+    /// data.
     fn create(ctx: &SlashContext<'_, D>, custom_id: String) -> InteractionResponse;
     /// Parses the provided interaction into the modal;
     fn parse(interaction: Interaction) -> Self;
