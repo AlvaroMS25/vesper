@@ -1,7 +1,7 @@
 use std::env;
 use std::sync::Arc;
 use futures_util::StreamExt;
-use twilight_gateway::Cluster;
+use twilight_gateway::{stream::{self, ShardEventStream}, Config};
 use twilight_http::Client;
 use twilight_model::gateway::event::Event;
 use twilight_model::gateway::Intents;
@@ -16,34 +16,36 @@ async fn main() {
 
     let http_client = Arc::new(Client::new(token.clone()));
 
-    let (cluster, mut events) = Cluster::builder(token, Intents::empty())
-        .http_client(Arc::clone(&http_client))
-        .build()
-        .await
-        .unwrap();
+    let config = Config::new(token.clone(), Intents::empty());
+    let mut shards = stream::create_recommended(
+        &http_client,
+        config,
+        |_, builder| builder.build()
+    ).await.unwrap().collect::<Vec<_>>();
 
-    cluster.up().await;
+    let mut stream = ShardEventStream::new(shards.iter_mut());
 
     // Wrap the framework in an Arc, so we can share it across tasks.
     let framework = Arc::new(Framework::builder(http_client, Id::new(application_id), ())
         .command(state)
         .build());
 
-    while let Some((_, event)) = events.next().await {
+    while let Some((_, event)) = stream.next().await {
         match event {
-            Event::Ready(_) => {
-                framework.register_global_commands().await.unwrap();
+            Err(error) => {
+                if error.is_fatal() {
+                    eprintln!("Gateway connection fatally closed, error: {error:?}");
+                    break;
+                }
             },
-            Event::InteractionCreate(interaction) => {
-                let framework_clone = Arc::clone(&framework);
-
-                // The framework doesn't spawn any tasks by itself, so if we want it to run in a
-                // separate task, we have to spawn it manually.
-                tokio::spawn(async move {
-                    framework_clone.process(interaction.0).await;
-                });
-            },
-            _ => ()
+            Ok(event) => match event {
+                Event::Ready(_) => {
+                    // We have to register the commands for them to show in discord.
+                    framework.register_global_commands().await.unwrap();
+                },
+                Event::InteractionCreate(interaction) => framework.process(interaction.0).await,
+                _ => ()
+            }
         }
     }
 }

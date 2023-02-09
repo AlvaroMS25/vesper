@@ -8,9 +8,9 @@ publish = false
 futures-util = "0.3"
 rand = "0.8"
 tokio = { version = "1", features = ["full"]}
-twilight-http = "0.14.0"
-twilight-model = "0.14.0"
-twilight-gateway = "0.14.0"
+twilight-http = "0.15.0"
+twilight-model = "0.15.0"
+twilight-gateway = "0.15.0"
 zephyrus = { path = "../zephyrus" }
 
 [[example]]
