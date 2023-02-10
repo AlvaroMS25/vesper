@@ -38,6 +38,10 @@ name = "autocompleting-arguments"
 path = "autocompleting-arguments.rs"
 
 [[example]]
+name = "argument-choices"
+path = "argument-choices.rs"
+
+[[example]]
 name = "using-dedicated-tasks"
 path = "using-dedicated-tasks.rs"
 
