@@ -22,12 +22,11 @@ impl Variant {
         let value = &self.value;
         let index = self.index as i64;
         tokens.extend(quote::quote! {
-            choices.push(::zephyrus::twilight_exports::CommandOptionChoice::Integer(
-                ::zephyrus::twilight_exports::CommandOptionChoiceData {
+            choices.push(CommandOptionChoice {
                     name: #value.to_string(),
-                    value: #index,
-                    name_localizations: None
-                })
+                    name_localizations: None,
+                    value: CommandOptionChoiceValue::Integer(#index)
+                }
             );
         })
     }
@@ -84,20 +83,34 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
 
     Ok(quote::quote! {
         const _: () = {
+            use ::zephyrus::{
+                builder::WrappedClient,
+                prelude::async_trait,
+                parse::{Parse, ParseError},
+                twilight_exports::{
+                    CommandInteractionDataResolved,
+                    CommandOptionChoice,
+                    CommandOptionChoiceValue,
+                    CommandOptionType,
+                    CommandOptionValue,
+
+                },
+            };
+
             #[automatically_derived]
-            #[::zephyrus::prelude::async_trait]
-            impl<T: Send + Sync + 'static> ::zephyrus::prelude::Parse<T> for #enum_name {
+            #[async_trait]
+            impl<T: Send + Sync + 'static> Parse<T> for #enum_name {
                 async fn parse(
-                    http_client: &::zephyrus::builder::WrappedClient,
+                    http_client: &WrappedClient,
                     data: &T,
-                    value: Option<&::zephyrus::twilight_exports::CommandOptionValue>,
-                    resolved: Option<&mut ::zephyrus::twilight_exports::CommandInteractionDataResolved>
-                ) -> Result<Self, ::zephyrus::prelude::ParseError>
+                    value: Option<&CommandOptionValue>,
+                    resolved: Option<&mut CommandInteractionDataResolved>
+                ) -> Result<Self, ParseError>
                 {
                     let num = usize::parse(http_client, data, value, resolved).await?;
                     match num {
                         #parse_stream
-                        _ => return Err(::zephyrus::parse::ParseError::Parsing {
+                        _ => return Err(ParseError::Parsing {
                                 argument_name: String::new(),
                                 required: true,
                                 argument_type: String::from(stringify!(#enum_name)),
@@ -106,10 +119,10 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
                         )
                     }
                 }
-                fn kind() -> ::zephyrus::twilight_exports::CommandOptionType {
-                    ::zephyrus::twilight_exports::CommandOptionType::Integer
+                fn kind() -> CommandOptionType {
+                    CommandOptionType::Integer
                 }
-                fn choices() -> Option<Vec<::zephyrus::twilight_exports::CommandOptionChoice>> {
+                fn choices() -> Option<Vec<CommandOptionChoice>> {
                     let mut choices = Vec::new();
 
                     #choice_stream;
