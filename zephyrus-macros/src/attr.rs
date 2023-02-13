@@ -1,11 +1,9 @@
-use std::collections::HashMap;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::ToTokens;
 use std::convert::TryFrom;
 use std::str::FromStr;
 use syn::spanned::Spanned;
 use syn::{Attribute, Error, Lit, Meta, NestedMeta, Path, Result};
-use syn::parse::{Parse, ParseStream};
 
 /// Values an [attr](self::Attr) can have
 #[derive(Debug, Clone)]
@@ -41,9 +39,68 @@ impl Attr {
     pub fn new(path: Path, values: Vec<Value>) -> Self {
         Self { path, values }
     }
-}
 
-impl Attr {
+    pub fn parse_multiple(attribute: &Attribute) -> Result<Vec<Self>> {
+        let mut parsed = Vec::new();
+        let meta = attribute.parse_meta()?;
+
+        match meta {
+            Meta::Path(p) => parsed.push(Attr::new(p, Vec::new())),
+            Meta::List(list) => {
+                for item in list.nested {
+                    let inner = match item {
+                        NestedMeta::Lit(lit) => return Err(Error::new(
+                            lit.span(),
+                            "Literal not recognized"
+                        )),
+                        NestedMeta::Meta(meta) => meta
+                    };
+
+                    let span = inner.span();
+                    let Meta::NameValue(nv) = inner else {
+                        return Err(Error::new(
+                            span,
+                            "Unrecognized attribute"
+                        ));
+                    };
+
+                    parsed.push(Attr::new(nv.path, vec![Value::Lit(nv.lit)]));
+                }
+            }
+            Meta::NameValue(nv) => parsed.push(Attr::new(nv.path, vec![Value::Lit(nv.lit)])),
+        }
+
+        Ok(parsed)
+    }
+
+    pub fn parse_one(attribute: &Attribute) -> Result<Self> {
+        let meta = attribute.parse_meta()?;
+
+        match meta {
+            Meta::Path(p) => Ok(Attr::new(p, Vec::new())),
+            Meta::List(l) => {
+                let path = l.path;
+                let values = l
+                    .nested
+                    .into_iter()
+                    .map(|m| match m {
+                        NestedMeta::Lit(lit) => Ok(Value::Lit(lit)),
+                        NestedMeta::Meta(m) => match m {
+                            Meta::Path(p) => Ok(Value::Ident(p.get_ident().unwrap().clone())),
+                            _ => Err(Error::new(
+                                m.span(),
+                                "Nested lists or name values are not supported",
+                            )),
+                        },
+                    })
+                    .collect::<Result<Vec<_>>>()?;
+
+                Ok(Attr::new(path, values))
+            }
+            Meta::NameValue(nv) => Ok(Attr::new(nv.path, vec![Value::Lit(nv.lit)])),
+        }
+    }
+
     #[allow(dead_code)]
     /// Executes the given function into the [attr](self::Attr)
     pub fn parse_value<T>(&self, f: impl FnOnce(&Value) -> Result<T>) -> Result<T> {
@@ -160,57 +217,12 @@ impl TryFrom<&Attribute> for Attr {
 }
 
 /// Parses the given syn attribute into an attr
-pub fn parse_attribute(attr: &Attribute) -> Result<Attr> {
-    let meta = attr.parse_meta()?;
-
-    match meta {
-        Meta::Path(p) => Ok(Attr::new(p, Vec::new())),
-        Meta::List(l) => {
-            let path = l.path;
-            let values = l
-                .nested
-                .into_iter()
-                .map(|m| match m {
-                    NestedMeta::Lit(lit) => Ok(Value::Lit(lit)),
-                    NestedMeta::Meta(m) => match m {
-                        Meta::Path(p) => Ok(Value::Ident(p.get_ident().unwrap().clone())),
-                        _ => Err(Error::new(
-                            m.span(),
-                            "Nested lists or name values are not supported",
-                        )),
-                    },
-                })
-                .collect::<Result<Vec<_>>>()?;
-
-            Ok(Attr::new(path, values))
-        }
-        Meta::NameValue(nv) => Ok(Attr::new(nv.path, vec![Value::Lit(nv.lit)])),
-    }
+pub fn parse_attribute(attribute: &Attribute) -> Result<Attr> {
+    Attr::parse_one(attribute)
 }
 
-pub fn parse_multiple(attr: &Attribute) -> Result<Vec<Attr>> {
-    let mut parsed = Vec::new();
-    let meta = attr.parse_meta()?;
-
-    match meta {
-        Meta::Path(p) => parsed.push(Attr::new(p, Vec::new())),
-        Meta::List(list) => {
-            for item in list.nested {
-                let inner = match item {
-                    NestedMeta::Lit(lit) => return Err(Error::new(
-                        lit.span(),
-                        "Literal not recognized"
-                    )),
-                    NestedMeta::Meta(meta) => meta
-                };
-
-
-            }
-        }
-        Meta::NameValue(nv) => parsed.push(Attr::new(nv.path, vec![Value::Lit(nv.lit)])),
-    }
-
-    Ok(parsed)
+pub fn parse_multiple(attribute: &Attribute) -> Result<Vec<Attr>> {
+    Attr::parse_multiple(attribute)
 }
 
 pub fn parse_named(prefix: &str, attribute: &Attribute) -> Result<Option<Vec<Attr>>> {
