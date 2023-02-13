@@ -207,3 +207,18 @@ pub fn check_return_type(ret: &ReturnType, out: TokenStream) -> Result<()> {
 
     Ok(())
 }
+
+/// Takes a vec of elements and applies a function to all of them, deleting them from the vec.
+pub fn consume_map<T, D, F>(items: &mut Vec<T>, data: &mut D, mut predicate: F) -> Result<()>
+where
+    F: FnMut(T, &mut D) -> Result<()>
+{
+    let i = 0;
+
+    while i < items.len() {
+        predicate(items.remove(i), data)?;
+    }
+
+    Ok(())
+}
+

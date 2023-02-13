@@ -1,7 +1,7 @@
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::ToTokens;
 use syn::{parse2, spanned::Spanned, Error, Result, Type, DeriveInput, Fields, FieldsNamed, Data};
-use crate::{attr::{self, Attr}, util::unique};
+use crate::{attr::{self, Attr}, util::{consume_map, unique}};
 use crate::optional::Optional;
 
 struct Modal {
@@ -23,7 +23,7 @@ struct Field {
 struct FieldParser<'a>(&'a Field);
 
 impl Modal {
-    fn new(input: &DeriveInput, fields: FieldsNamed) -> Result<Self> {
+    fn new(input: &mut DeriveInput, fields: FieldsNamed) -> Result<Self> {
         if fields.named.len() > 5 || fields.named.len() < 1 {
             return Err(Error::new(
                 fields.span(),
@@ -37,13 +37,15 @@ impl Modal {
             fields: Vec::with_capacity(fields.named.len())
         };
 
-        for attribute in &input.attrs {
-            let attr = attr::parse_attribute(attribute)?;
+        consume_map(&mut input.attrs, &mut title, |attribute, title| {
+            let attr = attr::parse_attribute(&attribute)?;
 
             if attr.path.get_ident().unwrap().to_string().as_str() == "title" {
-                unique(&mut title, attr.parse_string()?, "title", &attr.path)?;
+                unique(title, attr.parse_string()?, "title", &attr.path)?;
             }
-        }
+
+            Ok(())
+        })?;
 
         if let Some(title) = title {
             this.title = title;
@@ -58,7 +60,7 @@ impl Modal {
 }
 
 impl Field {
-    fn new(field: syn::Field) -> Result<Self> {
+    fn new(mut field: syn::Field) -> Result<Self> {
         let mut this = Self {
             kind: field.ty.clone(),
             ident: field.ident.unwrap(),
@@ -71,9 +73,10 @@ impl Field {
         };
 
 
-        for attribute in field.attrs {
+        consume_map(&mut field.attrs, &mut this, |attribute, this| {
             this.parse(attr::parse_attribute(&attribute)?)?;
-        }
+            Ok(())
+        })?;
 
         if this.label.is_none() {
             *this.label = Some(this.ident.to_string());
@@ -191,11 +194,12 @@ fn fields(data: Data, derive_span: impl Spanned) -> Result<FieldsNamed> {
 }
 
 pub fn modal(input: TokenStream2) -> Result<TokenStream2> {
-    let derive = parse2::<DeriveInput>(input)?;
+    let mut derive = parse2::<DeriveInput>(input)?;
     let fields = fields(derive.data.clone(), &derive)?;
+
+    let Modal { title, fields } = Modal::new(&mut derive, fields)?;
     let struct_ident = &derive.ident;
 
-    let Modal { title, fields } = Modal::new(&derive, fields)?;
     let parsers = fields.iter()
         .map(FieldParser)
         .collect::<Vec<FieldParser>>();
