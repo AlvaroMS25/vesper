@@ -74,8 +74,12 @@ impl Field {
 
 
         consume_map(&mut field.attrs, &mut this, |attribute, this| {
-            this.parse(attr::parse_attribute(&attribute)?)?;
-            Ok(())
+            let Some(mut inner) = attr::parse_named("modal", &attribute)? else { return Ok(()) };
+
+            consume_map(&mut inner, this, |attribute, this| {
+                this.parse(attribute)?;
+                Ok(())
+            })
         })?;
 
         if this.label.is_none() {

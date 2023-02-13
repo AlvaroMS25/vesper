@@ -1,9 +1,11 @@
+use std::collections::HashMap;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::ToTokens;
 use std::convert::TryFrom;
 use std::str::FromStr;
 use syn::spanned::Spanned;
 use syn::{Attribute, Error, Lit, Meta, NestedMeta, Path, Result};
+use syn::parse::{Parse, ParseStream};
 
 /// Values an [attr](self::Attr) can have
 #[derive(Debug, Clone)]
@@ -183,5 +185,46 @@ pub fn parse_attribute(attr: &Attribute) -> Result<Attr> {
             Ok(Attr::new(path, values))
         }
         Meta::NameValue(nv) => Ok(Attr::new(nv.path, vec![Value::Lit(nv.lit)])),
+    }
+}
+
+pub fn parse_multiple(attr: &Attribute) -> Result<Vec<Attr>> {
+    let mut parsed = Vec::new();
+    let meta = attr.parse_meta()?;
+
+    match meta {
+        Meta::Path(p) => parsed.push(Attr::new(p, Vec::new())),
+        Meta::List(list) => {
+            for item in list.nested {
+                let inner = match item {
+                    NestedMeta::Lit(lit) => return Err(Error::new(
+                        lit.span(),
+                        "Literal not recognized"
+                    )),
+                    NestedMeta::Meta(meta) => meta
+                };
+
+
+            }
+        }
+        Meta::NameValue(nv) => parsed.push(Attr::new(nv.path, vec![Value::Lit(nv.lit)])),
+    }
+
+    Ok(parsed)
+}
+
+pub fn parse_named(prefix: &str, attribute: &Attribute) -> Result<Option<Vec<Attr>>> {
+    let ident = attribute.path.get_ident();
+
+    if ident.is_none() || ident.unwrap().to_string() != prefix {
+        return Ok(None);
+    }
+
+    let parsed = parse_multiple(attribute)?;
+
+    if parsed.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(parsed))
     }
 }
