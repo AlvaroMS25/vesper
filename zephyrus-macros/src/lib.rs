@@ -130,7 +130,7 @@ pub fn parse(input: TokenStream) -> TokenStream {
 ///
 /// The derive macro accepts several attributes:
 ///
-/// - `#[title = "<TITLE>"`: This attribute allows specifying the title of the modal, by default the
+/// - `#[modal(title = "<TITLE>")]`: This attribute allows specifying the title of the modal, by default the
 /// title will be the name of the structure.
 ///
 /// ## Example
@@ -142,13 +142,13 @@ pub fn parse(input: TokenStream) -> TokenStream {
 /// }
 ///
 /// #[derive(Modal)]
-/// #[title = "Some incredible modal"]
+/// #[modal(title = "Some incredible modal")]
 /// struct OtherModal { // <- This one will have "Some incredible modal" as the title.
 ///     // ...
 /// }
 /// ```
 ///
-/// - `#[label = "<LABEL>"`: This attribute allows setting the label of the field, by default it will
+/// - `#[modal(label = "<LABEL>")]`: This attribute allows setting the label of the field, by default it will
 /// be the name of the struct field.
 ///
 /// ## Example
@@ -158,14 +158,14 @@ pub fn parse(input: TokenStream) -> TokenStream {
 ///
 /// #[derive(Modal)]
 /// struct MyModal {
-///     #[label = "My field"]
+///     #[modal(label = "My field")]
 ///     something: String, // <- This field will be shown as "My field"
 ///     optional_item: Option<String> // <- This one will use the struct name "optional_item"
 /// }
 /// ```
 ///
-/// - `#[max_length = x]` and `#[min_length = y]`: These attributes allow to set a maximum/minimum
-/// amount of characters a field can have.
+/// - `#[modal(max_length = x)]` and `#[modal(min_length = y)]`: These attributes allow to set a
+/// maximum/minimum amount of characters a field can have.
 ///
 /// ## Example
 ///
@@ -174,16 +174,15 @@ pub fn parse(input: TokenStream) -> TokenStream {
 ///
 /// #[derive(Modal)]
 /// struct MyModal {
-///     #[max_length = 150]
-///     #[min_length = 15]
+///     #[modal(max_length = 150, min_length = 15)]
 ///     something: String, // <- This field will have both maximum and minimum size constraints.
-///     #[max_length = 25]
+///     #[modal(max_length) = 25]
 ///     short_field: String, // <- This field will only have a maximum size constraint.
 ///     optional_item: Option<String> // <- This one won't have any
 /// }
 /// ```
 ///
-/// - `#[paragraph]`: This attribute will mark the field as a paragraph. By default, all fields are
+/// - `#[modal(paragraph)]`: This attribute will mark the field as a paragraph. By default, all fields are
 /// marked as single line fields, so the user will only be able to input up to one line unless we
 /// mark it as a paragraph.
 ///
@@ -194,14 +193,14 @@ pub fn parse(input: TokenStream) -> TokenStream {
 ///
 /// #[derive(Modal)]
 /// struct MyModal {
-///     #[paragraph]
+///     #[modal(paragraph)]
 ///     something: String, // <- This field will be shown as a multi-line field.
 ///     optional_item: Option<String> // <- This one will be shown as a single line one.
 /// }
 /// ```
 #[proc_macro_derive(
     Modal,
-    attributes(modal, title, label, max_length, min_length, paragraph, placeholder)
+    attributes(modal)
 )]
 pub fn modal(input: TokenStream) -> TokenStream {
     extract(modal::modal(input.into()))
