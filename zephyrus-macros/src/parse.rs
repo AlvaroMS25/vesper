@@ -1,7 +1,6 @@
-use crate::attr::Attr;
 use proc_macro2::{Ident, TokenStream as TokenStream2};
-use std::convert::TryFrom;
 use syn::{spanned::Spanned, DeriveInput, Error, Result};
+use crate::util::unique;
 
 struct Variant {
     value: String,
@@ -55,13 +54,27 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
             ));
         }
 
-        let mut name = variant.ident.to_string();
+        let mut name = None;
         for attribute in variant.attrs {
-            let attr = Attr::try_from(&attribute)?;
-            if attr.path.is_ident("rename") {
-                name = attr.parse_string()?;
+            let Some(attrs) = crate::attr::parse_named("parse", &attribute)? else {
+                continue;
+            };
+
+            for attr in attrs {
+                let span = attr.path.span();
+                match attr.path.get_ident().unwrap().to_string().as_str() {
+                    "rename" => {
+                        unique(&mut name, attr.parse_string()?, "rename", span)?;
+                    },
+                    _ => Err(Error::new(
+                        span,
+                        "Attribute not recognized"
+                    ))?
+                }
             }
         }
+
+        let name = name.unwrap_or(variant.ident.to_string());
 
         variants.push(Variant {
             ident: variant.ident.clone(),

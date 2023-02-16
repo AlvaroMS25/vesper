@@ -106,7 +106,43 @@ pub fn autocomplete(_: TokenStream, input: TokenStream) -> TokenStream {
     extract(autocomplete::autocomplete(input.into()))
 }
 
-#[proc_macro_derive(Parse, attributes(rename))]
+
+/// Implements `Parse` for an enum, allowing it to be used as a command argument.
+/// The enum will be seen by the user as a list of options to choose from, and one of the variants
+/// will have to be selected.
+///
+/// # Examples:
+///
+/// ```rust
+/// use zephyrus::prelude::*;
+///
+/// #[derive(Parse)]
+/// enum Choices {
+///     First,
+///     Second,
+///     Third,
+///     // ...
+/// }
+/// ```
+///
+/// Enums variants can be renamed to modify the value seen by the user using the
+/// `#[parse(rename = "<RENAME>")]` attribute.
+///
+/// # Example:
+/// ```rust
+/// use zephyrus::prelude::*;
+///
+/// #[derive(Parse)]
+/// enum Choices {
+///     First,
+///     Second,
+///     #[parse(rename = "Forth")]
+///     Third, // <- This item will be shown to the user as "Forth", despite its variant name being Third
+///     // ...
+/// }
+/// ```
+///
+#[proc_macro_derive(Parse, attributes(parse))]
 pub fn parse(input: TokenStream) -> TokenStream {
     extract(parse::parse(input.into()))
 }
