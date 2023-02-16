@@ -31,6 +31,13 @@ Log of changes for ``zephyrus`` crate, changes in between versions will be docum
 - Now context can send modals directly
 - Created Modal derive macro to create modals directly
 
+## 0.9.0 -- 2023-02-##
+
+#### Changes:
+- Updated twilight dependencies to 0.15
+- Now modal derive requires to specify attributes inside a modal one: #[modal(...)]
+- Now parse derive requires to specify attributes inside a parse one: #[parse(...)]
+
 <!-- contributors -->
 [sudo-carson]: https://github.com/sudo-carson
 
