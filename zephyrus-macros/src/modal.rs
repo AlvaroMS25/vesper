@@ -38,10 +38,12 @@ impl Modal {
         };
 
         consume_map(&mut input.attrs, &mut title, |attribute, title| {
-            let attr = attr::parse_attribute(&attribute)?;
+            let Some(inner) = attr::parse_named("modal", &attribute)? else { return Ok(()) };
 
-            if attr.path.get_ident().unwrap().to_string().as_str() == "title" {
-                unique(title, attr.parse_string()?, "title", &attr.path)?;
+            for attr in inner {
+                if attr.path.get_ident().unwrap().to_string().as_str() == "title" {
+                    unique(title, attr.parse_string()?, "title", &attr.path)?;
+                }
             }
 
             Ok(())
@@ -99,6 +101,17 @@ impl Field {
                 unique(&mut self.placeholder, attr.parse_string()?, "placeholder", span)?;
             },
             "paragraph" => {
+                if self.paragraph {
+                    Err(Error::new(
+                        span,
+                        "paragraph already set"
+                    ))?;
+                } else if attr.has_values() {
+                    Err(Error::new(
+                        span,
+                        "paragraph attribute doesn't admit values"
+                    ))?;
+                }
                 self.paragraph = true;
             },
             "max_length" => {
@@ -110,7 +123,10 @@ impl Field {
             "value" => {
                 unique(&mut self.value, attr.parse_string()?, "value", span)?;
             }
-            _ => {}
+            _ => Err(Error::new(
+               span,
+                "Attribute not recognized"
+            ))?
         }
 
         Ok(())
