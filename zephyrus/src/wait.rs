@@ -57,6 +57,8 @@ impl Future for InteractionWaiter {
 
 /// A waker used to notify its associate [`waiter`] when the predicate has been satisfied and
 /// deliver the interaction.
+///
+/// [`waiter`]: InteractionWaiter
 pub struct WaiterWaker {
     pub predicate: Box<dyn Fn(&Interaction) -> bool + Send + 'static>,
     pub sender: Sender<Interaction>
