@@ -139,7 +139,7 @@ to choose.
 
 Zephyrus allows doing this in an easy way, to allow this, a derive macro is provided by the framework. This macro is
 named the same way as `Parse` trait and can only be used in enums to define the options. Renaming is also allowed here
-by using the `#[rename]` attribute and allows to change the option name seen in discord.
+by using the `#[parse(rename)]` attribute and allows to change the option name seen in discord.
 
 ```rust
 #[derive(Parse)]
@@ -147,7 +147,7 @@ enum Choices {
     First,
     Second,
     Third,
-    #[rename = "Forth"]
+    #[parse(rename = "Forth")]
     Other
 }
 
