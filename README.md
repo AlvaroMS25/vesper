@@ -407,3 +407,12 @@ async fn(&SlashContext</* Some type */>) -> Result<bool, E>
 ```
 
 Note that those are not the real signatures, since the functions return `Box`ed futures.
+
+# Modals
+
+Since version 0.8.0, the framework provides a derive macro to make modals as easy as possible. Let's take a look at
+an example:
+
+```rust
+use zephyrus::prelude::*;
+```
