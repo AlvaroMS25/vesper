@@ -415,4 +415,26 @@ an example:
 
 ```rust
 use zephyrus::prelude::*;
+
+#[derive(Modal, Debug)]
+#[modal(title = "Test modal")]
+struct MyModal {
+    field: String,
+    #[modal(paragraph, label = "Paragraph")]
+    paragraph: String,
+    #[modal(placeholder = "This is an optional field")]
+    optional: Option<String>
+}
+
+#[command]
+#[description = "My command description"]
+async fn my_command(ctx: &SlashContext</* Some type */>) -> DefaultCommandResult {
+    let modal_waiter = ctx.create_modal::<MyModal>().await?;
+    let output = modal_waiter.await?;
+    
+    println!("{output:?}");
+    
+    Ok(())
+}
+
 ```
