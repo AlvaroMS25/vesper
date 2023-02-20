@@ -162,7 +162,7 @@ impl<'a, D> SlashContext<'a, D> {
     ///
     /// #[derive(Debug, Modal)]
     /// struct MyModal {
-    ///     #[paragraph]
+    ///     #[modal(paragraph)]
     ///     field: String
     /// }
     ///
