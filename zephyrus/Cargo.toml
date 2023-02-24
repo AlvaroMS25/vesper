@@ -18,7 +18,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 async-trait = "0.1"
-zephyrus-macros = { path = "../zephyrus-macros", version = "0.8" }
+zephyrus-macros = { path = "../zephyrus-macros", version = "0.9" }
 parking_lot = "0.12"
 tracing = "0.1"
 twilight-model = "0.15"
