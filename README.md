@@ -438,3 +438,11 @@ async fn my_command(ctx: &SlashContext</* Some type */>) -> DefaultCommandResult
 }
 
 ```
+
+Here the ´Modal´ derive macro derives the modal trait which allows us to create them, then we can modify how it will be
+shown to the user using the `#[modal(..)}` attributes. To see the full list of allowed attributes, take a look at the
+[macro declaration]
+
+Currently, only `String` and `Option<String>` fields are allowed
+
+[macro declaration]: https://github.com/AlvaroMS25/zephyrus/blob/master/zephyrus-macros/src/lib.rs#L150-L236
