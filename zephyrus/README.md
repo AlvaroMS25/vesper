@@ -139,7 +139,7 @@ to choose.
 
 Zephyrus allows doing this in an easy way, to allow this, a derive macro is provided by the framework. This macro is
 named the same way as `Parse` trait and can only be used in enums to define the options. Renaming is also allowed here
-by using the `#[rename]` attribute and allows to change the option name seen in discord.
+by using the `#[parse(rename)]` attribute and allows to change the option name seen in discord.
 
 ```rust
 #[derive(Parse)]
@@ -147,7 +147,7 @@ enum Choices {
     First,
     Second,
     Third,
-    #[rename = "Forth"]
+    #[parse(rename = "Forth")]
     Other
 }
 
@@ -407,3 +407,42 @@ async fn(&SlashContext</* Some type */>) -> Result<bool, E>
 ```
 
 Note that those are not the real signatures, since the functions return `Box`ed futures.
+
+# Modals
+
+Since version 0.8.0, the framework provides a derive macro to make modals as easy as possible. Let's take a look at
+an example:
+
+```rust
+use zephyrus::prelude::*;
+
+#[derive(Modal, Debug)]
+#[modal(title = "Test modal")]
+struct MyModal {
+    field: String,
+    #[modal(paragraph, label = "Paragraph")]
+    paragraph: String,
+    #[modal(placeholder = "This is an optional field")]
+    optional: Option<String>
+}
+
+#[command]
+#[description = "My command description"]
+async fn my_command(ctx: &SlashContext</* Some type */>) -> DefaultCommandResult {
+    let modal_waiter = ctx.create_modal::<MyModal>().await?;
+    let output = modal_waiter.await?;
+    
+    println!("{output:?}");
+    
+    Ok(())
+}
+
+```
+
+Here the ´Modal´ derive macro derives the modal trait which allows us to create them, then we can modify how it will be
+shown to the user using the `#[modal(..)}` attributes. To see the full list of allowed attributes, take a look at the
+[macro declaration].
+
+Currently, only `String` and `Option<String>` fields are allowed.
+
+[macro declaration]: https://github.com/AlvaroMS25/zephyrus/blob/master/zephyrus-macros/src/lib.rs#L150-L236
