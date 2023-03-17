@@ -41,7 +41,7 @@ pub struct ModalOutcome<S> {
     pub interaction: Interaction
 }
 
-impl<S> Debug for ModalOutcome<S> {
+impl<S: Debug> Debug for ModalOutcome<S> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         <S as Debug>::fmt(&self.inner, f)
     }
