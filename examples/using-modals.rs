@@ -59,9 +59,8 @@ async fn show_modal(ctx: &SlashContext<()>) -> DefaultCommandResult {
 
 #[derive(Modal, Debug)]
 struct MyModal {
-    #[placeholder = "My placeholder"]
+    #[modal(placeholder = "My placeholder")]
     something: String,
-    #[label = "Another field"]
-    #[paragraph]
+    #[modal(label = "Another field", paragraph)]
     field_2: Option<String>
 }

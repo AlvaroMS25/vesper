@@ -53,7 +53,7 @@ async fn main() {
 enum ArgumentOption {
     Something,
     AnotherOption,
-    #[rename = "Some other item"] Other // This will be shown as "Some other item"
+    #[parse(rename = "Some other item")] Other // This will be shown as "Some other item"
 }
 
 #[command]
