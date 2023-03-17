@@ -6,7 +6,7 @@ use tokio::sync::oneshot::error::RecvError;
 use crate::context::SlashContext;
 use crate::wait::InteractionWaiter;
 use crate::twilight_exports::{Interaction, InteractionClient, InteractionResponse, InteractionResponseType};
-use std::{error::Error as StdError, fmt::{Display, Formatter, Result as FmtResult}};
+use std::{error::Error as StdError, fmt::{Debug, Display, Formatter, Result as FmtResult}};
 use twilight_http::response::marker::EmptyBody;
 use twilight_http::response::ResponseFuture;
 
@@ -39,6 +39,12 @@ pub struct ModalOutcome<S> {
     pub inner: S,
     /// The interaction used to retrieve the modal.
     pub interaction: Interaction
+}
+
+impl<S> Debug for ModalOutcome<S> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        <S as Debug>::fmt(&self.inner, f)
+    }
 }
 
 impl<S> std::ops::Deref for ModalOutcome<S> {

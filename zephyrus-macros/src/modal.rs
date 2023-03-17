@@ -262,14 +262,15 @@ pub fn modal(input: TokenStream2) -> Result<TokenStream2> {
                     }
                 }
 
-                fn parse(interaction: Interaction) -> Self {
-                    let Some(InteractionData::ModalSubmit(modal)) = interaction.data else {
+                fn parse(interaction: &mut Interaction) -> Self {
+                    let Some(InteractionData::ModalSubmit(modal)) = &mut interaction.data else {
                         unreachable!();
                     };
 
                     #(let mut #field_names = None;)*
 
-                    for row in modal.components {
+                    let components = std::mem::take(&mut modal.components);
+                    for row in components {
                         for component in row.components {
                             match component.custom_id.as_str() {
                                 #(#parsers,)*
