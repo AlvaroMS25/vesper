@@ -31,6 +31,30 @@ impl Display for ModalError {
 
 impl StdError for ModalError {}
 
+/// The outcome of `.await`ing a [WaitModal](WaitModal).
+///
+/// This structure provides both the parsed modal and the interaction used to retrieve it.
+pub struct ModalOutcome<S> {
+    /// The inner parsed modal.
+    pub inner: S,
+    /// The interaction used to retrieve the modal.
+    pub interaction: Interaction
+}
+
+impl<S> std::ops::Deref for ModalOutcome<S> {
+    type Target = S;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<S> std::ops::DerefMut for ModalOutcome<S> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
+
 /// A waiter used to retrieve the input of a command. This can be obtained by using
 /// [SlashContext::create_modal](SlashContext::create_modal).
 ///
@@ -44,7 +68,7 @@ pub struct WaitModal<'ctx, S> {
     pub(crate) interaction: Option<Interaction>,
     pub(crate) http_client: &'ctx InteractionClient<'ctx>,
     pub(crate) acknowledge: Option<ResponseFuture<EmptyBody>>,
-    pub(crate) parse_fn: fn(Interaction) -> S,
+    pub(crate) parse_fn: fn(&mut Interaction) -> S,
     pub(crate) _marker: PhantomData<S>,
 }
 
@@ -52,7 +76,7 @@ impl<'ctx, S> WaitModal<'ctx, S> {
     pub(crate) fn new(
         waiter: InteractionWaiter,
         http_client: &'ctx InteractionClient<'ctx>,
-        parse_fn: fn(Interaction) -> S,
+        parse_fn: fn(&mut Interaction) -> S,
     ) -> WaitModal<'ctx, S>
     {
         Self {
@@ -67,7 +91,7 @@ impl<'ctx, S> WaitModal<'ctx, S> {
 }
 
 impl<'ctx, S> Future for WaitModal<'ctx, S> {
-    type Output = Result<S, ModalError>;
+    type Output = Result<ModalOutcome<S>, ModalError>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = unsafe { self.get_unchecked_mut() };
@@ -97,7 +121,12 @@ impl<'ctx, S> Future for WaitModal<'ctx, S> {
         ready!(Pin::new(this.acknowledge.as_mut().unwrap()).poll(cx))
             .map_err(ModalError::Http)?;
 
-        Poll::Ready(Ok((this.parse_fn)(this.interaction.take().unwrap())))
+        let mut interaction = this.interaction.take().unwrap();
+
+        Poll::Ready(Ok(ModalOutcome {
+            inner: (this.parse_fn)(&mut interaction),
+            interaction
+        }))
     }
 }
 
@@ -113,5 +142,5 @@ pub trait Modal<D> {
     /// data.
     fn create(ctx: &SlashContext<'_, D>, custom_id: String) -> InteractionResponse;
     /// Parses the provided interaction into the modal;
-    fn parse(interaction: Interaction) -> Self;
+    fn parse(interaction: &mut Interaction) -> Self;
 }
