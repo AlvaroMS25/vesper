@@ -3,9 +3,10 @@ use std::marker::PhantomData;
 use std::pin::Pin;
 use std::task::{Context, Poll, ready};
 use tokio::sync::oneshot::error::RecvError;
+use twilight_model::channel::message::MessageFlags;
 use crate::context::SlashContext;
 use crate::wait::InteractionWaiter;
-use crate::twilight_exports::{Interaction, InteractionClient, InteractionResponse, InteractionResponseType};
+use crate::twilight_exports::{Interaction, InteractionClient, InteractionResponse, InteractionResponseType, InteractionResponseData};
 use std::{error::Error as StdError, fmt::{Debug, Display, Formatter, Result as FmtResult}};
 use twilight_http::response::marker::EmptyBody;
 use twilight_http::response::ResponseFuture;
@@ -73,6 +74,8 @@ pub struct WaitModal<'ctx, S> {
     pub(crate) waiter: Option<InteractionWaiter>,
     pub(crate) interaction: Option<Interaction>,
     pub(crate) http_client: &'ctx InteractionClient<'ctx>,
+    pub(crate) flags: Option<MessageFlags>,
+    pub(crate) response_type: InteractionResponseType,
     pub(crate) acknowledge: Option<ResponseFuture<EmptyBody>>,
     pub(crate) parse_fn: fn(&mut Interaction) -> S,
     pub(crate) _marker: PhantomData<S>,
@@ -89,11 +92,29 @@ impl<'ctx, S> WaitModal<'ctx, S> {
             waiter: Some(waiter),
             interaction: None,
             http_client,
+            flags: None,
+            response_type: InteractionResponseType::DeferredUpdateMessage,
             acknowledge: None,
             parse_fn,
             _marker: PhantomData,
         }
     }
+
+    pub fn set_flags(mut self, flags: MessageFlags) -> Self {
+        self.flags = Some(flags);
+        self
+    }
+
+    pub fn set_ephemeral(self) -> Self {
+        self.set_flags(MessageFlags::EPHEMERAL)
+    }
+
+    pub fn defer_response(mut self) -> Self {
+        self.response_type = InteractionResponseType::DeferredChannelMessageWithSource;
+        self
+    }
+
+
 }
 
 impl<'ctx, S> Future for WaitModal<'ctx, S> {
@@ -112,13 +133,23 @@ impl<'ctx, S> Future for WaitModal<'ctx, S> {
 
         if this.acknowledge.is_none() {
             let interaction = this.interaction.as_ref().unwrap();
+
+            let response = InteractionResponse {
+                kind: this.response_type,
+                data: if this.flags.is_none() {
+                    None
+                } else {
+                    Some(InteractionResponseData {
+                        flags: this.flags,
+                        ..Default::default()
+                    })
+                }  
+            };
+
             let response = this.http_client.create_response(
                 interaction.id,
                 &interaction.token,
-                &InteractionResponse {
-                    kind: InteractionResponseType::DeferredUpdateMessage,
-                    data: None
-                }
+                &response
             );
 
             this.acknowledge = Some(response.into_future());
