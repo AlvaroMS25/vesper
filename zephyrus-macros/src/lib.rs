@@ -218,6 +218,21 @@ pub fn parse(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 ///
+/// - #[modal(placeholder = "<PLACEHOLDER>")]: This attribute allows specifying a placeholder that will be seen
+/// before entering anything on the input.
+/// 
+/// ## Example
+/// 
+/// ```rust
+/// use zephyrus::prelude::*;
+///
+/// #[derive(Modal)]
+/// struct MyModal {
+///     #[modal(placeholder = "This is a placeholder")]
+///     something: String, // <- This field will have as placeholder "This is a placeholder".
+/// }
+/// ```
+/// 
 /// - `#[modal(paragraph)]`: This attribute will mark the field as a paragraph. By default, all fields are
 /// marked as single line fields, so the user will only be able to input up to one line unless we
 /// mark it as a paragraph.
