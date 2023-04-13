@@ -32,9 +32,10 @@ where
 /// #[command]
 /// #[description = "My Command"]
 /// async fn my_command(ctx: &SlashContext<()>) -> DefaultCommandResult {
-///     ctx.acknowledge().await?;
+///     ctx.defer(false).await?;
 ///     let interaction = ctx.wait_interaction(|interaction| {
 ///         // predicate here
+///         false
 ///     }).await?;
 ///
 ///     Ok(())

@@ -98,7 +98,7 @@ async fn handle_error(_ctx: &SlashContext<()>, result: DefaultError) {
 // will be `None`, as the error will be consumed at the custom error handler.
 #[error_handler(handle_error)]
 async fn raises_error(ctx: &SlashContext<()>) -> DefaultCommandResult {
-    ctx.acknowledge().await?;
+    ctx.defer(false).await?;
     if !ctx.interaction.is_guild() {
         ctx.interaction_client.update_response(&ctx.interaction.token)
             .content(Some("This command can only be used in guilds")).unwrap()

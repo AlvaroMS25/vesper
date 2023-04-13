@@ -1,4 +1,5 @@
 use parking_lot::Mutex;
+use twilight_model::channel::message::MessageFlags;
 use crate::{
     builder::WrappedClient,
     twilight_exports::*,
@@ -112,6 +113,7 @@ impl<'a, D> SlashContext<'a, D> {
         unsafe { &mut *(&self.interaction as *const Interaction as *mut Interaction) }
     }
 
+    /*
     /// Acknowledges the interaction, allowing to respond later.
     ///
     /// # Examples
@@ -136,14 +138,50 @@ impl<'a, D> SlashContext<'a, D> {
     ///     Ok(())
     /// }
     /// ```
+    #[deprecated(since = "0.10.0", note = "Use `.defer` instead")]
     pub async fn acknowledge(&self) -> Result<(), twilight_http::Error> {
+        self.defer(false).await
+    }*/
+
+    /// Defers the interaction, allowing to respond later.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use zephyrus::prelude::*;
+    ///
+    /// #[command]
+    /// #[description = "My command description"]
+    /// async fn my_command(ctx: &SlashContext<()>) -> DefaultCommandResult {
+    ///     // Defer the interaction, this way we can respond to it later.
+    ///     ctx.defer(false).await?;
+    ///
+    ///     // Do something here
+    ///
+    ///     // Now edit the interaction
+    ///     ctx.interaction_client.update_response(&ctx.interaction.token)
+    ///         .content(Some("Hello world"))
+    ///         .unwrap()
+    ///         .await?;
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
+    pub async fn defer(&self, ephemeral: bool) -> Result<(), twilight_http::Error> {
         self.interaction_client
             .create_response(
                 self.interaction.id,
                 &self.interaction.token,
                 &InteractionResponse {
                     kind: InteractionResponseType::DeferredChannelMessageWithSource,
-                    data: None,
+                    data: if ephemeral {
+                        Some(InteractionResponseData {
+                            flags: Some(MessageFlags::EPHEMERAL),
+                            ..Default::default()
+                        })
+                    } else {
+                        None
+                    },
                 },
             )
             .await?;

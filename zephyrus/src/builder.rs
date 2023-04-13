@@ -138,7 +138,7 @@ where
     ///     let app_id = std::env::var("DISCORD_APP_ID").unwrap().parse::<u64>().unwrap();
     ///     let http_client = Client::new(token);
     ///
-    ///     let framework = Framework::builder(http_client, Id::new(app_id), ())
+    ///     let framework = Framework::<()>::builder(http_client, Id::new(app_id), ())
     ///         .before(before_hook)
     ///         .build();
     /// }
@@ -158,9 +158,8 @@ where
     /// use twilight_model::id::Id;
     ///
     /// #[after]
-    /// async fn after_hook(ctx: &SlashContext<()>, command_name: &str) -> bool {
-    ///     println!("Executing command {command_name}");
-    ///     true
+    /// async fn after_hook(ctx: &SlashContext<()>, command_name: &str, _: Option<DefaultCommandResult>) {
+    ///     println!("Command {command_name} finished execution");
     /// }
     ///
     /// #[tokio::main]
@@ -191,7 +190,7 @@ where
     ///#[command]
     ///#[description = "Says Hello world!"]
     ///async fn hello_world(ctx: &SlashContext<()>) -> DefaultCommandResult {
-    ///     ctx.acknowledge().await?;
+    ///     ctx.defer(false).await?;
     ///     ctx.interaction_client.update_response(&ctx.interaction.token)
     ///         .content(Some("Hello world!"))
     ///         .unwrap()
@@ -207,7 +206,7 @@ where
     ///     #[rename = "content"] #[description = "The content"] c: String
     ///) -> DefaultCommandResult
     ///{
-    ///     ctx.acknowledge().await?;
+    ///     ctx.defer(false).await?;
     ///     ctx.interaction_client.update_response(&ctx.interaction.token)
     ///         .content(Some(&c))
     ///         .unwrap()
