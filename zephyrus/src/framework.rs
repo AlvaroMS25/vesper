@@ -255,12 +255,12 @@ where
 
     /// Gets the next [option](CommandDataOption)
     /// only if it corresponds to a subcommand or a subcommand group.
-    fn get_next(&self, interaction: &mut Vec<CommandDataOption>) -> Option<CommandDataOption> {
+    fn get_next<'a>(&self, interaction: &'a Vec<CommandDataOption>) -> Option<&'a CommandDataOption> {
         if !interaction.is_empty()
             && (interaction[0].value.kind() == CommandOptionType::SubCommand
                 || interaction[0].value.kind() == CommandOptionType::SubCommandGroup)
         {
-            Some(interaction.remove(0))
+            interaction.get(0)
         } else {
             None
         }
