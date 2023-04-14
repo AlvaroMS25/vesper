@@ -60,20 +60,20 @@ impl<'a> DataIterator<'a> {
         self.resolved.as_mut()
     }
 
-    fn get_data(options: &mut Vec<CommandDataOption>) -> Vec<&CommandDataOption> {
+    fn get_data(options: &Vec<CommandDataOption>) -> Vec<&CommandDataOption> {
         if let Some(index) = options.iter().position(|item| {
             item.value.kind() == CommandOptionType::SubCommand
                 || item.value.kind() == CommandOptionType::SubCommandGroup
         })
         {
-            let item = options.get_mut(index).unwrap();
-            match &mut item.value {
+            let item = options.get(index).unwrap();
+            match &item.value {
                 CommandOptionValue::SubCommandGroup(g)
                 | CommandOptionValue::SubCommand(g) => Self::get_data(g),
                 _ => unreachable!()
             }
         } else {
-            options.iter_mut()
+            options.iter()
                 .collect()
         }
     }
