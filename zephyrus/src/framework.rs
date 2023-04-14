@@ -217,33 +217,22 @@ where
     /// [ApplicationCommand](ApplicationCommand),
     /// returning `None` if no command matches the given interaction.
     fn get_command(&self, interaction: &mut Interaction) -> Option<&Command<D, T, E>> {
-        let data = interaction.data.as_mut()?;
+        let data = interaction.data.as_ref()?;
         let interaction_data = extract!(data => ApplicationCommand);
-        if let Some(next) = self.get_next(&mut interaction_data.options) {
+        if let Some(next) = self.get_next(&interaction_data.options) {
             let group = self.groups.get(&*interaction_data.name)?;
             match next.value.kind() {
                 CommandOptionType::SubCommand => {
                     let subcommands = group.kind.as_simple()?;
-                    let options = match next.value {
-                        CommandOptionValue::SubCommand(s) => s,
-                        _ => unreachable!(),
-                    };
-                    interaction_data.options = options;
                     subcommands.get(&*next.name)
                 }
                 CommandOptionType::SubCommandGroup => {
-                    let mut options = match next.value {
-                        CommandOptionValue::SubCommandGroup(s) => s,
-                        _ => unreachable!(),
+                    let CommandOptionValue::SubCommandGroup(options) = &next.value else {
+                        unreachable!();
                     };
-                    let subcommand = self.get_next(&mut options)?;
+                    let subcommand = self.get_next(options)?;
                     let subgroups = group.kind.as_group()?;
                     let group = subgroups.get(&*next.name)?;
-                    let options = match subcommand.value {
-                        CommandOptionValue::SubCommand(s) => s,
-                        _ => unreachable!(),
-                    };
-                    interaction_data.options = options;
                     group.subcommands.get(&*subcommand.name)
                 }
                 _ => None,
