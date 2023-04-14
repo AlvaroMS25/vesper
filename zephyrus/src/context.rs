@@ -113,7 +113,6 @@ impl<'a, D> SlashContext<'a, D> {
         unsafe { &mut *(&self.interaction as *const Interaction as *mut Interaction) }
     }
 
-    /*
     /// Acknowledges the interaction, allowing to respond later.
     ///
     /// # Examples
@@ -141,7 +140,7 @@ impl<'a, D> SlashContext<'a, D> {
     #[deprecated(since = "0.10.0", note = "Use `.defer` instead")]
     pub async fn acknowledge(&self) -> Result<(), twilight_http::Error> {
         self.defer(false).await
-    }*/
+    }
 
     /// Defers the interaction, allowing to respond later.
     ///
