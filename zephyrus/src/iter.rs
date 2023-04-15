@@ -16,7 +16,7 @@ impl<'a> DataIterator<'a> {
         };
 
         Self {
-            src: Self::get_data(&mut data.options),
+            src: Self::get_data(&data.options),
             resolved: &mut data.resolved
         }
     }
