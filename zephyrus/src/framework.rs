@@ -15,6 +15,7 @@ use crate::{
 };
 use tracing::debug;
 use parking_lot::Mutex;
+use crate::command::ExecutionResult;
 use crate::parse::ParseError;
 
 macro_rules! extract {
@@ -247,7 +248,9 @@ where
         };
 
         if execute {
-            let result = cmd.execute(&context).await;
+            let ExecutionResult::Finished(result) = cmd.execute(&context).await else {
+                return;
+            };
             if let Some(after) = &self.after {
                 (after.0)(&context, cmd.name, result).await;
             }
