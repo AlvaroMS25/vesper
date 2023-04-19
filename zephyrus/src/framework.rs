@@ -157,13 +157,23 @@ where
                 CommandOptionValue::SubCommand(sc) => self.get_focus(sc),
                 _ => self.get_focus(&data.options)
             }?;
+            let CommandOptionValue::Focused(ref input, kind) = focused.value else {
+                return None;
+            };
 
             let command = self.get_command(interaction)?;
             let position = command
                 .arguments
                 .iter()
                 .position(|arg| arg.name == focused.name)?;
-            return Some((command.name, command.arguments.get(position)?, focused!(&focused.value)));
+            return Some((
+                command.name,
+                command.arguments.get(position)?,
+                Focused {
+                    input: input.clone(),
+                    kind
+                }
+            ));
         }
 
         None
