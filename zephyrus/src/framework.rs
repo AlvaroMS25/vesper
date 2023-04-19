@@ -7,7 +7,7 @@ use crate::{
     hook::{AfterHook, BeforeHook},
     twilight_exports::{
         ApplicationMarker, Client,
-        Command as TwilightCommand, CommandData, CommandDataOption, CommandOption, CommandOptionType,
+        Command as TwilightCommand, CommandDataOption, CommandOption, CommandOptionType,
         CommandOptionValue, GuildMarker, Id, Interaction, InteractionData, InteractionType, InteractionClient, InteractionResponse,
         InteractionResponseType,
     },
@@ -15,6 +15,7 @@ use crate::{
 };
 use tracing::debug;
 use parking_lot::Mutex;
+use crate::command::ExecutionResult;
 use crate::parse::ParseError;
 
 macro_rules! extract {
@@ -123,7 +124,7 @@ where
     }
 
     async fn try_autocomplete(&self, mut interaction: Interaction) {
-        if let Some((argument, value)) = self.get_autocomplete_argument(extract!(interaction.data.as_ref().unwrap() => ApplicationCommand)) {
+        if let Some((argument, value)) = self.get_autocomplete_argument(&interaction) {
             if let Some(fun) = &argument.autocomplete {
                 let context = AutocompleteContext::new(
                     &self.http_client,
@@ -150,55 +151,30 @@ where
 
     fn get_autocomplete_argument(
         &self,
-        data: &CommandData,
+        interaction: &Interaction,
     ) -> Option<(&CommandArgument<D>, Focused)> {
+        let data = extract!(interaction.data.as_ref().unwrap() => ApplicationCommand);
         if !data.options.is_empty() {
             let outer = data.options.get(0)?;
-            match &outer.value {
+            let focused = match &outer.value {
                 CommandOptionValue::SubCommandGroup(sc_group) => {
-                    if !sc_group.is_empty() {
-                        let map = self
-                            .groups
-                            .get(data.name.as_str())?
-                            .kind
-                            .as_group()?;
-                        let group = map.get(outer.name.as_str())?;
-                        let next = sc_group.get(0)?;
-                        if let CommandOptionValue::SubCommand(options) = &next.value {
-                            let focused = self.get_focus(options)?;
-                            let command = group.subcommands.get(next.name.as_str())?;
-                            let position = command
-                                .arguments
-                                .iter()
-                                .position(|arg| arg.name == focused.name)?;
-                            return Some((command.arguments.get(position)?, focused!(&focused.value)));
-                        }
+                    let next = sc_group.get(0)?;
+                    if let CommandOptionValue::SubCommand(options) = &next.value {
+                        self.get_focus(options)
+                    } else {
+                        None
                     }
                 }
-                CommandOptionValue::SubCommand(sc) => {
-                    if !sc.is_empty() {
-                        let group = self.groups.get(data.name.as_str())?
-                            .kind
-                            .as_simple()?;
-                        let focused = self.get_focus(sc)?;
-                        let command = group.get(outer.name.as_str())?;
-                        let position = command
-                            .arguments
-                            .iter()
-                            .position(|arg| arg.name == focused.name)?;
-                        return Some((command.arguments.get(position)?, focused!(&focused.value)));
-                    }
-                }
-                _ => {
-                    let focused = self.get_focus(&data.options)?;
-                    let command = self.commands.get(data.name.as_str())?;
-                    let position = command
-                        .arguments
-                        .iter()
-                        .position(|arg| arg.name == focused.name)?;
-                    return Some((command.arguments.get(position)?, focused!(&focused.value)));
-                }
-            }
+                CommandOptionValue::SubCommand(sc) => self.get_focus(sc),
+                _ => self.get_focus(&data.options)
+            }?;
+
+            let command = self.get_command(interaction)?;
+            let position = command
+                .arguments
+                .iter()
+                .position(|arg| arg.name == focused.name)?;
+            return Some((command.arguments.get(position)?, focused!(&focused.value)));
         }
 
         None
@@ -216,34 +192,23 @@ where
     /// Gets the command matching the given
     /// [ApplicationCommand](ApplicationCommand),
     /// returning `None` if no command matches the given interaction.
-    fn get_command(&self, interaction: &mut Interaction) -> Option<&Command<D, T, E>> {
-        let data = interaction.data.as_mut()?;
+    fn get_command(&self, interaction: &Interaction) -> Option<&Command<D, T, E>> {
+        let data = interaction.data.as_ref()?;
         let interaction_data = extract!(data => ApplicationCommand);
-        if let Some(next) = self.get_next(&mut interaction_data.options) {
+        if let Some(next) = self.get_next(&interaction_data.options) {
             let group = self.groups.get(&*interaction_data.name)?;
             match next.value.kind() {
                 CommandOptionType::SubCommand => {
                     let subcommands = group.kind.as_simple()?;
-                    let options = match next.value {
-                        CommandOptionValue::SubCommand(s) => s,
-                        _ => unreachable!(),
-                    };
-                    interaction_data.options = options;
                     subcommands.get(&*next.name)
                 }
                 CommandOptionType::SubCommandGroup => {
-                    let mut options = match next.value {
-                        CommandOptionValue::SubCommandGroup(s) => s,
-                        _ => unreachable!(),
+                    let CommandOptionValue::SubCommandGroup(options) = &next.value else {
+                        unreachable!();
                     };
-                    let subcommand = self.get_next(&mut options)?;
+                    let subcommand = self.get_next(options)?;
                     let subgroups = group.kind.as_group()?;
                     let group = subgroups.get(&*next.name)?;
-                    let options = match subcommand.value {
-                        CommandOptionValue::SubCommand(s) => s,
-                        _ => unreachable!(),
-                    };
-                    interaction_data.options = options;
                     group.subcommands.get(&*subcommand.name)
                 }
                 _ => None,
@@ -255,12 +220,12 @@ where
 
     /// Gets the next [option](CommandDataOption)
     /// only if it corresponds to a subcommand or a subcommand group.
-    fn get_next(&self, interaction: &mut Vec<CommandDataOption>) -> Option<CommandDataOption> {
+    fn get_next<'a>(&self, interaction: &'a Vec<CommandDataOption>) -> Option<&'a CommandDataOption> {
         if !interaction.is_empty()
             && (interaction[0].value.kind() == CommandOptionType::SubCommand
                 || interaction[0].value.kind() == CommandOptionType::SubCommandGroup)
         {
-            Some(interaction.remove(0))
+            interaction.get(0)
         } else {
             None
         }
@@ -283,7 +248,9 @@ where
         };
 
         if execute {
-            let result = cmd.execute(&context).await;
+            let ExecutionResult::Finished(result) = cmd.execute(&context).await else {
+                return;
+            };
             if let Some(after) = &self.after {
                 (after.0)(&context, cmd.name, result).await;
             }

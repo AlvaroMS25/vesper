@@ -1,5 +1,5 @@
 use crate::context::SlashContext;
-use crate::twilight_exports::{InteractionData, CommandDataOption, CommandInteractionDataResolved};
+use crate::twilight_exports::{InteractionData, CommandDataOption, CommandOptionType, CommandOptionValue, CommandInteractionDataResolved};
 
 /// An iterator used to iterate through slash command options.
 pub struct DataIterator<'a> {
@@ -15,13 +15,8 @@ impl<'a> DataIterator<'a> {
             _ => unreachable!()
         };
 
-        let options = data
-            .options
-            .iter()
-            .collect::<Vec<_>>();
-
         Self {
-            src: options,
+            src: Self::get_data(&data.options),
             resolved: &mut data.resolved
         }
     }
@@ -63,6 +58,24 @@ impl<'a> DataIterator<'a> {
 
     pub fn resolved(&mut self) -> Option<&mut CommandInteractionDataResolved> {
         self.resolved.as_mut()
+    }
+
+    fn get_data(options: &Vec<CommandDataOption>) -> Vec<&CommandDataOption> {
+        if let Some(index) = options.iter().position(|item| {
+            item.value.kind() == CommandOptionType::SubCommand
+                || item.value.kind() == CommandOptionType::SubCommandGroup
+        })
+        {
+            let item = options.get(index).unwrap();
+            match &item.value {
+                CommandOptionValue::SubCommandGroup(g)
+                | CommandOptionValue::SubCommand(g) => Self::get_data(g),
+                _ => unreachable!()
+            }
+        } else {
+            options.iter()
+                .collect()
+        }
     }
 }
 

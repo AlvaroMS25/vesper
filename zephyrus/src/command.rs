@@ -9,6 +9,12 @@ pub(crate) type CommandFn<D, T, E> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxF
 /// A map of [commands](self::Command).
 pub type CommandMap<D, T, E> = HashMap<&'static str, Command<D, T, E>>;
 
+pub enum ExecutionResult<T, E> {
+    CheckErrored,
+    CheckFailed,
+    Finished(Option<Result<T, E>>)
+}
+
 /// A command executed by the framework.
 pub struct Command<D, T, E> {
     /// The name of the command.
@@ -81,29 +87,29 @@ impl<D, T, E> Command<D, T, E> {
         Ok(true)
     }
 
-    pub async fn execute(&self, context: &SlashContext<'_, D>) -> Option<Result<T, E>> {
+    pub async fn execute(&self, context: &SlashContext<'_, D>) -> ExecutionResult<T, E> {
         match self.run_checks(context).await {
             Ok(true) => {
                 let output = (self.fun)(context).await;
 
-                match (&self.error_handler, output) {
+                let remainder = match (&self.error_handler, output) {
                     (Some(hook), Err(why)) => {
                         (hook.0)(context, why).await;
                         None
                     },
                     (_, output) => Some(output)
-                }
+                };
+
+                ExecutionResult::Finished(remainder)
             },
             Err(why) => {
+                // If the command has an error handler, execute it, if not, discard the error.
                 if let Some(hook) = &self.error_handler {
                     (hook.0)(context, why).await;
-
-                    None
-                } else {
-                    Some(Err(why))
                 }
+                ExecutionResult::CheckErrored
             },
-            _ => None
+            _ => ExecutionResult::CheckFailed
         }
     }
 }
