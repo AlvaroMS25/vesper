@@ -124,7 +124,7 @@ where
     }
 
     async fn try_autocomplete(&self, mut interaction: Interaction) {
-        if let Some((argument, value)) = self.get_autocomplete_argument(&interaction) {
+        if let Some((name, argument, value)) = self.get_autocomplete_argument(&interaction) {
             if let Some(fun) = &argument.autocomplete {
                 let context = AutocompleteContext::new(
                     &self.http_client,
@@ -132,6 +132,7 @@ where
                     value,
                     &mut interaction,
                 );
+                debug!("Command [{}] executing argument {} autocomplete function", name, argument.name);
                 let data = (fun.0)(context).await;
 
                 let _ = self
@@ -152,7 +153,7 @@ where
     fn get_autocomplete_argument(
         &self,
         interaction: &Interaction,
-    ) -> Option<(&CommandArgument<D>, Focused)> {
+    ) -> Option<(&str, &CommandArgument<D>, Focused)> {
         let data = extract!(interaction.data.as_ref().unwrap() => ApplicationCommand);
         if !data.options.is_empty() {
             let outer = data.options.get(0)?;
@@ -174,7 +175,7 @@ where
                 .arguments
                 .iter()
                 .position(|arg| arg.name == focused.name)?;
-            return Some((command.arguments.get(position)?, focused!(&focused.value)));
+            return Some((command.name, command.arguments.get(position)?, focused!(&focused.value)));
         }
 
         None
@@ -265,6 +266,7 @@ where
         let mut commands = Vec::new();
 
         for cmd in self.commands.values() {
+            debug!("Registering command [{}]", cmd.name);
             let mut options = Vec::new();
 
             for i in &cmd.arguments {
@@ -360,7 +362,7 @@ where
         if let ParentType::Group(map) = &parent.kind {
             let mut subgroups = Vec::new();
             for group in map.values() {
-                debug!("Registering subgroup {} of {}", group.name, parent.name);
+                debug!("Registering subgroup [{}] of [{}]", group.name, parent.name);
 
                 let mut subcommands = Vec::new();
                 for sub in group.subcommands.values() {
@@ -399,7 +401,7 @@ where
 
     /// Creates a subcommand at the given scope.
     fn create_subcommand(&self, cmd: &Command<D, T, E>) -> CommandOption {
-        debug!("Registering {} subcommand", cmd.name);
+        debug!("Registering [{}] subcommand", cmd.name);
 
         CommandOption {
             kind: CommandOptionType::SubCommand,

@@ -2,6 +2,7 @@ use crate::{
     argument::CommandArgument, context::SlashContext, twilight_exports::Permissions, BoxFuture,
 };
 use std::collections::HashMap;
+use tracing::{debug, info, warn};
 use crate::hook::{CheckHook, ErrorHandlerHook};
 
 /// A pointer to a command function.
@@ -79,25 +80,38 @@ impl<D, T, E> Command<D, T, E> {
     }
 
     pub async fn run_checks(&self, context: &SlashContext<'_, D>) -> Result<bool, E> {
+        debug!("Running command [{}] checks", self.name);
         for check in &self.checks {
             if !(check.0)(context).await? {
+                debug!("Command [{}] check returned false", self.name);
                 return Ok(false);
             }
         }
+        debug!("All command [{}] checks passed", self.name);
         Ok(true)
     }
 
     pub async fn execute(&self, context: &SlashContext<'_, D>) -> ExecutionResult<T, E> {
         match self.run_checks(context).await {
             Ok(true) => {
+                debug!("Executing command [{}]", self.name);
                 let output = (self.fun)(context).await;
 
                 let remainder = match (&self.error_handler, output) {
                     (Some(hook), Err(why)) => {
+                        info!("Command [{}] raised an error, using established error handler", self.name);
                         (hook.0)(context, why).await;
                         None
                     },
-                    (_, output) => Some(output)
+                    (_, Ok(res)) => {
+                        debug!("Command [{}] executed successfully", self.name);
+                        Some(Ok(res))
+                    },
+                    (_, Err(res)) => {
+                        info!("Command [{}] raised an error, but no error handler was established,\
+                        the error will be forwarded to the after handler", self.name);
+                        Some(Err(res))
+                    }
                 };
 
                 ExecutionResult::Finished(remainder)
@@ -105,7 +119,10 @@ impl<D, T, E> Command<D, T, E> {
             Err(why) => {
                 // If the command has an error handler, execute it, if not, discard the error.
                 if let Some(hook) = &self.error_handler {
+                    info!("Command [{}] check raised an error, using established error handler", self.name);
                     (hook.0)(context, why).await;
+                } else {
+                    warn!("Command [{}] check raised an error, but no error handler was established", self.name);
                 }
                 ExecutionResult::CheckErrored
             },
