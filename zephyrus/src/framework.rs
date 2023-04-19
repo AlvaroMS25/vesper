@@ -22,18 +22,6 @@ macro_rules! extract {
     ($expr:expr => $variant:ident) => {
         match $expr {
             InteractionData::$variant(inner) => inner,
-            _ => unreachable!()
-        }
-    };
-}
-
-macro_rules! focused {
-    ($($tt:tt)*) => {
-        match $($tt)* {
-            CommandOptionValue::Focused(input, kind) => Focused {
-                input: input.clone(),
-                kind: *kind
-            },
             _ => return None
         }
     };
