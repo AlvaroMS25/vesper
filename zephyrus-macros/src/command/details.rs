@@ -1,10 +1,9 @@
-use crate::attr::*;
 use darling::FromMeta;
+use darling::export::NestedMeta;
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::ToTokens;
 use syn::Token;
-use std::convert::TryFrom;
-use syn::{spanned::Spanned, Attribute, Error, Result};
+use syn::{Attribute, Result};
 use syn::punctuated::Punctuated;
 
 #[derive(Default, FromMeta)]
@@ -20,59 +19,14 @@ pub struct CommandDetails {
 
 impl CommandDetails {
     pub fn parse(attrs: &mut Vec<Attribute>) -> Result<Self> {
-        let mut s = Self::default();
+        let meta = attrs
+            .drain(..)
+            .map(|item| item.meta)
+            .map(NestedMeta::Meta)
+            .collect::<Vec<_>>();
 
-        let i = 0;
-
-        while i < attrs.len() {
-            let attr = &attrs[i];
-
-            match attr.path.get_ident().unwrap().to_string().as_str() {
-                "description" => {
-                    if !s.description.is_empty() {
-                        return Err(Error::new(attr.span(), "Description already set"));
-                    }
-
-                    s.description = {
-                        let a = Attr::try_from(attr)?;
-                        a.parse_string()?
-                    };
-                }
-                "required_permissions" => {
-                    if s.required_permissions.is_some() {
-                        return Err(Error::new(attr.span(), "Permissions already set"));
-                    }
-                    let a = Attr::try_from(attr)?;
-                    let permissions = a.parse_all()?;
-                    s.required_permissions = Some(permissions);
-                },
-                "checks" => {
-                    let attr = Attr::try_from(attr)?;
-                    let checks = attr.parse_all()?;
-                    s.checks.extend(checks);
-                },
-                "error_handler" => {
-                    if s.error_handler.is_some() {
-                        return Err(Error::new(attr.span(), "Error handler already set"));
-                    }
-
-                    let attr = Attr::try_from(attr)?;
-                    s.error_handler = Some(attr.parse_identifier()?);
-                },
-                _ => return Err(Error::new(attr.span(), "Attribute not recognized")),
-            }
-
-            attrs.remove(i);
-        }
-
-        if s.description.is_empty() {
-            return Err(Error::new(
-                proc_macro2::Span::call_site(),
-                "Description is required",
-            ));
-        }
-
-        Ok(s)
+        Self::from_list(meta.as_slice())
+            .map_err(From::from)
     }
 }
 
@@ -98,7 +52,7 @@ impl ToTokens for CommandDetails {
             tokens.extend(quote::quote!(.required_permissions(#permission_stream)));
         }
 
-        let checks = &self.checks;
+        let checks = self.checks.iter();
 
         tokens.extend(quote::quote! {
             .checks(vec![#(#checks()),*])
