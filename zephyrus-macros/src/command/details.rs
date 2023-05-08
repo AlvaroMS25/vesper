@@ -1,16 +1,20 @@
 use crate::attr::*;
+use darling::FromMeta;
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::ToTokens;
+use syn::Token;
 use std::convert::TryFrom;
 use syn::{spanned::Spanned, Attribute, Error, Result};
+use syn::punctuated::Punctuated;
 
-#[derive(Default)]
+#[derive(Default, FromMeta)]
+#[darling(default)]
 /// The details of a given command
 pub struct CommandDetails {
     /// The description of this command
     pub description: String,
-    pub required_permissions: Option<Vec<Ident>>,
-    pub checks: Vec<Ident>,
+    pub required_permissions: Option<Punctuated<Ident, Token![,]>>,
+    pub checks: Punctuated<Ident, Token![,]>,
     pub error_handler: Option<Ident>
 }
 
