@@ -1,6 +1,10 @@
+mod argument;
+mod details;
+
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use syn::{parse2, spanned::Spanned, Block, Error, ItemFn, Result, Signature, Type};
-use crate::{argument::Argument, details::CommandDetails, util};
+use {argument::Argument, details::CommandDetails};
+use crate::util;
 
 /// The implementation of the command macro, this macro modifies the provided function body to allow
 /// parsing all function arguments and wraps it into a command struct, registering all command names,
