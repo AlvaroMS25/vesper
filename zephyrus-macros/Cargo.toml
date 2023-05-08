@@ -16,6 +16,6 @@ proc-macro = true
 
 [dependencies]
 quote = "1"
-syn = { version = "1", features = ["full", "derive", "extra-traits"] }
-proc-macro2 = "1"
+syn = { version = "2", features = ["full", "derive", "extra-traits"] }
+proc-macro2 = ">=1.0.56"
 darling = "0.20"
