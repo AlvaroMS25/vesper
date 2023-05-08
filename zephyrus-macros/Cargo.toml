@@ -18,3 +18,4 @@ proc-macro = true
 quote = "1"
 syn = { version = "1", features = ["full", "derive", "extra-traits"] }
 proc-macro2 = "1"
+darling = "0.20"
