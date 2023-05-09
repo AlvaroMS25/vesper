@@ -1,9 +1,11 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::ToTokens;
+use syn::parse::Parse;
+use syn::punctuated::Punctuated;
 use std::convert::TryFrom;
 use std::str::FromStr;
 use syn::spanned::Spanned;
-use syn::{Attribute, Error, Lit, Meta, MetaList, NestedMeta, Path, Result};
+use syn::{Attribute, Error, Lit, Meta, MetaList, Path, Result, Expr, Token};
 
 /// Values an [attr](self::Attr) can have
 #[derive(Debug, Clone)]
@@ -40,9 +42,28 @@ impl Attr {
         Self { path, values }
     }
 
+    pub fn get_lit(nv: Expr) -> Result<Lit> {
+        match nv {
+            Expr::Lit(lit) => Ok(lit.lit),
+            other => Err(Error::new(
+                other.span(),
+                "Expected literal"
+            ))
+        }
+    }
+
+    pub fn punctuate<T, P>(list: MetaList) -> Result<Punctuated<T, P>>
+    where
+        T: Parse,
+        P: Parse
+    {
+        list.parse_args_with(Punctuated::parse_terminated)
+    }
+
     pub fn parse_meta_list(out: &mut Vec<Attr>, list: MetaList, allow_lit: bool) -> Result<()> {
-        for item in list.nested {
-            let inner = match item {
+        let punctuated = Self::punctuate::<Meta, Token![,]>(list)?;
+        for item in punctuated {
+            /*let inner = match item {
                 NestedMeta::Lit(lit) if !allow_lit => {
                     return Err(Error::new(
                         lit.span(),
@@ -54,11 +75,11 @@ impl Attr {
                     return Ok(());
                 },
                 NestedMeta::Meta(meta) => meta
-            };
+            };*/
 
-            match inner {
+            match item {
                 Meta::NameValue(nv) => {
-                    out.push(Attr::new(nv.path, vec![Value::Lit(nv.lit)]));
+                    out.push(Attr::new(nv.path, vec![Value::Lit(Self::get_lit(nv.value)?)]));
                 },
                 Meta::List(list) => {
                     Self::parse_meta_list(out, list, allow_lit)?;
@@ -74,42 +95,37 @@ impl Attr {
 
     pub fn parse_multiple(attribute: &Attribute, allow_lit: bool) -> Result<Vec<Self>> {
         let mut parsed = Vec::new();
-        let meta = attribute.parse_meta()?;
 
-        match meta {
+        match attribute.meta.clone() {
             Meta::Path(p) => parsed.push(Attr::new(p, Vec::new())),
             Meta::List(list) => Self::parse_meta_list(&mut parsed, list, allow_lit)?,
-            Meta::NameValue(nv) => parsed.push(Attr::new(nv.path, vec![Value::Lit(nv.lit)])),
+            Meta::NameValue(nv) => parsed.push(Attr::new(nv.path, vec![Value::Lit(Self::get_lit(nv.value)?)])),
         }
 
         Ok(parsed)
     }
 
     pub fn parse_one(attribute: &Attribute) -> Result<Self> {
-        let meta = attribute.parse_meta()?;
+        let meta = attribute.meta.clone();
 
         match meta {
             Meta::Path(p) => Ok(Attr::new(p, Vec::new())),
             Meta::List(l) => {
-                let path = l.path;
-                let values = l
-                    .nested
+                let path = l.path.clone();
+                let values = Self::punctuate::<Meta, Token![,]>(l)?
                     .into_iter()
                     .map(|m| match m {
-                        NestedMeta::Lit(lit) => Ok(Value::Lit(lit)),
-                        NestedMeta::Meta(m) => match m {
-                            Meta::Path(p) => Ok(Value::Ident(p.get_ident().unwrap().clone())),
-                            _ => Err(Error::new(
-                                m.span(),
-                                "Nested lists or name values are not supported",
-                            )),
-                        },
+                        Meta::Path(p) => Ok(Value::Ident(p.get_ident().unwrap().clone())),
+                        _ => Err(Error::new(
+                            m.span(),
+                            "Nested lists or name values are not supported",
+                        )),
                     })
                     .collect::<Result<Vec<_>>>()?;
 
                 Ok(Attr::new(path, values))
             }
-            Meta::NameValue(nv) => Ok(Attr::new(nv.path, vec![Value::Lit(nv.lit)])),
+            Meta::NameValue(nv) => Ok(Attr::new(nv.path, vec![Value::Lit(Self::get_lit(nv.value)?)])),
         }
     }
 
@@ -242,7 +258,7 @@ pub fn parse_multiple(attribute: &Attribute) -> Result<Vec<Attr>> {
 }
 
 pub fn parse_named(prefix: &str, attribute: &Attribute) -> Result<Option<Vec<Attr>>> {
-    let ident = attribute.path.get_ident();
+    let ident = attribute.path().get_ident();
 
     if ident.is_none() || ident.unwrap().to_string() != prefix {
         return Ok(None);
