@@ -1,5 +1,7 @@
 use darling::{FromMeta, Result, export::{NestedMeta}, error::Accumulator};
 
+use crate::list::FixedList;
+
 macro_rules! try_both {
     (@inner $fun:ident, [$($args:ident),* $(,)?]) => {{
         let mut accumulator = Accumulator::default();
@@ -8,9 +10,15 @@ macro_rules! try_both {
             Ok(Either::Left(parsed))
         } else {
             let parsed = accumulator.handle(B::$fun($($args),*));
-            accumulator.finish()?;
-            // If we are here, there were no errors in the accumulator and B was parsed.
-            Ok(Either::Right(parsed.unwrap()))
+            if let Some(parsed) = parsed {
+                let _ = accumulator.finish(); // Discard previous error.
+                Ok(Either::Right(parsed))
+            } else {
+                // If we are here, both parsing failed, so the accumulator will return an error
+                // and exit the function.
+                accumulator.finish()?;
+                unreachable!()
+            }
         }
     }};
     ($fun:ident, $($args:ident),* $(,)?) => {
@@ -25,6 +33,12 @@ macro_rules! try_both {
 pub enum Either<A, B> {
     Left(A),
     Right(B)
+}
+
+impl<A: Default, B> Default for Either<A, B> {
+    fn default() -> Self {
+        Self::Left(A::default())
+    }
 }
 
 impl<A: FromMeta, B: FromMeta> FromMeta for Either<A, B> {
@@ -107,6 +121,15 @@ where
         match self {
             Either::Left(a) => Box::new(a.into_iter()),
             Either::Right(b) => Box::new(b.into_iter())
+        }
+    }
+}
+
+impl<A> Either<A, FixedList<1, A>> {
+    pub fn inner(&self) -> &A {
+        match self {
+            Self::Left(a) => a,
+            Self::Right(list) => &list.inner[0]
         }
     }
 }
