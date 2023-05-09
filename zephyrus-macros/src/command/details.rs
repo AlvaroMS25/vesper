@@ -6,14 +6,17 @@ use syn::Token;
 use syn::{Attribute, Result};
 use syn::punctuated::Punctuated;
 
+use crate::either::Either;
+use crate::list::{List, FixedList};
+
 #[derive(Default, FromMeta)]
 #[darling(default)]
 /// The details of a given command
 pub struct CommandDetails {
     /// The description of this command
-    pub description: String,
+    pub description: Either<String, FixedList<1, String>>,
     pub required_permissions: Option<Punctuated<Ident, Token![,]>>,
-    pub checks: Punctuated<Ident, Token![,]>,
+    pub checks: List<Ident>,
     pub error_handler: Option<Ident>
 }
 
@@ -32,7 +35,7 @@ impl CommandDetails {
 
 impl ToTokens for CommandDetails {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
-        let d = &self.description;
+        let d = self.description.inner();
         tokens.extend(quote::quote!(.description(#d)));
 
         if let Some(permissions) = &self.required_permissions {
@@ -52,7 +55,7 @@ impl ToTokens for CommandDetails {
             tokens.extend(quote::quote!(.required_permissions(#permission_stream)));
         }
 
-        let checks = self.checks.iter();
+        let checks = self.checks.inner.iter();
 
         tokens.extend(quote::quote! {
             .checks(vec![#(#checks()),*])
