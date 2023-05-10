@@ -26,6 +26,10 @@ impl<T: FromMeta> FromMeta for Optional<T> {
     fn from_nested_meta(item: &darling::export::NestedMeta) -> darling::Result<Self> {
         Ok(Self(FromMeta::from_nested_meta(item)?))
     }
+
+    fn from_meta(item: &syn::Meta) -> darling::Result<Self> {
+        Ok(Self(FromMeta::from_meta(item)?))
+    }
 }
 
 impl<T> Deref for Optional<T> {
