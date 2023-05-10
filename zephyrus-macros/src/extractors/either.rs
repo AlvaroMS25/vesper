@@ -1,7 +1,7 @@
 use darling::{FromMeta, Result, export::{NestedMeta}, error::Accumulator};
 use quote::ToTokens;
 
-use crate::list::FixedList;
+use super::FixedList;
 
 macro_rules! try_both {
     (@inner $fun:ident, [$($args:ident),* $(,)?]) => {{
@@ -92,7 +92,8 @@ where
     for<'a> &'a A: IntoIterator<Item = I>,
     for<'a> &'a B: IntoIterator<Item = I>
 {
-    fn iter_ref<'a>(&'a self) -> Box<dyn Iterator<Item = I> + 'a> {
+    #[allow(dead_code)]
+    pub fn iter_ref<'a>(&'a self) -> Box<dyn Iterator<Item = I> + 'a> {
         match &self {
             Either::Left(a) => Box::new(a.into_iter()),
             Either::Right(b) => Box::new(b.into_iter())
@@ -105,7 +106,8 @@ where
     for<'a> &'a mut A: IntoIterator<Item = I>,
     for<'a> &'a mut B: IntoIterator<Item = I>
 {
-    fn iter_mut<'a>(&'a mut self) -> Box<dyn Iterator<Item = I> + 'a> {
+    #[allow(dead_code)]
+    pub fn iter_mut<'a>(&'a mut self) -> Box<dyn Iterator<Item = I> + 'a> {
         match self {
             Either::Left(a) => Box::new(a.into_iter()),
             Either::Right(b) => Box::new(b.into_iter())
@@ -118,7 +120,8 @@ where
     A: IntoIterator<Item = I> + 'static,
     B: IntoIterator<Item = I> + 'static
 {
-    fn into_iter(self) -> Box<dyn Iterator<Item = I>> {
+    #[allow(dead_code)]
+    pub fn into_iter(self) -> Box<dyn Iterator<Item = I>> {
         match self {
             Either::Left(a) => Box::new(a.into_iter()),
             Either::Right(b) => Box::new(b.into_iter())
@@ -131,6 +134,19 @@ impl<A> Either<A, FixedList<1, A>> {
         match self {
             Self::Left(a) => a,
             Self::Right(list) => &list.inner[0]
+        }
+    }
+}
+
+impl<A, B> Either<A, B> {
+    pub fn map_1<T, F1, F2, R>(&self, data: &mut T, mut f1: F1, mut f2: F2) -> R
+    where
+        F1: FnMut(&mut T, &A) -> R,
+        F2: FnMut(&mut T, &B) -> R
+    {
+        match self {
+            Self::Left(a) => f1(data, a),
+            Self::Right(b) => f2(data, b)
         }
     }
 }

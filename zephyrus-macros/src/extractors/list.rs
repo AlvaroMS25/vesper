@@ -1,4 +1,5 @@
 use std::convert::TryInto;
+use std::ops::{Deref, DerefMut};
 
 use darling::{FromMeta, Result, export::NestedMeta};
 
@@ -11,6 +12,19 @@ impl<T> Default for List<T> {
         Self {
             inner: Vec::new()
         }
+    }
+}
+
+impl<T> Deref for List<T> {
+    type Target = Vec<T>;
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<T> DerefMut for List<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
     }
 }
 
