@@ -1,4 +1,4 @@
-use std::{mem::MaybeUninit, convert::TryInto};
+use std::convert::TryInto;
 
 use darling::{FromMeta, Result, export::NestedMeta};
 
