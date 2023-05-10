@@ -1,4 +1,5 @@
 use darling::{FromMeta, Result, export::{NestedMeta}, error::Accumulator};
+use quote::ToTokens;
 
 use crate::list::FixedList;
 
@@ -130,6 +131,15 @@ impl<A> Either<A, FixedList<1, A>> {
         match self {
             Self::Left(a) => a,
             Self::Right(list) => &list.inner[0]
+        }
+    }
+}
+
+impl<A: ToTokens, B: ToTokens> ToTokens for Either<A, B> {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        match self {
+            Self::Left(a) => <A as ToTokens>::to_tokens(a, tokens),
+            Self::Right(b) => <B as ToTokens>::to_tokens(b, tokens)
         }
     }
 }
