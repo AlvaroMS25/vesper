@@ -1,17 +1,21 @@
+use darling::{FromDeriveInput, FromField};
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::ToTokens;
 use syn::{parse2, spanned::Spanned, Error, Result, Type, DeriveInput, Fields, FieldsNamed, Data};
-use crate::{attr::{self, Attr}, util::{consume_map, unique}};
 use crate::optional::Optional;
 
+#[derive(FromDeriveInput)]
+#[darling(attributes(myderive))]
 struct Modal {
     title: String,
+    #[darling(skip)]
     fields: Vec<Field>
 }
 
+#[derive(FromField)]
 struct Field {
-    kind: Type,
-    ident: Ident,
+    ty: Type,
+    ident: Option<Ident>,
     label: Optional<String>,
     placeholder: Optional<String>,
     paragraph: bool,
@@ -23,37 +27,10 @@ struct Field {
 struct FieldParser<'a>(&'a Field);
 
 impl Modal {
-    fn new(input: &mut DeriveInput, fields: FieldsNamed) -> Result<Self> {
-        if fields.named.len() > 5 || fields.named.len() < 1 {
-            return Err(Error::new(
-                fields.span(),
-                "Modals must have between 1 and 5 fields"
-            ));
-        }
+    fn new(input: &DeriveInput, fields: &FieldsNamed) -> darling::Result<Self> {
+        let mut this = Self::from_derive_input(input)?;
 
-        let mut title = None;
-        let mut this = Self {
-            title: input.ident.to_string(),
-            fields: Vec::with_capacity(fields.named.len())
-        };
-
-        consume_map(&mut input.attrs, &mut title, |attribute, title| {
-            let Some(inner) = attr::parse_named("modal", &attribute)? else { return Ok(()) };
-
-            for attr in inner {
-                if attr.path.get_ident().unwrap().to_string().as_str() == "title" {
-                    unique(title, attr.parse_string()?, "title", &attr.path)?;
-                }
-            }
-
-            Ok(())
-        })?;
-
-        if let Some(title) = title {
-            this.title = title;
-        }
-
-        for field in fields.named {
+        for field in &fields.named {
             this.fields.push(Field::new(field)?);
         }
 
@@ -62,81 +39,15 @@ impl Modal {
 }
 
 impl Field {
-    fn new(mut field: syn::Field) -> Result<Self> {
-        let mut this = Self {
-            kind: field.ty.clone(),
-            ident: field.ident.unwrap(),
-            label: None.into(),
-            placeholder: None.into(),
-            paragraph: false,
-            max_length: None.into(),
-            min_length: None.into(),
-            value: None.into()
-        };
-
-
-        consume_map(&mut field.attrs, &mut this, |attribute, this| {
-            let Some(mut inner) = attr::parse_named("modal", &attribute)? else { return Ok(()) };
-
-            consume_map(&mut inner, this, |attribute, this| {
-                this.parse(attribute)?;
-                Ok(())
-            })
-        })?;
-
-        if this.label.is_none() {
-            *this.label = Some(this.ident.to_string());
-        }
-
-        Ok(this)
-    }
-
-    fn parse(&mut self, attr: Attr) -> Result<()> {
-        let span = attr.path.span();
-        match attr.path.get_ident().unwrap().to_string().as_str() {
-            "label" => {
-                unique(&mut self.label, attr.parse_string()?, "label", span)?;
-            },
-            "placeholder" => {
-                unique(&mut self.placeholder, attr.parse_string()?, "placeholder", span)?;
-            },
-            "paragraph" => {
-                if self.paragraph {
-                    Err(Error::new(
-                        span,
-                        "paragraph already set"
-                    ))?;
-                } else if attr.has_values() {
-                    Err(Error::new(
-                        span,
-                        "paragraph attribute doesn't admit values"
-                    ))?;
-                }
-                self.paragraph = true;
-            },
-            "max_length" => {
-                unique(&mut self.max_length, attr.parse_number::<u16>()?, "max_length", span)?;
-            },
-            "min_length" => {
-                unique(&mut self.min_length, attr.parse_number::<u16>()?, "min_length", span)?;
-            },
-            "value" => {
-                unique(&mut self.value, attr.parse_string()?, "value", span)?;
-            }
-            _ => Err(Error::new(
-               span,
-                "Attribute not recognized"
-            ))?
-        }
-
-        Ok(())
+    fn new(field: &syn::Field) -> darling::Result<Self> {
+        FromField::from_field(&field)
     }
 }
 
 impl ToTokens for Field {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
         let Self {
-            kind,
+            ty: kind,
             ident: _,
             label,
             placeholder,
@@ -187,14 +98,14 @@ impl<'a> ToTokens for FieldParser<'a> {
     }
 }
 
-fn fields(data: Data, derive_span: impl Spanned) -> Result<FieldsNamed> {
+fn fields(data: &Data, derive_span: impl Spanned) -> Result<&FieldsNamed> {
     match data {
-        Data::Struct(s) => match s.fields {
+        Data::Struct(s) => match &s.fields {
             Fields::Named(fields) => Ok(fields),
             Fields::Unnamed(fields) => {
                 return Err(Error::new(
                     fields.span(),
-                    "Unnamed fields not supported",
+                    "Tuple structs not supported",
                 ))
             },
             Fields::Unit => {
@@ -215,19 +126,19 @@ fn fields(data: Data, derive_span: impl Spanned) -> Result<FieldsNamed> {
 
 pub fn modal(input: TokenStream2) -> Result<TokenStream2> {
     let mut derive = parse2::<DeriveInput>(input)?;
-    let fields = fields(derive.data.clone(), &derive)?;
+    let fields = fields(&derive.data, &derive)?;
 
-    let Modal { title, fields } = Modal::new(&mut derive, fields)?;
+    let Modal { title, fields } = Modal::new(&derive, fields)?;
     let struct_ident = &derive.ident;
 
     let parsers = fields.iter()
         .map(FieldParser)
         .collect::<Vec<FieldParser>>();
     let field_names = fields.iter()
-        .map(|field| &field.ident)
+        .map(|field| field.ident.as_ref().unwrap())
         .collect::<Vec<&Ident>>();
     let field_types = fields.iter()
-        .map(|field| &field.kind)
+        .map(|field| &field.ty)
         .collect::<Vec<&Type>>();
 
     Ok(quote::quote! {
