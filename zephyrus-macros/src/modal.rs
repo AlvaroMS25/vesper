@@ -1,11 +1,12 @@
-use darling::{FromDeriveInput, FromField};
+use darling::{FromDeriveInput, FromField, FromMeta, FromAttributes};
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::ToTokens;
 use syn::{parse2, spanned::Spanned, Error, Result, Type, DeriveInput, Fields, FieldsNamed, Data};
 use crate::optional::Optional;
 
-#[derive(FromDeriveInput)]
-#[darling(attributes(myderive))]
+#[derive(FromDeriveInput, Default)]
+#[darling(attributes(modal))]
+#[darling(default)]
 struct Modal {
     title: String,
     #[darling(skip)]
@@ -16,6 +17,14 @@ struct Modal {
 struct Field {
     ty: Type,
     ident: Option<Ident>,
+    #[darling(skip)]
+    attributes: FieldAttributes
+}
+
+#[derive(FromAttributes, Default)]
+#[darling(attributes(modal))]
+#[darling(default)]
+struct FieldAttributes {
     label: Optional<String>,
     placeholder: Optional<String>,
     paragraph: bool,
@@ -40,7 +49,14 @@ impl Modal {
 
 impl Field {
     fn new(field: &syn::Field) -> darling::Result<Self> {
-        FromField::from_field(&field)
+        let mut this = Field::from_field(&field)?;
+        this.attributes = FieldAttributes::from_attributes(field.attrs.as_slice())?;
+
+        if this.attributes.label.is_none() {
+            this.attributes.label = Some(this.ident.as_ref().unwrap().to_string()).into();
+        }
+
+        Ok(this)
     }
 }
 
@@ -49,13 +65,16 @@ impl ToTokens for Field {
         let Self {
             ty: kind,
             ident: _,
+            attributes
+        } = &self;
+        let FieldAttributes {
             label,
             placeholder,
             paragraph,
             max_length,
             min_length,
             value
-        } = &self;
+        } = attributes;
         let label = label.as_ref().unwrap();
         let label_ref = &label;
         let placeholder = placeholder.clone().map(|p| quote::quote!(String::from(#p)));
@@ -88,7 +107,7 @@ impl ToTokens for Field {
 impl<'a> ToTokens for FieldParser<'a> {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
         let ident = &self.0.ident;
-        let label = &self.0.label.as_ref().unwrap();
+        let label = &self.0.attributes.label.as_ref().unwrap();
 
         tokens.extend(quote::quote! {
             #label => {
