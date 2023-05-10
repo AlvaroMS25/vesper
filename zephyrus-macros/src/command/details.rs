@@ -1,12 +1,12 @@
 use darling::FromMeta;
 use darling::export::NestedMeta;
-use proc_macro2::{Ident, TokenStream as TokenStream2};
+use proc_macro2::TokenStream as TokenStream2;
 use quote::ToTokens;
 use syn::Token;
 use syn::{Attribute, Result};
 use syn::punctuated::Punctuated;
 
-use crate::extractors::{Either, FixedList, FunctionPath, List};
+use crate::extractors::{Either, FixedList, FunctionPath, Ident, List};
 
 #[derive(Default, FromMeta)]
 #[darling(default)]
@@ -14,9 +14,9 @@ use crate::extractors::{Either, FixedList, FunctionPath, List};
 pub struct CommandDetails {
     /// The description of this command
     pub description: Either<String, FixedList<1, String>>,
-    pub required_permissions: Option<Punctuated<Ident, Token![,]>>,
+    pub required_permissions: Option<List<Ident>>,
     pub checks: Either<List<FunctionPath>, Punctuated<FunctionPath, Token![,]>>,
-    pub error_handler: Option<Ident>
+    pub error_handler: Option<Either<FunctionPath, FixedList<1, FunctionPath>>>
 }
 
 impl CommandDetails {
@@ -66,6 +66,7 @@ impl ToTokens for CommandDetails {
         });
 
         if let Some(error_handler) = &self.error_handler {
+            let error_handler = error_handler.inner();
             tokens.extend(quote::quote!(.error_handler(#error_handler())));
         }
     }
