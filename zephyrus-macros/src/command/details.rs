@@ -6,8 +6,7 @@ use syn::Token;
 use syn::{Attribute, Result};
 use syn::punctuated::Punctuated;
 
-use crate::either::Either;
-use crate::list::{List, FixedList};
+use crate::extractors::{Either, FixedList, FunctionPath, List};
 
 #[derive(Default, FromMeta)]
 #[darling(default)]
@@ -16,7 +15,7 @@ pub struct CommandDetails {
     /// The description of this command
     pub description: Either<String, FixedList<1, String>>,
     pub required_permissions: Option<Punctuated<Ident, Token![,]>>,
-    pub checks: List<Ident>,
+    pub checks: Either<List<FunctionPath>, Punctuated<FunctionPath, Token![,]>>,
     pub error_handler: Option<Ident>
 }
 
@@ -55,7 +54,12 @@ impl ToTokens for CommandDetails {
             tokens.extend(quote::quote!(.required_permissions(#permission_stream)));
         }
 
-        let checks = self.checks.inner.iter();
+        let mut checks = Vec::new();
+        self.checks.map_1(
+            &mut checks,
+            |checks, a| checks.extend(a.iter().cloned()),
+            |checks, b| checks.extend(b.iter().cloned())
+        );
 
         tokens.extend(quote::quote! {
             .checks(vec![#(#checks()),*])
