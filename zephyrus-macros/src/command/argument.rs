@@ -19,7 +19,7 @@ pub struct ArgumentAttributes {
     ///
     /// e.g.: fn a(#[description = "some here"] arg: String), being the fields inside `description`
     /// this field
-    pub description: String,
+    pub description: Either<String, FixedList<1, String>>,
     /// The renaming of this argument, if this option is not specified, the original name will be
     /// used to parse the argument and register the command in discord
     #[darling(rename = "rename")]
@@ -66,7 +66,7 @@ impl<'a> Argument<'a> {
 
 impl ToTokens for Argument<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let des = &self.attributes.description;
+        let des = self.attributes.description.inner();
         let ty = &self.ty;
         let tt = &self.trait_type;
         let argument_path = quote::quote!(::zephyrus::argument::CommandArgument);
