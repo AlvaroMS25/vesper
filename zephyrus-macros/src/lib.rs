@@ -3,7 +3,6 @@ use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 
 mod after;
-mod attr;
 mod autocomplete;
 mod before;
 mod check;
