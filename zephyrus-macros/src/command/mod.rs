@@ -83,15 +83,15 @@ pub fn parse_arguments<'a>(
     arguments.reverse();
 
     let (names, types, renames) = (
-        arguments.iter().map(|s| &s.name).collect::<Vec<_>>(),
+        arguments.iter().map(|s| &s.ident).collect::<Vec<_>>(),
         arguments.iter().map(|s| &s.ty).collect::<Vec<_>>(),
         arguments
             .iter()
             .map(|s| {
-                if let Some(renaming) = &s.renaming {
-                    renaming.to_owned()
+                if let Some(renaming) = &s.attributes.renaming {
+                    renaming.inner().clone()
                 } else {
-                    s.name.to_string()
+                    s.ident.to_string()
                 }
             })
             .collect::<Vec<_>>(),
