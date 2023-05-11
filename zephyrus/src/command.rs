@@ -3,6 +3,7 @@ use crate::{
 };
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
+use twilight_http::request::application::command::create_global_command::CreateGlobalChatInputCommand;
 use crate::hook::{CheckHook, ErrorHandlerHook};
 
 /// A pointer to a command function.
@@ -28,6 +29,8 @@ pub struct Command<D, T, E> {
     pub fun: CommandFn<D, T, E>,
     /// The required permissions to use this command
     pub required_permissions: Option<Permissions>,
+    pub nsfw: bool,
+    pub only_guilds: bool,
     pub checks: Vec<CheckHook<D, E>>,
     pub error_handler: Option<ErrorHandlerHook<D, E>>
 }
@@ -41,6 +44,8 @@ impl<D, T, E> Command<D, T, E> {
             arguments: Default::default(),
             fun,
             required_permissions: Default::default(),
+            nsfw: false,
+            only_guilds: false,
             checks: Default::default(),
             error_handler: None
         }
@@ -89,6 +94,15 @@ impl<D, T, E> Command<D, T, E> {
         }
         debug!("All command [{}] checks passed", self.name);
         Ok(true)
+    }
+
+    pub fn apply_global<'a>(
+        &self, 
+        command: CreateGlobalChatInputCommand<'a>
+    ) -> CreateGlobalChatInputCommand<'a> {
+        command
+            .nsfw(self.nsfw)
+            .dm_permission(!self.only_guilds)
     }
 
     pub async fn execute(&self, context: &SlashContext<'_, D>) -> ExecutionResult<T, E> {
