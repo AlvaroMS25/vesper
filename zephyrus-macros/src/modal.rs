@@ -1,4 +1,4 @@
-use darling::{FromDeriveInput, FromField, FromMeta, FromAttributes};
+use darling::{FromDeriveInput, FromField, FromAttributes};
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::ToTokens;
 use syn::{parse2, spanned::Spanned, Error, Result, Type, DeriveInput, Fields, FieldsNamed, Data};
@@ -144,7 +144,7 @@ fn fields(data: &Data, derive_span: impl Spanned) -> Result<&FieldsNamed> {
 }
 
 pub fn modal(input: TokenStream2) -> Result<TokenStream2> {
-    let mut derive = parse2::<DeriveInput>(input)?;
+    let derive = parse2::<DeriveInput>(input)?;
     let fields = fields(&derive.data, &derive)?;
 
     let Modal { title, fields } = Modal::new(&derive, fields)?;
