@@ -84,6 +84,16 @@ impl<D, T, E> Command<D, T, E> {
         self
     }
 
+    pub fn nsfw(mut self, nsfw: bool) -> Self {
+        self.nsfw = nsfw;
+        self
+    }
+
+    pub fn only_guilds(mut self, only_guilds: bool) -> Self {
+        self.only_guilds = only_guilds;
+        self
+    }
+
     pub async fn run_checks(&self, context: &SlashContext<'_, D>) -> Result<bool, E> {
         debug!("Running command [{}] checks", self.name);
         for check in &self.checks {
