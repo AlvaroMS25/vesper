@@ -9,14 +9,20 @@ use syn::punctuated::Punctuated;
 use crate::extractors::{Either, FixedList, FunctionPath, Ident, List};
 
 #[derive(Default, FromMeta)]
-#[darling(default)]
 /// The details of a given command
 pub struct CommandDetails {
     /// The description of this command
     pub description: Either<String, FixedList<1, String>>,
+    #[darling(default)]
     pub required_permissions: Option<List<Ident>>,
+    #[darling(default)]
     pub checks: Either<List<FunctionPath>, Punctuated<FunctionPath, Token![,]>>,
-    pub error_handler: Option<Either<FunctionPath, FixedList<1, FunctionPath>>>
+    #[darling(default)]
+    pub error_handler: Option<Either<FunctionPath, FixedList<1, FunctionPath>>>,
+    #[darling(default)]
+    pub nsfw: bool,
+    #[darling(default)]
+    pub only_guilds: bool
 }
 
 impl CommandDetails {
@@ -69,5 +75,13 @@ impl ToTokens for CommandDetails {
             let error_handler = error_handler.inner();
             tokens.extend(quote::quote!(.error_handler(#error_handler())));
         }
+
+        let nsfw = self.nsfw;
+        let only_guilds = self.only_guilds;
+
+        tokens.extend(quote::quote!(
+            .nsfw(#nsfw)
+            .only_guilds(#only_guilds)
+        ));
     }
 }
