@@ -3,13 +3,22 @@ use crate::{
 };
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
-use twilight_http::request::application::command::create_global_command::CreateGlobalChatInputCommand;
+use twilight_http::request::application::command::{create_global_command::CreateGlobalChatInputCommand, create_guild_command::CreateGuildChatInputCommand};
+use twilight_validate::command::CommandValidationError;
 use crate::hook::{CheckHook, ErrorHandlerHook};
 
 /// A pointer to a command function.
 pub(crate) type CommandFn<D, T, E> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, Result<T, E>>;
 /// A map of [commands](self::Command).
 pub type CommandMap<D, T, E> = HashMap<&'static str, Command<D, T, E>>;
+
+macro_rules! if_some {
+    ($item:expr, |$x:ident| $($tree:tt)*) => {
+        if let Some($x) = $item {
+            $($tree)*
+        }
+    };
+}
 
 pub enum ExecutionResult<T, E> {
     CheckErrored,
@@ -21,8 +30,10 @@ pub enum ExecutionResult<T, E> {
 pub struct Command<D, T, E> {
     /// The name of the command.
     pub name: &'static str,
+    pub localized_names: Option<HashMap<String, String>>,
     /// The description of the commands.
     pub description: &'static str,
+    pub localized_descriptions: Option<HashMap<String, String>>,
     /// All the arguments the command requires.
     pub arguments: Vec<CommandArgument<D>>,
     /// A pointer to this command function.
@@ -40,7 +51,9 @@ impl<D, T, E> Command<D, T, E> {
     pub fn new(fun: CommandFn<D, T, E>) -> Self {
         Self {
             name: Default::default(),
+            localized_names: Default::default(),
             description: Default::default(),
+            localized_descriptions: Default::default(),
             arguments: Default::default(),
             fun,
             required_permissions: Default::default(),
@@ -106,13 +119,33 @@ impl<D, T, E> Command<D, T, E> {
         Ok(true)
     }
 
-    pub fn apply_global<'a>(
-        &self, 
-        command: CreateGlobalChatInputCommand<'a>
-    ) -> CreateGlobalChatInputCommand<'a> {
-        command
+    pub fn apply_global_command<'a, 'b: 'a>(
+        &'b self, 
+        mut command: CreateGlobalChatInputCommand<'a>
+    ) -> Result<CreateGlobalChatInputCommand<'a>, CommandValidationError> {
+        command = command
             .nsfw(self.nsfw)
-            .dm_permission(!self.only_guilds)
+            .dm_permission(!self.only_guilds);
+
+        if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
+        if_some!(&self.localized_names, |n| command = command.name_localizations(n)?);
+        if_some!(&self.localized_descriptions, |d| command = command.description_localizations(d)?);
+
+        Ok(command)
+    }
+
+    pub fn apply_guild_command<'a, 'b: 'a>(
+        &'b self,
+        mut command: CreateGuildChatInputCommand<'a>
+    ) -> Result<CreateGuildChatInputCommand<'a>, CommandValidationError> {
+        command = command
+            .nsfw(self.nsfw);
+
+        if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
+        if_some!(&self.localized_names, |n| command = command.name_localizations(n)?);
+        if_some!(&self.localized_descriptions, |d| command = command.description_localizations(d)?);
+
+        Ok(command)
     }
 
     pub async fn execute(&self, context: &SlashContext<'_, D>) -> ExecutionResult<T, E> {

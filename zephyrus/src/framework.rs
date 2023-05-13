@@ -275,10 +275,7 @@ where
                 .create_guild_command(guild_id)
                 .chat_input(cmd.name, cmd.description)?
                 .command_options(&options)?;
-
-            if let Some(permissions) = &cmd.required_permissions {
-                command = command.default_member_permissions(*permissions);
-            }
+            command = cmd.apply_guild_command(command)?;
 
             commands.push(command.await?.model().await?);
         }
@@ -318,10 +315,7 @@ where
                 .create_global_command()
                 .chat_input(cmd.name, cmd.description)?
                 .command_options(&options)?;
-
-            if let Some(permissions) = &cmd.required_permissions {
-                command = command.default_member_permissions(*permissions);
-            }
+            command = cmd.apply_global_command(command)?;
 
             commands.push(command.await?.model().await?);
         }
