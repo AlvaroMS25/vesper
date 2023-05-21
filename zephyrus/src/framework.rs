@@ -91,9 +91,12 @@ where
     }
 
     /// Processes the given interaction, dispatching commands or waking waiters if necessary.
-    pub async fn process(&self, interaction: Interaction) {
+    pub async fn process(&self, mut interaction: Interaction) -> Option<Result<T, E>> {
         match interaction.kind {
-            InteractionType::ApplicationCommand => self.try_execute(interaction).await,
+            InteractionType::ApplicationCommand => {
+                let command = self.get_command(&mut interaction)?;
+                return self.execute(command, interaction).await;
+            },
             InteractionType::ApplicationCommandAutocomplete => self.try_autocomplete(interaction).await,
             InteractionType::MessageComponent | InteractionType::ModalSubmit => {
                 let mut lock = self.waiters.lock();
@@ -103,12 +106,8 @@ where
             }
             _ => ()
         }
-    }
 
-    async fn try_execute(&self, mut interaction: Interaction) {
-        if let Some(command) = self.get_command(&mut interaction) {
-            self.execute(command, interaction).await;
-        }
+        None
     }
 
     async fn try_autocomplete(&self, mut interaction: Interaction) {
@@ -231,7 +230,7 @@ where
     }
 
     /// Executes the given [command](crate::command::Command) and the hooks.
-    async fn execute(&self, cmd: &Command<D, T, E>, interaction: Interaction) {
+    async fn execute(&self, cmd: &Command<D, T, E>, interaction: Interaction) -> Option<Result<T, E>> {
         let context = SlashContext::new(
             &self.http_client,
             self.application_id,
@@ -248,12 +247,16 @@ where
 
         if execute {
             let ExecutionResult::Finished(result) = cmd.execute(&context).await else {
-                return;
+                return None;
             };
             if let Some(after) = &self.after {
                 (after.0)(&context, cmd.name, result).await;
+            } else {
+                return result;
             }
         }
+
+        None
     }
 
     /// Registers the commands provided to the framework in the specified guild.
