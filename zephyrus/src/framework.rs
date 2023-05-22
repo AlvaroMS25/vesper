@@ -289,11 +289,10 @@ where
             let mut result = cmd.execute(&context).await;
 
             match (&self.after, result.state) {
-                // The after hook should not execute if any check returned false.
+                // The after hook should not execute if any check returned false or a check errored.
                 (Some(after), 
                 ExecutionState::CommandFinished 
-                | ExecutionState::CommandErrored 
-                | ExecutionState::CheckErrored) => {
+                | ExecutionState::CommandErrored) => {
                     // Set the output as taken, if it was already taken, we'll restore it to the previous state.
                     let output = std::mem::replace(&mut result.output, OutputLocation::TakenByAfterHook);
 
