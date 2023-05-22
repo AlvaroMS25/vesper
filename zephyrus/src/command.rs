@@ -36,7 +36,7 @@ pub enum OutputLocation<T, E> {
     /// The output has been forwarded to the `after` hook.
     TakenByAfterHook,
     /// The output has been taken by the `error_handler` hook.
-    TakenByErrorHandlerHook
+    TakenByErrorHandler
 }
 
 /// Information about the command execution and it's output.
@@ -141,7 +141,7 @@ impl<D, T, E> Command<D, T, E> {
                     (Some(hook), Err(why)) => {
                         info!("Command [{}] raised an error, using established error handler", self.name);
                         state = ExecutionState::CommandErrored;
-                        location = OutputLocation::TakenByErrorHandlerHook;
+                        location = OutputLocation::TakenByErrorHandler;
 
                         (hook.0)(context, why).await;
                     },
@@ -163,7 +163,7 @@ impl<D, T, E> Command<D, T, E> {
                 if let Some(hook) = &self.error_handler {
                     info!("Command [{}] check raised an error, using established error handler", self.name);
                     (hook.0)(context, why).await;
-                    location = OutputLocation::TakenByErrorHandlerHook;
+                    location = OutputLocation::TakenByErrorHandler;
                 } else {
                     info!("Command [{}] check raised an error, but no error handler was established", self.name);
                     location = OutputLocation::Present(Err(why));
