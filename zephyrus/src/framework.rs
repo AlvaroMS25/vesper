@@ -299,7 +299,7 @@ where
 
                     let output = if let OutputLocation::Present(return_value) = output {
                         // If the output is not taken beforehand by the error handler, leave it as taken
-                        // by the hook one.
+                        // by the after hook one.
                         Some(return_value)
                     } else {
                         // If it was taken, return it to it's original state.
