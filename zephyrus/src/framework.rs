@@ -301,7 +301,7 @@ where
                         // by the after hook one.
                         Some(return_value)
                     } else {
-                        // If it was taken, return it to it's original state.
+                        // If it was taken, return it to it's previous state.
                         result.output = output;
                         None
                     };
