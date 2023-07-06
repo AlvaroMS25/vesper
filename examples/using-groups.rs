@@ -65,7 +65,9 @@ async fn main() {
                     // We have to register the commands for them to show in discord.
                     framework.register_global_commands().await.unwrap();
                 },
-                Event::InteractionCreate(interaction) => framework.process(interaction.0).await,
+                Event::InteractionCreate(interaction) => {
+                    framework.process(interaction.0).await;
+                },
                 _ => ()
             }
         }

@@ -3,14 +3,12 @@ use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 
 mod after;
-mod argument;
-mod attr;
 mod autocomplete;
 mod before;
 mod check;
+mod extractors;
 mod command;
 mod error_handler;
-mod details;
 mod hook;
 mod modal;
 mod optional;

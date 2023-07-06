@@ -1,6 +1,14 @@
+use darling::FromAttributes;
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use syn::{spanned::Spanned, DeriveInput, Error, Result};
-use crate::util::unique;
+use crate::extractors::{Either, FixedList};
+
+#[derive(FromAttributes)]
+#[darling(attributes(parse))]
+struct VariantAttributes {
+    #[darling(rename = "rename")]
+    renaming: Option<Either<String, FixedList<1, String>>>,
+}
 
 struct Variant {
     value: String,
@@ -54,27 +62,11 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
             ));
         }
 
-        let mut name = None;
-        for attribute in variant.attrs {
-            let Some(attrs) = crate::attr::parse_named("parse", &attribute)? else {
-                continue;
-            };
+        let attributes = VariantAttributes::from_attributes(variant.attrs.as_slice())?;
 
-            for attr in attrs {
-                let span = attr.path.span();
-                match attr.path.get_ident().unwrap().to_string().as_str() {
-                    "rename" => {
-                        unique(&mut name, attr.parse_string()?, "rename", span)?;
-                    },
-                    _ => Err(Error::new(
-                        span,
-                        "Attribute not recognized"
-                    ))?
-                }
-            }
-        }
-
-        let name = name.unwrap_or(variant.ident.to_string());
+        let name = attributes.renaming
+            .map(|item| item.inner().clone())
+            .unwrap_or(variant.ident.to_string());
 
         variants.push(Variant {
             ident: variant.ident.clone(),

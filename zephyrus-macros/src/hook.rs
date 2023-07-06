@@ -1,6 +1,6 @@
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use syn::{
-    parse2, spanned::Spanned, Error, FnArg, GenericParam, ItemFn, Lifetime, LifetimeDef, Result,
+    parse2, spanned::Spanned, Error, FnArg, GenericParam, ItemFn, Lifetime, LifetimeParam, Result,
     ReturnType, Type,
 };
 
@@ -46,7 +46,7 @@ pub fn hook(input: TokenStream2) -> Result<TokenStream2> {
     */
     sig.generics.params.insert(
         0,
-        GenericParam::Lifetime(LifetimeDef {
+        GenericParam::Lifetime(LifetimeParam {
             attrs: Default::default(),
             lifetime: Lifetime::new("'future", Span::call_site()),
             colon_token: None,

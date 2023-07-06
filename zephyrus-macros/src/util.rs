@@ -18,16 +18,6 @@ pub fn get_returnable_trait() -> Path {
     parse2(quote::quote!(::zephyrus::extract::Returnable)).unwrap()
 }
 
-pub fn unique<T>(item: &mut Option<T>, new: T, name: &str, span: impl Spanned) -> Result<()> {
-    if item.is_some() {
-        return Err(Error::new(span.span(), format!("{name} already set")));
-    }
-
-    *item = Some(new);
-
-    Ok(())
-}
-
 /// Gets the path of the given type
 pub fn get_path(t: &Type, allow_references: bool) -> Result<&Path> {
     match t {
@@ -207,18 +197,3 @@ pub fn check_return_type(ret: &ReturnType, out: TokenStream) -> Result<()> {
 
     Ok(())
 }
-
-/// Takes a vec of elements and applies a function to all of them, deleting them from the vec.
-pub fn consume_map<T, D, F>(items: &mut Vec<T>, data: &mut D, mut predicate: F) -> Result<()>
-where
-    F: FnMut(T, &mut D) -> Result<()>
-{
-    let i = 0;
-
-    while i < items.len() {
-        predicate(items.remove(i), data)?;
-    }
-
-    Ok(())
-}
-

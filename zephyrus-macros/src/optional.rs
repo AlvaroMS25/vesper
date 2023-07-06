@@ -1,4 +1,5 @@
 use std::ops::{Deref, DerefMut};
+use darling::FromMeta;
 use proc_macro2::TokenStream;
 use quote::ToTokens;
 
@@ -18,6 +19,16 @@ impl<T: ToTokens> ToTokens for Optional<T> {
 impl<T: ToTokens> From<Option<T>> for Optional<T> {
     fn from(value: Option<T>) -> Self {
         Self(value)
+    }
+}
+
+impl<T: FromMeta> FromMeta for Optional<T> {
+    fn from_nested_meta(item: &darling::export::NestedMeta) -> darling::Result<Self> {
+        Ok(Self(FromMeta::from_nested_meta(item)?))
+    }
+
+    fn from_meta(item: &syn::Meta) -> darling::Result<Self> {
+        Ok(Self(FromMeta::from_meta(item)?))
     }
 }
 
