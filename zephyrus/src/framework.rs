@@ -1,7 +1,7 @@
 use crate::{
     argument::CommandArgument,
     builder::{FrameworkBuilder, WrappedClient},
-    command::{Command, CommandMap},
+    command::{Command, CommandMap, ExecutionState, OutputLocation},
     context::{AutocompleteContext, Focused, SlashContext},
     group::{GroupParent, GroupParentMap, ParentType},
     hook::{AfterHook, BeforeHook},
@@ -25,6 +25,24 @@ macro_rules! extract {
             _ => return None
         }
     };
+}
+
+/// The result of a `.process` call, containing the state of the interaction handling.
+#[non_exhaustive]
+pub enum ProcessResult<T, E> {
+    /// The specified command was not found, either to execute its handler or to try to autocomplete
+    /// an argument.
+    CommandNotFound,
+    /// The interaction was a modal submit interaction.
+    ModalSubmit,
+    /// The interaction was a message component interaction.
+    MessageComponent,
+    /// The specified command argument was autocompleted successufully.
+    Autocompleted,
+    /// The specified command was executed.
+    CommandExecuted(ExecutionResult<T, E>),
+    /// The interaction type is not supported. This should unly happen with `Ping` interactions.
+    UnknownInteraction
 }
 
 /// The default error used by the framework.
@@ -91,27 +109,35 @@ where
     }
 
     /// Processes the given interaction, dispatching commands or waking waiters if necessary.
-    pub async fn process(&self, interaction: Interaction) {
+    pub async fn process(&self, mut interaction: Interaction) -> ProcessResult<T, E> {
         match interaction.kind {
-            InteractionType::ApplicationCommand => self.try_execute(interaction).await,
+            InteractionType::ApplicationCommand => {
+                let Some(command) = self.get_command(&mut interaction) else {
+                    return ProcessResult::CommandNotFound;
+                };
+                self.execute(command, interaction).await.into()
+            },
             InteractionType::ApplicationCommandAutocomplete => self.try_autocomplete(interaction).await,
-            InteractionType::MessageComponent | InteractionType::ModalSubmit => {
-                let mut lock = self.waiters.lock();
-                if let Some(position) = lock.iter().position(|waker| waker.check(&interaction)) {
-                    lock.remove(position).wake(interaction);
-                }
-            }
-            _ => ()
+            InteractionType::MessageComponent  => {
+                self.wake_waiters(interaction);
+                ProcessResult::MessageComponent
+            },
+            InteractionType::ModalSubmit => {
+                self.wake_waiters(interaction);
+                ProcessResult::ModalSubmit
+            },
+            _ => ProcessResult::UnknownInteraction
         }
     }
 
-    async fn try_execute(&self, mut interaction: Interaction) {
-        if let Some(command) = self.get_command(&mut interaction) {
-            self.execute(command, interaction).await;
+    fn wake_waiters(&self, interaction: Interaction) {
+        let mut lock = self.waiters.lock();
+        if let Some(position) = lock.iter().position(|waker| waker.check(&interaction)) {
+            lock.remove(position).wake(interaction);
         }
     }
 
-    async fn try_autocomplete(&self, mut interaction: Interaction) {
+    async fn try_autocomplete(&self, mut interaction: Interaction) -> ProcessResult<T, E> {
         if let Some((name, argument, value)) = self.get_autocomplete_argument(&interaction) {
             if let Some(fun) = &argument.autocomplete {
                 let context = AutocompleteContext::new(
@@ -134,8 +160,12 @@ where
                         },
                     )
                     .await;
+
+                return ProcessResult::Autocompleted;
             }
         }
+
+        ProcessResult::CommandNotFound
     }
 
     fn get_autocomplete_argument(
@@ -231,7 +261,7 @@ where
     }
 
     /// Executes the given [command](crate::command::Command) and the hooks.
-    async fn execute(&self, cmd: &Command<D, T, E>, interaction: Interaction) {
+    async fn execute(&self, cmd: &Command<D, T, E>, interaction: Interaction) -> ExecutionResult<T, E> {
         let context = SlashContext::new(
             &self.http_client,
             self.application_id,
@@ -247,11 +277,45 @@ where
         };
 
         if execute {
-            let ExecutionResult::Finished(result) = cmd.execute(&context).await else {
-                return;
+            /*let ExecutionResult::Finished(result) = cmd.execute(&context).await else {
+                return None;
             };
             if let Some(after) = &self.after {
                 (after.0)(&context, cmd.name, result).await;
+            } else {
+                return result;
+            }*/
+            
+            let mut result = cmd.execute(&context).await;
+
+            match (&self.after, result.state) {
+                // The after hook should not execute if any check returned false or a check errored.
+                (Some(after), 
+                ExecutionState::CommandFinished 
+                | ExecutionState::CommandErrored) => {
+                    // Set the output as taken, if it was already taken, we'll restore it to the previous state.
+                    let output = std::mem::replace(&mut result.output, OutputLocation::TakenByAfterHook);
+
+                    let output = if let OutputLocation::Present(return_value) = output {
+                        // If the output is not taken beforehand by the error handler, leave it as taken
+                        // by the after hook one.
+                        Some(return_value)
+                    } else {
+                        // If it was taken, return it to it's previous state.
+                        result.output = output;
+                        None
+                    };
+
+                    (after.0)(&context, cmd.name, output).await;
+                },
+                _ => ()
+            }
+
+            result
+        } else {
+            ExecutionResult {
+                state: ExecutionState::BeforeHookFailed,
+                output: OutputLocation::NotExecuted
             }
         }
     }
