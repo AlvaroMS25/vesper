@@ -448,7 +448,7 @@ Currently, only `String` and `Option<String>` fields are allowed.
 [macro declaration]: https://github.com/AlvaroMS25/zephyrus/blob/master/zephyrus-macros/src/lib.rs#L150-L236
 
 # Bulk Commands Overwrite
-If you'd like to use Discord's [Bulk Overwrite Global Application Commands](https://discord.com/developers/docs/interactions/application-commands#bulk-overwrite-global-application-commands) enpoint, perhaps in tandem with a [commands lockfile](https://github.com/carterhimmel/thoth/tree/28c3855b1c55c9ed839bbbcbf9e9c704bf2bd81a/.github/workflows/cd_commands.yml), you'll want to use `Framework#commands_vector`.
+If you'd like to use Discord's [Bulk Overwrite Global Application Commands](https://discord.com/developers/docs/interactions/application-commands#bulk-overwrite-global-application-commands) enpoint, perhaps in tandem with a [commands lockfile](https://github.com/carterhimmel/thoth/tree/28c3855b1c55c9ed839bbbcbf9e9c704bf2bd81a/.github/workflows/cd_commands.yml), you'll want to use `Framework#twilight_commands`.
 
 > **Note**
 > This requires the `bulk` feature.
@@ -456,7 +456,7 @@ If you'd like to use Discord's [Bulk Overwrite Global Application Commands](http
 ```rust
 type MyFramework = Arc<Framework<()>>;
 
-async fn create_framework(
+fn create_framework(
     http_client: Arc<Client>,
     app_id: Id<ApplicationMarker>
 ) -> MyFramework {
@@ -466,7 +466,7 @@ async fn create_framework(
 }
 
 fn create_lockfile(framework: MyFramework) -> Result<()> {
-    let commands = framework.commands_vector();
+    let commands = framework.twilight_commands();
     let content = serde_json::to_string_pretty(&commands)?;
 
     let path = concat!(env!("CARGO_MANIFEST_DIR"), "/commands.lock.json").to_string();

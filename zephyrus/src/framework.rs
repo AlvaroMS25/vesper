@@ -402,9 +402,9 @@ where
         Ok(commands)
     }
 
-    /// Creates a vector of Command objects, to be used against Discord's bulk endpoint.
+    /// Creates a vector of Twilight [`Command`](twilight_model::application::command::Command) objects, to be used against Discord's bulk endpoint.
     #[cfg(feature = "bulk")]
-    pub fn commands_vector(
+    pub fn twilight_commands(
         &self,
     ) -> Vec<TwilightCommand> {
         use twilight_model::application::command::CommandType;
