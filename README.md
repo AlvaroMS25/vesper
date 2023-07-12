@@ -446,3 +446,44 @@ shown to the user using the `#[modal(..)}` attributes. To see the full list of a
 Currently, only `String` and `Option<String>` fields are allowed.
 
 [macro declaration]: https://github.com/AlvaroMS25/zephyrus/blob/master/zephyrus-macros/src/lib.rs#L150-L236
+
+# Bulk Commands Overwrite
+If you'd like to use Discord's [Bulk Overwrite Global Application Commands](https://discord.com/developers/docs/interactions/application-commands#bulk-overwrite-global-application-commands) enpoint, perhaps in tandem with a [commands lockfile](https://github.com/carterhimmel/thoth/tree/28c3855b1c55c9ed839bbbcbf9e9c704bf2bd81a/.github/workflows/cd_commands.yml), you'll want to use `Framework#twilight_commands`.
+
+> **Note**
+> This requires the `bulk` feature.
+
+```rust
+type MyFramework = Arc<Framework<()>>;
+
+fn create_framework(
+    http_client: Arc<Client>,
+    app_id: Id<ApplicationMarker>
+) -> MyFramework {
+    Arc::new(Framework::builder(http_client, app_id, ())
+        .command(hello)
+        .build())
+}
+
+fn create_lockfile(framework: MyFramework) -> Result<()> {
+    let commands = framework.twilight_commands();
+    let content = serde_json::to_string_pretty(&commands)?;
+
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/commands.lock.json").to_string();
+	std::fs::write(path, content).unwrap();
+
+    Ok(())
+}
+```
+
+<!-- # Unsupported Message and User Commands
+Zephyrus [doesn't quite support message and user commands](https://github.com/AlvaroMS25/zephyrus/issues/6).  
+
+If you want to:
+- use message/user commands
+- utilize [Bulk Overwrite Global Application Commands]()
+- and utilize a [Commands Lockfile]()  
+
+you'll have to:
+- selectively filter which `INTERACTION_CREATE` [types](https://docs.rs/twilight-model/0.15.2/twilight_model/application/interaction/enum.InteractionType.html) are fed to Zephyrus
+- exclusively use Zephyrus' modal system or your own, not both -->
