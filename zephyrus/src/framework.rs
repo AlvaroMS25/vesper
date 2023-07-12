@@ -402,6 +402,49 @@ where
         Ok(commands)
     }
 
+    /// Creates a vector of Command objects, to be used against Discord's bulk endpoint.
+    #[cfg(feature = "bulk")]
+    pub fn commands_vector(
+        &self,
+    ) -> Result<Vec<TwilightCommand>, Box<dyn std::error::Error + Send + Sync>> {
+        use twilight_model::application::command::CommandType;
+        use twilight_util::builder::command::CommandBuilder;
+
+        let mut commands = Vec::new();
+
+        for cmd in self.commands.values() {
+            // FIXME: support more than just chat input
+            let mut command = CommandBuilder::new(cmd.name, cmd.description, CommandType::ChatInput);
+
+            for i in &cmd.arguments {
+                command = command.option(i.as_option());
+            }
+
+            if let Some(permissions) = &cmd.required_permissions {
+                command = command.default_member_permissions(*permissions);
+            }
+
+            commands.push(command.build());
+        }
+
+        for group in self.groups.values() {
+            let options = self.create_group(group);
+            let mut command = CommandBuilder::new(group.name, group.description, CommandType::ChatInput);
+
+            for i in options {
+                command = command.option(i);
+            }
+
+            if let Some(permissions) = &group.required_permissions {
+                command = command.default_member_permissions(*permissions);
+            }
+
+            commands.push(command.build());
+        }
+
+        Ok(commands)
+    }
+
     fn arg_options(&self, arguments: &Vec<CommandArgument<D>>) -> Vec<CommandOption> {
         let mut options = Vec::with_capacity(arguments.len());
 
