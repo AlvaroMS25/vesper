@@ -406,7 +406,7 @@ where
     #[cfg(feature = "bulk")]
     pub fn commands_vector(
         &self,
-    ) -> Result<Vec<TwilightCommand>, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Vec<TwilightCommand> {
         use twilight_model::application::command::CommandType;
         use twilight_util::builder::command::CommandBuilder;
 
@@ -442,7 +442,7 @@ where
             commands.push(command.build());
         }
 
-        Ok(commands)
+        commands
     }
 
     fn arg_options(&self, arguments: &Vec<CommandArgument<D>>) -> Vec<CommandOption> {
