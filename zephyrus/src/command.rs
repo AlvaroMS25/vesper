@@ -3,9 +3,11 @@ use crate::{
 };
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
-use twilight_http::request::application::command::{create_global_command::CreateGlobalChatInputCommand, create_guild_command::CreateGuildChatInputCommand};
+use twilight_http::{request::application::command::{create_global_command::CreateGlobalChatInputCommand, create_guild_command::CreateGuildChatInputCommand}, client::InteractionClient};
+use twilight_model::id::{marker::GuildMarker, Id};
 use twilight_validate::command::CommandValidationError;
 use crate::hook::{CheckHook, ErrorHandlerHook};
+use crate::twilight_exports::Command as TwilightCommand;
 
 /// A pointer to a command function.
 pub(crate) type CommandFn<D, T, E> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, Result<T, E>>;
@@ -63,6 +65,14 @@ impl<T, E> From<ExecutionResult<T, E>> for ProcessResult<T, E> {
     }
 }
 
+#[derive(Default)]
+pub enum CommandKind {
+    #[default]
+    ChatInput,
+    Message,
+    User
+}
+
 /// A command executed by the framework.
 pub struct Command<D, T, E> {
     /// The name of the command.
@@ -71,6 +81,7 @@ pub struct Command<D, T, E> {
     /// The description of the commands.
     pub description: &'static str,
     pub localized_descriptions: Option<HashMap<String, String>>,
+    pub kind: CommandKind,
     /// All the arguments the command requires.
     pub arguments: Vec<CommandArgument<D>>,
     /// A pointer to this command function.
@@ -91,6 +102,7 @@ impl<D, T, E> Command<D, T, E> {
             localized_names: Default::default(),
             description: Default::default(),
             localized_descriptions: Default::default(),
+            kind: Default::default(),
             arguments: Default::default(),
             fun,
             required_permissions: Default::default(),
@@ -110,6 +122,11 @@ impl<D, T, E> Command<D, T, E> {
     /// Sets the command description.
     pub fn description(mut self, description: &'static str) -> Self {
         self.description = description;
+        self
+    }
+
+    pub fn kind(mut self, kind: CommandKind) -> Self {
+        self.kind = kind;
         self
     }
 
@@ -183,6 +200,113 @@ impl<D, T, E> Command<D, T, E> {
         if_some!(&self.localized_descriptions, |d| command = command.description_localizations(d)?);
 
         Ok(command)
+    }
+
+    async fn create_chat_command(
+        &self,
+        http: &InteractionClient<'_>,
+        guild: Option<Id<GuildMarker>>
+    ) -> Result<TwilightCommand, Box<dyn std::error::Error + Send + Sync>>
+    {
+        let options = self.arguments.iter()
+            .map(|a| a.as_option())
+            .collect::<Vec<_>>();
+
+        let model = if let Some(id) = guild {
+            let mut command = http.create_guild_command(id)
+                .chat_input(self.name, self.description)?
+                .command_options(&options)?
+                .nsfw(self.nsfw);
+
+            if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
+            if_some!(&self.localized_names, |n| command = command.name_localizations(n)?);
+            if_some!(&self.localized_descriptions, |d| command = command.description_localizations(d)?);
+
+            command.await?.model().await?
+        } else {
+            let mut command = http.create_global_command()
+                .chat_input(self.name, self.description)?
+                .command_options(&options)?
+                .nsfw(self.nsfw)
+                .dm_permission(!self.only_guilds);
+
+            if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
+            if_some!(&self.localized_names, |n| command = command.name_localizations(n)?);
+            if_some!(&self.localized_descriptions, |d| command = command.description_localizations(d)?);
+
+            command.await?.model().await?
+        };
+
+        Ok(model)
+    }
+
+    async fn create_user_command(
+        &self,
+        http: &InteractionClient<'_>,
+        guild: Option<Id<GuildMarker>>
+    ) -> Result<TwilightCommand, Box<dyn std::error::Error + Send + Sync>>
+    {
+        let model = if let Some(id) = guild {
+            let mut command = http.create_guild_command(id)
+                .user(self.name)?
+                .nsfw(self.nsfw);
+
+            if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
+
+            command.await?.model().await?
+        } else {
+            let mut command = http.create_global_command()
+                .user(self.name)?
+                .nsfw(self.nsfw)
+                .dm_permission(!self.only_guilds);
+
+            if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
+
+            command.await?.model().await?
+        };
+
+        Ok(model)
+    }
+
+    async fn create_message_command(
+        &self,
+        http: &InteractionClient<'_>,
+        guild: Option<Id<GuildMarker>>
+    ) -> Result<TwilightCommand, Box<dyn std::error::Error + Send + Sync>>
+    {
+        let model = if let Some(id) = guild {
+            let mut command = http.create_guild_command(id)
+                .message(self.name)?
+                .nsfw(self.nsfw);
+
+            if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
+
+            command.await?.model().await?
+        } else {
+            let mut command = http.create_global_command()
+                .message(self.name)?
+                .nsfw(self.nsfw)
+                .dm_permission(!self.only_guilds);
+
+            if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
+
+            command.await?.model().await?
+        };
+
+        Ok(model)
+    }
+
+    pub async fn create(
+        &self, 
+        http: &InteractionClient<'_>, 
+        guild: Option<Id<GuildMarker>>
+    ) -> Result<TwilightCommand, Box<dyn std::error::Error + Send + Sync>>
+    {
+        match self.kind {
+            CommandKind::ChatInput => self.create_chat_command(http, guild).await,
+            CommandKind::Message => self.create_message_command(http, guild).await,
+            CommandKind::User => self.create_user_command(http, guild).await
+        }
     }
 
     pub async fn execute(&self, context: &SlashContext<'_, D>) -> ExecutionResult<T, E> {
