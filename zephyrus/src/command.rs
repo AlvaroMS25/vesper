@@ -2,10 +2,9 @@ use crate::{
     argument::CommandArgument, context::SlashContext, twilight_exports::Permissions, BoxFuture, framework::ProcessResult,
 };
 use std::collections::HashMap;
-use tracing::{debug, info, warn};
-use twilight_http::{request::application::command::{create_global_command::CreateGlobalChatInputCommand, create_guild_command::CreateGuildChatInputCommand}, client::InteractionClient};
+use tracing::{debug, info};
+use twilight_http::client::InteractionClient;
 use twilight_model::id::{marker::GuildMarker, Id};
-use twilight_validate::command::CommandValidationError;
 use crate::hook::{CheckHook, ErrorHandlerHook};
 use crate::twilight_exports::Command as TwilightCommand;
 
