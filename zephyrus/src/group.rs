@@ -108,7 +108,7 @@ impl<D, T, E> GroupParent<D, T, E> {
         Ok(model)
     }
 
-    fn get_options(&self) -> Vec<CommandOption> {
+    pub fn get_options(&self) -> Vec<CommandOption> {
         if let ParentType::Group(groups) = &self.kind {
             let mut subgroups = Vec::new();
 

@@ -383,7 +383,7 @@ where
         }
 
         for group in self.groups.values() {
-            let options = self.create_group(group);
+            let options = group.get_options();
             let mut command = CommandBuilder::new(group.name, group.description, CommandType::ChatInput);
 
             for i in options {
@@ -398,80 +398,5 @@ where
         }
 
         commands
-    }
-
-    fn arg_options(&self, arguments: &Vec<CommandArgument<D>>) -> Vec<CommandOption> {
-        let mut options = Vec::with_capacity(arguments.len());
-
-        for arg in arguments {
-            options.push(arg.as_option());
-        }
-
-        options
-    }
-
-    fn create_group(&self, parent: &GroupParent<D, T, E>) -> Vec<CommandOption> {
-        debug!("Registering group {}", parent.name);
-
-        if let ParentType::Group(map) = &parent.kind {
-            let mut subgroups = Vec::new();
-            for group in map.values() {
-                debug!("Registering subgroup [{}] of [{}]", group.name, parent.name);
-
-                let mut subcommands = Vec::new();
-                for sub in group.subcommands.values() {
-                    subcommands.push(self.create_subcommand(sub))
-                }
-
-                subgroups.push(CommandOption {
-                    kind: CommandOptionType::SubCommandGroup,
-                    name: group.name.to_string(),
-                    description: group.description.to_string(),
-                    options: Some(subcommands),
-                    autocomplete: None,
-                    choices: None,
-                    required: None,
-                    channel_types: None,
-                    description_localizations: None,
-                    max_length: None,
-                    max_value: None,
-                    min_length: None,
-                    min_value: None,
-                    name_localizations: None,
-                });
-            }
-            subgroups
-        } else if let ParentType::Simple(map) = &parent.kind {
-            let mut subcommands = Vec::new();
-            for sub in map.values() {
-                subcommands.push(self.create_subcommand(sub));
-            }
-
-            subcommands
-        } else {
-            unreachable!()
-        }
-    }
-
-    /// Creates a subcommand at the given scope.
-    fn create_subcommand(&self, cmd: &Command<D, T, E>) -> CommandOption {
-        debug!("Registering [{}] subcommand", cmd.name);
-
-        CommandOption {
-            kind: CommandOptionType::SubCommand,
-            name: cmd.name.to_string(),
-            description: cmd.description.to_string(),
-            options: Some(self.arg_options(&cmd.arguments)),
-            autocomplete: None,
-            choices: None,
-            required: None,
-            channel_types: None,
-            description_localizations: None,
-            max_length: None,
-            max_value: None,
-            min_length: None,
-            min_value: None,
-            name_localizations: None,
-        }
     }
 }
