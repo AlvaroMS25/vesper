@@ -175,35 +175,6 @@ impl<D, T, E> Command<D, T, E> {
         Ok(true)
     }
 
-    pub fn apply_global_command<'a, 'b: 'a>(
-        &'b self, 
-        mut command: CreateGlobalChatInputCommand<'a>
-    ) -> Result<CreateGlobalChatInputCommand<'a>, CommandValidationError> {
-        command = command
-            .nsfw(self.nsfw)
-            .dm_permission(!self.only_guilds);
-
-        if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
-        if_some!(&self.localized_names, |n| command = command.name_localizations(n)?);
-        if_some!(&self.localized_descriptions, |d| command = command.description_localizations(d)?);
-
-        Ok(command)
-    }
-
-    pub fn apply_guild_command<'a, 'b: 'a>(
-        &'b self,
-        mut command: CreateGuildChatInputCommand<'a>
-    ) -> Result<CreateGuildChatInputCommand<'a>, CommandValidationError> {
-        command = command
-            .nsfw(self.nsfw);
-
-        if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
-        if_some!(&self.localized_names, |n| command = command.name_localizations(n)?);
-        if_some!(&self.localized_descriptions, |d| command = command.description_localizations(d)?);
-
-        Ok(command)
-    }
-
     async fn create_chat_command(
         &self,
         http: &InteractionClient<'_>,
