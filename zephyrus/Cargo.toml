@@ -21,9 +21,12 @@ async-trait = "0.1"
 zephyrus-macros = { path = "../zephyrus-macros", version = "0.9" }
 parking_lot = "0.12"
 tracing = "0.1"
-twilight-model = "0.15"
-twilight-http = "0.15"
-twilight-validate = "0.15"
+twilight-model = { workspace = true }
+twilight-http = { workspace = true }
+twilight-validate = { workspace = true }
+
+# feature: bulk
+twilight-util = { version = "0.15", features = ["builder"], optional = true }
 
 [dependencies.tokio]
 version = "1"
@@ -32,6 +35,7 @@ features = ["sync"]
 
 [features]
 rc = []
+bulk = ["dep:twilight-util"]
 
 [dev-dependencies]
 futures = "0.3"
