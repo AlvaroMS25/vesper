@@ -264,6 +264,8 @@ pub struct GroupParentBuilder<D, T, E> {
     description: Option<&'static str>,
     kind: ParentType<D, T, E>,
     required_permissions: Option<Permissions>,
+    nsfw: bool,
+    only_guilds: bool
 }
 
 impl<D, T, E> GroupParentBuilder<D, T, E> {
@@ -274,6 +276,8 @@ impl<D, T, E> GroupParentBuilder<D, T, E> {
             description: None,
             kind: ParentType::Group(Default::default()),
             required_permissions: None,
+            nsfw: false,
+            only_guilds: false
         }
     }
 
@@ -291,6 +295,16 @@ impl<D, T, E> GroupParentBuilder<D, T, E> {
 
     pub fn required_permissions(&mut self, permissions: Permissions) -> &mut Self {
         self.required_permissions = Some(permissions);
+        self
+    }
+
+    pub fn nsfw(&mut self, nsfw: bool) -> &mut Self {
+        self.nsfw = nsfw;
+        self
+    }
+
+    pub fn only_guilds(&mut self, only_guilds: bool) -> &mut Self {
+        self.only_guilds = only_guilds;
         self
     }
 
@@ -336,6 +350,8 @@ impl<D, T, E> GroupParentBuilder<D, T, E> {
             description: self.description.unwrap(),
             kind: self.kind,
             required_permissions: self.required_permissions,
+            nsfw: self.nsfw,
+            only_guilds: self.only_guilds
         }
     }
 }
