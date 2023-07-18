@@ -14,6 +14,8 @@ pub(crate) type CommandFn<D, T, E> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxF
 /// A map of [commands](self::Command).
 pub type CommandMap<D, T, E> = HashMap<&'static str, Command<D, T, E>>;
 
+#[doc(hidden)]
+#[macro_export]
 macro_rules! if_some {
     ($item:expr, |$x:ident| $($tree:tt)*) => {
         if let Some($x) = $item {
