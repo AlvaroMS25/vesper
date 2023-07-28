@@ -46,7 +46,7 @@ pub mod twilight_exports {
     };
     pub use twilight_model::{
         application::{
-            command::{Command, CommandOption, CommandOptionChoice, CommandOptionChoiceValue, CommandOptionType},
+            command::{Command, CommandOption, CommandOptionChoice, CommandOptionChoiceValue, CommandOptionType, CommandType},
             interaction::{
                 application_command::{CommandData, CommandDataOption, CommandOptionValue, CommandInteractionDataResolved},
                 modal::ModalInteractionData,

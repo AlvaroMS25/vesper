@@ -108,6 +108,7 @@ pub struct InputOptions {
 
 impl InputOptions {
     pub fn new(stream: TokenStream2, ident: &syn::Ident) -> Result<Self> {
+        let stream_empty = stream.is_empty();
         let span = stream.span();
         let meta = parse2::<MetaListParser>(stream)?.0;
 
@@ -117,12 +118,12 @@ impl InputOptions {
 
         let mut this = Self::from_list(&meta)?;
 
-        if this.name.is_empty() {
-            this.name = ident.to_string();
-        }
-
         if !(this.chat || this.message || this.user) {
             this.chat = true;
+        }
+
+        if this.name.is_empty() {
+            this.name = ident.to_string();
         }
 
         if !(this.chat ^ this.message ^ this.user) || (this.chat && this.message && this.user) {
@@ -147,9 +148,9 @@ impl ToTokens for InputOptions {
 
 
         let kind = if self.user {
-            quote::quote!(::zephyrus::command::CommandKind::User)
+            quote::quote!(::zephyrus::twilight_exports::CommandType::User)
         } else if self.message {
-            quote::quote!(::zephyrus::command::CommandKind::Message)
+            quote::quote!(::zephyrus::twilight_exports::CommandType::Message)
         } else {
             unreachable!()
         };

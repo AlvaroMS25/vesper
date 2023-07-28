@@ -6,7 +6,7 @@ use tracing::{debug, info};
 use twilight_http::client::InteractionClient;
 use twilight_model::id::{marker::GuildMarker, Id};
 use crate::hook::{CheckHook, ErrorHandlerHook};
-use crate::twilight_exports::Command as TwilightCommand;
+use crate::twilight_exports::{Command as TwilightCommand, CommandType};
 
 /// A pointer to a command function.
 pub(crate) type CommandFn<D, T, E> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, Result<T, E>>;
@@ -66,14 +66,6 @@ impl<T, E> From<ExecutionResult<T, E>> for ProcessResult<T, E> {
     }
 }
 
-#[derive(Default)]
-pub enum CommandKind {
-    #[default]
-    ChatInput,
-    Message,
-    User
-}
-
 /// A command executed by the framework.
 pub struct Command<D, T, E> {
     /// The name of the command.
@@ -82,7 +74,7 @@ pub struct Command<D, T, E> {
     /// The description of the commands.
     pub description: &'static str,
     pub localized_descriptions: Option<HashMap<String, String>>,
-    pub kind: CommandKind,
+    pub kind: CommandType,
     /// All the arguments the command requires.
     pub arguments: Vec<CommandArgument<D>>,
     /// A pointer to this command function.
@@ -103,7 +95,7 @@ impl<D, T, E> Command<D, T, E> {
             localized_names: Default::default(),
             description: Default::default(),
             localized_descriptions: Default::default(),
-            kind: Default::default(),
+            kind: CommandType::ChatInput,
             arguments: Default::default(),
             fun,
             required_permissions: Default::default(),
@@ -126,7 +118,7 @@ impl<D, T, E> Command<D, T, E> {
         self
     }
 
-    pub fn kind(mut self, kind: CommandKind) -> Self {
+    pub fn kind(mut self, kind: CommandType) -> Self {
         self.kind = kind;
         self
     }
@@ -275,9 +267,10 @@ impl<D, T, E> Command<D, T, E> {
     ) -> Result<TwilightCommand, Box<dyn std::error::Error + Send + Sync>>
     {
         match self.kind {
-            CommandKind::ChatInput => self.create_chat_command(http, guild).await,
-            CommandKind::Message => self.create_message_command(http, guild).await,
-            CommandKind::User => self.create_user_command(http, guild).await
+            CommandType::ChatInput => self.create_chat_command(http, guild).await,
+            CommandType::Message => self.create_message_command(http, guild).await,
+            CommandType::User => self.create_user_command(http, guild).await,
+            _ => panic!("Invalid command type")
         }
     }
 
