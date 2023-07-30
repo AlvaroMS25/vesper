@@ -380,9 +380,7 @@ where
             if_some!(&cmd.localized_names, |n| command = command.name_localizations(n));
             if_some!(&cmd.localized_descriptions, |d| command = command.name_localizations(d));
 
-            if let Some(permissions) = &cmd.required_permissions {
-                command = command.default_member_permissions(*permissions);
-            }
+            if_some!(cmd.required_permissions, |p| command = command.default_member_permissions(p));
 
             commands.push(command.build());
         }
