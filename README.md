@@ -155,6 +155,56 @@ will treat it as a `chat` command, so `#[command]` is equivalent to `#[command(c
 
 **If a non-chat command takes arguments in it's handler, discord will allow it, but the framework won't receive any argument.**
 
+The framework also provides a `#[only_guilds]` attribute which will mark the command to only be available on guilds and
+an `#[nsfw]` for nsfw commands.
+
+The same command used before as an example could be marked only for guilds/nsfw the following way:
+```rust
+#[command]
+#[nsfw] // This command is now marked as nsfw
+#[description = "This is the description of the command"]
+async fn command(
+    ctx: &SlashContext</* Your type of context*/>,
+    #[description = "A description for the argument"] some_arg: String,
+    #[rename = "other_arg"] #[description = "other description"] other: Option<Id<UserMarker>>
+) -> DefaultCommandResult 
+{
+    // Command body
+    
+    Ok(())
+}
+
+#[command(chat)]
+#[only_guilds] // This command is now only marked as only available inside of guilds
+#[description = "This is the description of the command"]
+async fn command(
+    ctx: &SlashContext</* Your type of context*/>,
+    #[description = "A description for the argument"] some_arg: String,
+    #[rename = "other_arg"] #[description = "other description"] other: Option<Id<UserMarker>>
+) -> DefaultCommandResult
+{
+    // Command body
+
+    Ok(())
+}
+
+#[command(chat)]
+#[only_guilds] // This command is now marked as nsfw and only available inside guilds
+#[nsfw]
+#[description = "This is the description of the command"]
+async fn command(
+    ctx: &SlashContext</* Your type of context*/>, // The context must always be the first parameter.
+    #[description = "A description for the argument"] some_arg: String,
+    #[rename = "other_arg"] #[description = "other description"] other: Option<Id<UserMarker>>
+) -> DefaultCommandResult
+{
+    // Command body
+
+    Ok(())
+}
+```
+
+
 ### Command functions
 
 Command functions must include a `description` attribute, which will be seen in discord when the user tries to use the command.
