@@ -380,8 +380,6 @@ where
             if_some!(&cmd.localized_names, |n| command = command.name_localizations(n));
             if_some!(&cmd.localized_descriptions, |d| command = command.name_localizations(d));
 
-            if_some!(cmd.required_permissions, |p| command = command.default_member_permissions(p));
-
             commands.push(command.build());
         }
 
