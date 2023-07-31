@@ -17,6 +17,7 @@ use tracing::debug;
 use parking_lot::Mutex;
 use crate::command::ExecutionResult;
 use crate::parse::ParseError;
+#[cfg(feature = "bulk")]
 use crate::if_some;
 
 macro_rules! extract {
