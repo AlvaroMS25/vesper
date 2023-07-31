@@ -3,7 +3,7 @@ use crate::{
     framework::{DefaultError, Framework},
     group::*,
     hook::{AfterHook, BeforeHook},
-    twilight_exports::{ApplicationMarker, Client, Id, Permissions},
+    twilight_exports::{ApplicationMarker, Client, CommandType, Id, Permissions},
     parse::ParseError
 };
 #[cfg(feature = "rc")]
@@ -332,6 +332,7 @@ impl<D, T, E> GroupParentBuilder<D, T, E> {
     /// Sets this parent group as [simple](crate::group::ParentType::Simple), only allowing subcommands.
     pub fn command(&mut self, fun: FnPointer<Command<D, T, E>>) -> &mut Self {
         let command = fun();
+        assert!(matches!(command.kind, CommandType::ChatInput), "Only chat commands can be used inside groups");
         if let ParentType::Simple(map) = &mut self.kind {
             map.insert(command.name, command);
         } else {
@@ -379,6 +380,7 @@ impl<D, T, E> CommandGroupBuilder<D, T, E> {
     /// Adds a command to this group.
     pub fn command(&mut self, fun: FnPointer<Command<D, T, E>>) -> &mut Self {
         let command = fun();
+        assert!(matches!(command.kind, CommandType::ChatInput), "Only chat commands can be used inside groups");
         self.subcommands.insert(command.name, command);
         self
     }
