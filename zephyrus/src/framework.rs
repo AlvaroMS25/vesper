@@ -17,6 +17,7 @@ use tracing::debug;
 use parking_lot::Mutex;
 use crate::command::ExecutionResult;
 use crate::parse::ParseError;
+use crate::if_some;
 
 macro_rules! extract {
     ($expr:expr => $variant:ident) => {
@@ -369,30 +370,31 @@ where
 
         for cmd in self.commands.values() {
             // FIXME: support more than just chat input
-            let mut command = CommandBuilder::new(cmd.name, cmd.description, CommandType::ChatInput);
+            let mut command = CommandBuilder::new(cmd.name, cmd.description, cmd.kind);
 
             for i in &cmd.arguments {
                 command = command.option(i.as_option());
             }
 
-            if let Some(permissions) = &cmd.required_permissions {
-                command = command.default_member_permissions(*permissions);
-            }
+            if_some!(cmd.required_permissions, |p| command = command.default_member_permissions(p));
+            if_some!(&cmd.localized_names, |n| command = command.name_localizations(n));
+            if_some!(&cmd.localized_descriptions, |d| command = command.name_localizations(d));
+
+            if_some!(cmd.required_permissions, |p| command = command.default_member_permissions(p));
 
             commands.push(command.build());
         }
 
         for group in self.groups.values() {
             let options = group.get_options();
+            // groups are only supported by chat input
             let mut command = CommandBuilder::new(group.name, group.description, CommandType::ChatInput);
 
             for i in options {
                 command = command.option(i);
             }
 
-            if let Some(permissions) = &group.required_permissions {
-                command = command.default_member_permissions(*permissions);
-            }
+            if_some!(group.required_permissions, |p| command = command.default_member_permissions(p));
 
             commands.push(command.build());
         }
