@@ -109,8 +109,19 @@ pub struct InputOptions {
 impl InputOptions {
     pub fn new(stream: TokenStream2, ident: &syn::Ident) -> Result<Self> {
         let stream_empty = stream.is_empty();
+        let stream_clone = stream.clone();
         let span = stream.span();
-        let meta = parse2::<MetaListParser>(stream)?.0;
+        let meta = match parse2::<MetaListParser>(stream) {
+            Ok(m) => m.0,
+            Err(_) if !stream_empty => {
+                return Ok(Self {
+                    chat: true,
+                    name: parse2::<syn::LitStr>(stream_clone)?.value(),
+                    ..Default::default()
+                })
+            },
+            Err(e) => return Err(e)
+        };
 
         let meta = meta.into_iter()
             .map(NestedMeta::Meta)
