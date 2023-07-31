@@ -1,6 +1,9 @@
+use twilight_http::client::InteractionClient;
+use twilight_model::{id::{marker::GuildMarker, Id}, application::command::{CommandOption, CommandOptionType}};
+
 use crate::{
-    command::CommandMap,
-    twilight_exports::Permissions,
+    command::{CommandMap, Command},
+    twilight_exports::{Command as TwilightCommand, Permissions},
 };
 use std::collections::HashMap;
 
@@ -54,6 +57,8 @@ pub struct GroupParent<D, T, E> {
     pub kind: ParentType<D, T, E>,
     /// The required permissions to execute commands inside this group
     pub required_permissions: Option<Permissions>,
+    pub nsfw: bool,
+    pub only_guilds: bool
 }
 
 /// A group of commands, referred by discord as `SubCommandGroup`.
@@ -68,4 +73,100 @@ pub struct CommandGroup<D, T, E> {
     pub description: &'static str,
     /// The commands this group has as children.
     pub subcommands: CommandMap<D, T, E>,
+}
+
+impl<D, T, E> GroupParent<D, T, E> {
+    pub async fn create(
+        &self,
+        http: &InteractionClient<'_>,
+        guild: Option<Id<GuildMarker>>
+    ) -> Result<TwilightCommand, Box<dyn std::error::Error + Send + Sync>>
+    {
+        let options = self.get_options();
+
+        let model = if let Some(id) = guild {
+            let mut command = http.create_guild_command(id)
+                .chat_input(self.name, self.description)?
+                .command_options(&options)?
+                .nsfw(self.nsfw);
+
+            crate::if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
+
+            command.await?.model().await?
+        } else {
+            let mut command = http.create_global_command()
+                .chat_input(self.name, self.description)?
+                .command_options(&options)?
+                .nsfw(self.nsfw)
+                .dm_permission(!self.only_guilds);
+
+            crate::if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
+
+            command.await?.model().await?
+        };
+
+        Ok(model)
+    }
+
+    pub fn get_options(&self) -> Vec<CommandOption> {
+        if let ParentType::Group(groups) = &self.kind {
+            let mut subgroups = Vec::new();
+
+            for group in groups.values() {
+                let mut subcommands = Vec::new();
+
+                for cmd in group.subcommands.values() {
+                    subcommands.push(self.create_subcommand(cmd));
+                }
+
+                subgroups.push(CommandOption {
+                    kind: CommandOptionType::SubCommandGroup,
+                    name: group.name.to_string(),
+                    description: group.description.to_string(),
+                    options: Some(subcommands),
+                    autocomplete: None,
+                    choices: None,
+                    required: None,
+                    channel_types: None,
+                    description_localizations: None,
+                    max_length: None,
+                    max_value: None,
+                    min_length: None,
+                    min_value: None,
+                    name_localizations: None,
+                });
+            }
+
+            subgroups
+        } else if let ParentType::Simple(commands) = &self.kind {
+            let mut subcommands = Vec::new();
+            for sub in commands.values() {
+                subcommands.push(self.create_subcommand(sub));
+            }
+
+            subcommands
+        } else {
+            unreachable!()
+        }
+    }
+
+    /// Creates a subcommand at the given scope.
+    fn create_subcommand(&self, cmd: &Command<D, T, E>) -> CommandOption {
+        CommandOption {
+            kind: CommandOptionType::SubCommand,
+            name: cmd.name.to_string(),
+            description: cmd.description.to_string(),
+            options: Some(cmd.arguments.iter().map(|a| a.as_option()).collect()),
+            autocomplete: None,
+            choices: None,
+            required: None,
+            channel_types: None,
+            description_localizations: None,
+            max_length: None,
+            max_value: None,
+            min_length: None,
+            min_value: None,
+            name_localizations: None,
+        }
+    }
 }

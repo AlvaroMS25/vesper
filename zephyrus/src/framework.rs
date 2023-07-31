@@ -3,11 +3,11 @@ use crate::{
     builder::{FrameworkBuilder, WrappedClient},
     command::{Command, CommandMap, ExecutionState, OutputLocation},
     context::{AutocompleteContext, Focused, SlashContext},
-    group::{GroupParent, GroupParentMap, ParentType},
+    group::GroupParentMap,
     hook::{AfterHook, BeforeHook},
     twilight_exports::{
         ApplicationMarker, Client,
-        Command as TwilightCommand, CommandDataOption, CommandOption, CommandOptionType,
+        Command as TwilightCommand, CommandDataOption, CommandOptionType,
         CommandOptionValue, GuildMarker, Id, Interaction, InteractionData, InteractionType, InteractionClient, InteractionResponse,
         InteractionResponseType,
     },
@@ -17,6 +17,8 @@ use tracing::debug;
 use parking_lot::Mutex;
 use crate::command::ExecutionResult;
 use crate::parse::ParseError;
+#[cfg(feature = "bulk")]
+use crate::if_some;
 
 macro_rules! extract {
     ($expr:expr => $variant:ident) => {
@@ -329,34 +331,12 @@ where
 
         for cmd in self.commands.values() {
             debug!("Registering command [{}]", cmd.name);
-            let mut options = Vec::new();
 
-            for i in &cmd.arguments {
-                options.push(i.as_option());
-            }
-            let interaction_client = self.interaction_client();
-            let mut command = interaction_client
-                .create_guild_command(guild_id)
-                .chat_input(cmd.name, cmd.description)?
-                .command_options(&options)?;
-            command = cmd.apply_guild_command(command)?;
-
-            commands.push(command.await?.model().await?);
+            commands.push(cmd.create(&self.interaction_client(), Some(guild_id)).await?);
         }
 
         for group in self.groups.values() {
-            let options = self.create_group(group);
-            let interaction_client = self.interaction_client();
-            let mut command = interaction_client
-                .create_guild_command(guild_id)
-                .chat_input(group.name, group.description)?
-                .command_options(&options)?;
-
-            if let Some(permissions) = &group.required_permissions {
-                command = command.default_member_permissions(*permissions);
-            }
-
-            commands.push(command.await?.model().await?);
+            commands.push(group.create(&self.interaction_client(), Some(guild_id)).await?);
         }
 
         Ok(commands)
@@ -369,34 +349,11 @@ where
         let mut commands = Vec::new();
 
         for cmd in self.commands.values() {
-            let mut options = Vec::new();
-
-            for i in &cmd.arguments {
-                options.push(i.as_option());
-            }
-            let interaction_client = self.interaction_client();
-            let mut command = interaction_client
-                .create_global_command()
-                .chat_input(cmd.name, cmd.description)?
-                .command_options(&options)?;
-            command = cmd.apply_global_command(command)?;
-
-            commands.push(command.await?.model().await?);
+            commands.push(cmd.create(&self.interaction_client(), None).await?);
         }
 
         for group in self.groups.values() {
-            let options = self.create_group(group);
-            let interaction_client = self.interaction_client();
-            let mut command = interaction_client
-                .create_global_command()
-                .chat_input(group.name, group.description)?
-                .command_options(&options)?;
-
-            if let Some(permissions) = &group.required_permissions {
-                command = command.default_member_permissions(*permissions);
-            }
-
-            commands.push(command.await?.model().await?);
+            commands.push(group.create(&self.interaction_client(), None).await?);
         }
 
         Ok(commands)
@@ -414,109 +371,33 @@ where
 
         for cmd in self.commands.values() {
             // FIXME: support more than just chat input
-            let mut command = CommandBuilder::new(cmd.name, cmd.description, CommandType::ChatInput);
+            let mut command = CommandBuilder::new(cmd.name, cmd.description, cmd.kind);
 
             for i in &cmd.arguments {
                 command = command.option(i.as_option());
             }
 
-            if let Some(permissions) = &cmd.required_permissions {
-                command = command.default_member_permissions(*permissions);
-            }
+            if_some!(cmd.required_permissions, |p| command = command.default_member_permissions(p));
+            if_some!(&cmd.localized_names, |n| command = command.name_localizations(n));
+            if_some!(&cmd.localized_descriptions, |d| command = command.name_localizations(d));
 
             commands.push(command.build());
         }
 
         for group in self.groups.values() {
-            let options = self.create_group(group);
+            let options = group.get_options();
+            // groups are only supported by chat input
             let mut command = CommandBuilder::new(group.name, group.description, CommandType::ChatInput);
 
             for i in options {
                 command = command.option(i);
             }
 
-            if let Some(permissions) = &group.required_permissions {
-                command = command.default_member_permissions(*permissions);
-            }
+            if_some!(group.required_permissions, |p| command = command.default_member_permissions(p));
 
             commands.push(command.build());
         }
 
         commands
-    }
-
-    fn arg_options(&self, arguments: &Vec<CommandArgument<D>>) -> Vec<CommandOption> {
-        let mut options = Vec::with_capacity(arguments.len());
-
-        for arg in arguments {
-            options.push(arg.as_option());
-        }
-
-        options
-    }
-
-    fn create_group(&self, parent: &GroupParent<D, T, E>) -> Vec<CommandOption> {
-        debug!("Registering group {}", parent.name);
-
-        if let ParentType::Group(map) = &parent.kind {
-            let mut subgroups = Vec::new();
-            for group in map.values() {
-                debug!("Registering subgroup [{}] of [{}]", group.name, parent.name);
-
-                let mut subcommands = Vec::new();
-                for sub in group.subcommands.values() {
-                    subcommands.push(self.create_subcommand(sub))
-                }
-
-                subgroups.push(CommandOption {
-                    kind: CommandOptionType::SubCommandGroup,
-                    name: group.name.to_string(),
-                    description: group.description.to_string(),
-                    options: Some(subcommands),
-                    autocomplete: None,
-                    choices: None,
-                    required: None,
-                    channel_types: None,
-                    description_localizations: None,
-                    max_length: None,
-                    max_value: None,
-                    min_length: None,
-                    min_value: None,
-                    name_localizations: None,
-                });
-            }
-            subgroups
-        } else if let ParentType::Simple(map) = &parent.kind {
-            let mut subcommands = Vec::new();
-            for sub in map.values() {
-                subcommands.push(self.create_subcommand(sub));
-            }
-
-            subcommands
-        } else {
-            unreachable!()
-        }
-    }
-
-    /// Creates a subcommand at the given scope.
-    fn create_subcommand(&self, cmd: &Command<D, T, E>) -> CommandOption {
-        debug!("Registering [{}] subcommand", cmd.name);
-
-        CommandOption {
-            kind: CommandOptionType::SubCommand,
-            name: cmd.name.to_string(),
-            description: cmd.description.to_string(),
-            options: Some(self.arg_options(&cmd.arguments)),
-            autocomplete: None,
-            choices: None,
-            required: None,
-            channel_types: None,
-            description_localizations: None,
-            max_length: None,
-            max_value: None,
-            min_length: None,
-            min_value: None,
-            name_localizations: None,
-        }
     }
 }

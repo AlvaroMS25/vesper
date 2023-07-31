@@ -6,8 +6,6 @@
 
 <strong>This crate is independent from the [twilight](https://twilight.rs/) ecosystem</strong>
 
-
-***The framework is experimental and the API might change.***
 ***
 
 `Zephyrus` is a command framework which uses slash commands, it mainly offers variable argument parsing.
@@ -25,8 +23,8 @@ The framework itself ***doesn't*** spawn any tasks by itself, so you might want 
 
 ```rust
 use std::sync::Arc;
-use futures::StreamExt;
-use twilight_gateway::{Cluster, cluster::Events};
+use futures_util::StreamExt;
+use twilight_gateway::{stream::{self, ShardEventStream}, Config};
 use twilight_http::Client;
 use twilight_model::gateway::event::Event;
 use twilight_model::gateway::Intents;
@@ -53,7 +51,7 @@ async fn hello(ctx: &SlashContext<()>) -> DefaultCommandResult {
     Ok(())
 }
 
-async fn handle_events(http_client: Arc<Client>, mut events: Events, app_id: Id<ApplicationMarker>) {
+async fn handle_events(http_client: Arc<Client>, mut events: ShardEventStream, app_id: Id<ApplicationMarker>) {
     let framework = Arc::new(Framework::builder(http_client, app_id, ())
         .command(hello)
         .build());
@@ -79,15 +77,17 @@ async fn handle_events(http_client: Arc<Client>, mut events: Events, app_id: Id<
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let token = std::env::var("DISCORD_TOKEN")?;
     let app_id = Id::<ApplicationMarker>::new(std::env::var("APP_ID")?.parse()?);
-    let client = Arc::new(Client::builder().token(token.clone()).build());
+    let client = Arc::new(Client::new(token.clone()));
 
-    let (cluster, events) = Cluster::builder(token, Intents::empty())
-        .http_client(Arc::clone(&client))
-        .build()
-        .await?;
+    let config = Config::new(token, Intents::empty());
+    let mut shards = stream::create_recommended(
+        &client,
+        config,
+        |_, builder| builder.build()
+    ).await.unwrap().collect::<Vec<_>>();
+    let mut shard_stream = ShardEventStream::new(shards.iter_mut());
 
-    cluster.up().await;
-    handle_events(client, events, app_id).await;
+    handle_events(client, shard_stream, app_id).await;
 
     Ok(())
 }
@@ -101,13 +101,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
 Every command is an ``async`` function, having always as the first parameter a `&SlashContext<T>`
 
+The framework supports `chat`, `message` and `user` commands, let's take a look at each of them
+
+#### Chat command
 ```rust
-#[command]
+#[command(chat)] // or #[command]
 #[description = "This is the description of the command"]
 async fn command(
     ctx: &SlashContext</* Your type of context*/>, // The context must always be the first parameter.
     #[description = "A description for the argument"] some_arg: String,
-    #[rename = "other_arg"] #[description = "other description"] other: Option<UserId>
+    #[rename = "other_arg"] #[description = "other description"] other: Option<Id<UserMarker>>
 ) -> DefaultCommandResult 
 {
     // Command body
@@ -116,12 +119,102 @@ async fn command(
 }
 ```
 
+#### User command
+```rust
+#[command(user)]
+#[description = "This is the description of the command"]
+async fn command(
+    ctx: &SlashContext</* Your type of context*/>, // The context must always be the first parameter.
+) -> DefaultCommandResult 
+{
+    // Command body
+    
+    Ok(())
+}
+```
+
+#### Message command
+```rust
+#[command(message)]
+#[description = "This is the description of the command"]
+async fn command(
+    ctx: &SlashContext</* Your type of context*/>, // The context must always be the first parameter.
+) -> DefaultCommandResult 
+{
+    // Command body
+    
+    Ok(())
+}
+```
+
+As you can see, the only difference between them is the usage of `#[command({chat, user, message})` and the fact that only
+`chat` commands can take arguments.
+
+The `command` macro defaults to a `chat` command, so if none of `{chat, user, message}` specifiers is used, the macro
+will treat it as a `chat` command, so `#[command]` is equivalent to `#[command(chat)]`.
+
+**If a non-chat command takes arguments in it's handler, discord will allow it, but the framework won't receive any argument.**
+
+The framework also provides a `#[only_guilds]` attribute which will mark the command to only be available on guilds and
+an `#[nsfw]` for nsfw commands.
+
+The same command used before as an example could be marked only for guilds/nsfw the following way:
+```rust
+#[command]
+#[nsfw] // This command is now marked as nsfw
+#[description = "This is the description of the command"]
+async fn command(
+    ctx: &SlashContext</* Your type of context*/>,
+    #[description = "A description for the argument"] some_arg: String,
+    #[rename = "other_arg"] #[description = "other description"] other: Option<Id<UserMarker>>
+) -> DefaultCommandResult 
+{
+    // Command body
+    
+    Ok(())
+}
+
+#[command(chat)]
+#[only_guilds] // This command is now only marked as only available inside of guilds
+#[description = "This is the description of the command"]
+async fn command(
+    ctx: &SlashContext</* Your type of context*/>,
+    #[description = "A description for the argument"] some_arg: String,
+    #[rename = "other_arg"] #[description = "other description"] other: Option<Id<UserMarker>>
+) -> DefaultCommandResult
+{
+    // Command body
+
+    Ok(())
+}
+
+#[command(chat)]
+#[only_guilds] // This command is now marked as nsfw and only available inside guilds
+#[nsfw]
+#[description = "This is the description of the command"]
+async fn command(
+    ctx: &SlashContext</* Your type of context*/>, // The context must always be the first parameter.
+    #[description = "A description for the argument"] some_arg: String,
+    #[rename = "other_arg"] #[description = "other description"] other: Option<Id<UserMarker>>
+) -> DefaultCommandResult
+{
+    // Command body
+
+    Ok(())
+}
+```
+
+
 ### Command functions
 
 Command functions must include a `description` attribute, which will be seen in discord when the user tries to use the command.
 
-The `#[command]` attribute also allows to rename the command by passing the name of the command to the attribute like
-`#[command("Command name here")]`. If the name is not provided, the command will use the function name.
+The `#[command]` macro also allows to rename the command by passing the name of the command to the attribute like
+`#[command({chat, user, message}, name = "Command name here")]`. If the name is not provided, the command will use the 
+function name.
+
+If using the short form of `#[command]` while creating a `chat` command, the rename can be passed directly like
+`#[command("Command name")]`, that is equivalent to `#[command(chat, name = "Command name")]`
 
 ### Command arguments
 
@@ -454,18 +547,16 @@ If you'd like to use Discord's [Bulk Overwrite Global Application Commands](http
 > This requires the `bulk` feature.
 
 ```rust
-type MyFramework = Arc<Framework<()>>;
-
 fn create_framework(
     http_client: Arc<Client>,
     app_id: Id<ApplicationMarker>
-) -> MyFramework {
-    Arc::new(Framework::builder(http_client, app_id, ())
+) -> Framework<()> {
+    Framework::builder(http_client, app_id, ())
         .command(hello)
-        .build())
+        .build()
 }
 
-fn create_lockfile(framework: MyFramework) -> Result<()> {
+fn create_lockfile(framework: Framework<()>) -> Result<()> {
     let commands = framework.twilight_commands();
     let content = serde_json::to_string_pretty(&commands)?;
 
@@ -475,15 +566,3 @@ fn create_lockfile(framework: MyFramework) -> Result<()> {
     Ok(())
 }
 ```
-
-<!-- # Unsupported Message and User Commands
-Zephyrus [doesn't quite support message and user commands](https://github.com/AlvaroMS25/zephyrus/issues/6).  
-
-If you want to:
-- use message/user commands
-- utilize [Bulk Overwrite Global Application Commands]()
-- and utilize a [Commands Lockfile]()  
-
-you'll have to:
-- selectively filter which `INTERACTION_CREATE` [types](https://docs.rs/twilight-model/0.15.2/twilight_model/application/interaction/enum.InteractionType.html) are fed to Zephyrus
-- exclusively use Zephyrus' modal system or your own, not both -->

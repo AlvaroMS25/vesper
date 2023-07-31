@@ -1,10 +1,10 @@
 [package]
 name = "zephyrus-macros"
-version = "0.9.0"
+version = "0.10.0"
 authors = ["Alvaro <62391364+AlvaroMS25@users.noreply.github.com>"]
 edition = "2018"
 description = "Procedural macros used by Zephyrus"
-readme = "README.md"
+readme = "../README.md"
 repository = "https://github.com/AlvaroMS25/zephyrus"
 license = "MIT"
 keywords = ["async", "twilight", "discord", "slash-command"]

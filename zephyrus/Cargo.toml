@@ -1,10 +1,10 @@
 [package]
 name = "zephyrus"
-version = "0.9.0"
+version = "0.10.0"
 authors = ["Alvaro <62391364+AlvaroMS25@users.noreply.github.com>"]
 edition = "2018"
 description = "A slash-command framework meant to be used with twilight"
-readme = "README.md"
+readme = "../README.md"
 repository = "https://github.com/AlvaroMS25/zephyrus"
 license = "MIT"
 keywords = ["async", "twilight", "discord", "slash-command"]
@@ -18,7 +18,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 async-trait = "0.1"
-zephyrus-macros = { path = "../zephyrus-macros", version = "0.9" }
+zephyrus-macros = { path = "../zephyrus-macros", version = ">=0.10" }
 parking_lot = "0.12"
 tracing = "0.1"
 twilight-model = { workspace = true }

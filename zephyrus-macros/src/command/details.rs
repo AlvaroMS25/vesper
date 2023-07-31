@@ -1,8 +1,9 @@
-use darling::FromMeta;
-use darling::export::NestedMeta;
+use darling::{FromMeta, export::NestedMeta};
 use proc_macro2::TokenStream as TokenStream2;
 use quote::ToTokens;
-use syn::Token;
+use syn::spanned::Spanned;
+use syn::{Token, Meta, parse2, Error};
+use syn::parse::Parse;
 use syn::{Attribute, Result};
 use syn::punctuated::Punctuated;
 
@@ -11,6 +12,8 @@ use crate::extractors::{Either, FixedList, FunctionPath, Ident, List};
 #[derive(Default, FromMeta)]
 /// The details of a given command
 pub struct CommandDetails {
+    #[darling(skip, default)]
+    pub input_options: InputOptions,
     /// The description of this command
     pub description: Either<String, FixedList<1, String>>,
     #[darling(default)]
@@ -26,20 +29,25 @@ pub struct CommandDetails {
 }
 
 impl CommandDetails {
-    pub fn parse(attrs: &mut Vec<Attribute>) -> Result<Self> {
+    pub fn parse(input_options: InputOptions, attrs: &mut Vec<Attribute>) -> Result<Self> {
         let meta = attrs
             .drain(..)
             .map(|item| item.meta)
             .map(NestedMeta::Meta)
             .collect::<Vec<_>>();
 
-        Self::from_list(meta.as_slice())
-            .map_err(From::from)
+        let mut this = Self::from_list(meta.as_slice())?;
+
+        this.input_options = input_options;
+        Ok(this)
     }
 }
 
 impl ToTokens for CommandDetails {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
+        let options = &self.input_options;
+        tokens.extend(quote::quote!(#options));
+
         let d = self.description.inner();
         tokens.extend(quote::quote!(.description(#d)));
 
@@ -83,5 +91,89 @@ impl ToTokens for CommandDetails {
             .nsfw(#nsfw)
             .only_guilds(#only_guilds)
         ));
+    }
+}
+
+#[derive(Default, FromMeta)]
+pub struct InputOptions {
+    #[darling(default)]
+    pub chat: bool,
+    #[darling(default)]
+    pub message: bool,
+    #[darling(default)]
+    pub user: bool,
+    #[darling(default)]
+    pub name: String
+}
+
+impl InputOptions {
+    pub fn new(stream: TokenStream2, ident: &syn::Ident) -> Result<Self> {
+        let stream_empty = stream.is_empty();
+        let stream_clone = stream.clone();
+        let span = stream.span();
+        let meta = match parse2::<MetaListParser>(stream) {
+            Ok(m) => m.0,
+            Err(_) if !stream_empty => {
+                return Ok(Self {
+                    chat: true,
+                    name: parse2::<syn::LitStr>(stream_clone)?.value(),
+                    ..Default::default()
+                })
+            },
+            Err(e) => return Err(e)
+        };
+
+        let meta = meta.into_iter()
+            .map(NestedMeta::Meta)
+            .collect::<Vec<_>>();
+
+        let mut this = Self::from_list(&meta)?;
+
+        if !(this.chat || this.message || this.user) {
+            this.chat = true;
+        }
+
+        if this.name.is_empty() {
+            this.name = ident.to_string();
+        }
+
+        if !(this.chat ^ this.message ^ this.user) || (this.chat && this.message && this.user) {
+            return Err(Error::new(
+                span,
+                "Only one of `chat`, `message` or `user` can be selected"
+            ));
+        }
+
+        Ok(this)
+    }
+}
+
+impl ToTokens for InputOptions {
+    fn to_tokens(&self, tokens: &mut TokenStream2) {
+        let name = &self.name;
+        tokens.extend(quote::quote!(.name(#name)));
+
+        if self.chat {
+            return;
+        }
+
+
+        let kind = if self.user {
+            quote::quote!(::zephyrus::twilight_exports::CommandType::User)
+        } else if self.message {
+            quote::quote!(::zephyrus::twilight_exports::CommandType::Message)
+        } else {
+            unreachable!()
+        };
+
+        tokens.extend(quote::quote!(.kind(#kind)));
+    }
+}
+
+pub struct MetaListParser(pub Punctuated<Meta, Token![,]>);
+
+impl Parse for MetaListParser {
+    fn parse(input: syn::parse::ParseStream) -> Result<Self> {
+        Ok(Self(input.call(Punctuated::parse_terminated)?))
     }
 }

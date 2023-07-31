@@ -6,6 +6,8 @@ use syn::{parse2, spanned::Spanned, Block, Error, ItemFn, Result, Signature, Typ
 use {argument::Argument, details::CommandDetails};
 use crate::util;
 
+use self::details::InputOptions;
+
 /// The implementation of the command macro, this macro modifies the provided function body to allow
 /// parsing all function arguments and wraps it into a command struct, registering all command names,
 /// types and descriptions.
@@ -27,12 +29,7 @@ pub fn command(macro_attrs: TokenStream2, input: TokenStream2) -> Result<TokenSt
         ));
     }
 
-    // If we provided a name at macro invocation, use it, if not, use the function's one
-    let name = if macro_attrs.is_empty() {
-        sig.ident.to_string()
-    } else {
-        parse2::<syn::LitStr>(macro_attrs)?.value()
-    };
+    let input_options = InputOptions::new(macro_attrs, &sig.ident)?;
 
     // The name of the function
     let ident = sig.ident.clone();
@@ -49,12 +46,11 @@ pub fn command(macro_attrs: TokenStream2, input: TokenStream2) -> Result<TokenSt
     let command_path = util::get_command_path();
 
     let args = parse_arguments(&mut sig, &mut block, context_ident, &context_type)?;
-    let opts = CommandDetails::parse(&mut attrs)?;
+    let opts = CommandDetails::parse(input_options, &mut attrs)?;
 
     Ok(quote::quote! {
         pub fn #ident() -> #command_path<#context_type, <#output as #returnable>::Ok, <#output as #returnable>::Err> {
             #command_path::new(#fn_ident)
-                .name(#name)
                 #opts
                 #(#args)*
         }
