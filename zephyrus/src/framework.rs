@@ -377,7 +377,7 @@ where
                 _ => ""
             };
 
-            let mut command = CommandBuilder::new(cmd.name, cmd.description, cmd.kind);
+            let mut command = CommandBuilder::new(cmd.name, description, cmd.kind);
 
             // only chat input commands can have options and descriptions
             if cmd.kind == CommandType::ChatInput {
