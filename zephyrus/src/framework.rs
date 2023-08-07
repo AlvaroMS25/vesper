@@ -370,16 +370,26 @@ where
         let mut commands = Vec::new();
 
         for cmd in self.commands.values() {
-            // FIXME: support more than just chat input
+            // only chat input commands can have a description
+            // for other types of commands, the description is ignored, provided as an empty string
+            let description = match cmd.kind {
+                CommandType::ChatInput => cmd.description,
+                _ => ""
+            };
+
             let mut command = CommandBuilder::new(cmd.name, cmd.description, cmd.kind);
 
-            for i in &cmd.arguments {
-                command = command.option(i.as_option());
+            // only chat input commands can have options and descriptions
+            if cmd.kind == CommandType::ChatInput {
+                for i in &cmd.arguments {
+                    command = command.option(i.as_option());
+                }
+                if_some!(&cmd.localized_descriptions, |d| command = command.name_localizations(d));
             }
 
             if_some!(cmd.required_permissions, |p| command = command.default_member_permissions(p));
             if_some!(&cmd.localized_names, |n| command = command.name_localizations(n));
-            if_some!(&cmd.localized_descriptions, |d| command = command.name_localizations(d));
+            
 
             commands.push(command.build());
         }
