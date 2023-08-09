@@ -280,15 +280,6 @@ where
         };
 
         if execute {
-            /*let ExecutionResult::Finished(result) = cmd.execute(&context).await else {
-                return None;
-            };
-            if let Some(after) = &self.after {
-                (after.0)(&context, cmd.name, result).await;
-            } else {
-                return result;
-            }*/
-            
             let mut result = cmd.execute(&context).await;
 
             match (&self.after, result.state) {
