@@ -115,6 +115,7 @@ where
         match interaction.kind {
             InteractionType::ApplicationCommand => {
                 let Some(command) = self.get_command(&mut interaction) else {
+                    self.wake_waiters(interaction);
                     return ProcessResult::CommandNotFound;
                 };
                 self.execute(command, interaction).await.into()
