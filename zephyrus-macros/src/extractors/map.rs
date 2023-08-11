@@ -1,9 +1,7 @@
 use std::{collections::HashMap, hash::Hash, ops::{Deref, DerefMut}};
 
-use darling::{FromMeta, Result, export::NestedMeta, error::Accumulator, Error};
-use proc_macro2::TokenStream;
-use quote::ToTokens;
-use syn::{Meta, Path, punctuated::Punctuated, Token, parse::{Parse, Parser}, parse2};
+use darling::{FromMeta, Result};
+use syn::{Meta, punctuated::Punctuated, Token, parse::{Parse, Parser}};
 
 use crate::extractors::Tuple2;
 

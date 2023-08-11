@@ -11,11 +11,6 @@ impl<K, V, D> Tuple2<K, V, D> {
     pub fn new(k: K, v: V) -> Self {
         Self(k, v, PhantomData)
     }
-
-    pub fn with_delimiter(k: K, v: V, delim: D) -> Self {
-        let _ = delim;
-        Self(k, v, PhantomData)
-    }
 }
 
 impl<K, V, D> Parse for Tuple2<K, V, D>
