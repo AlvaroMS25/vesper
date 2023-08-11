@@ -1,4 +1,4 @@
-use darling::{FromMeta, Result, export::{NestedMeta}, error::Accumulator};
+use darling::{FromMeta, Result, export::NestedMeta, error::Accumulator};
 use quote::ToTokens;
 
 use super::FixedList;
