@@ -1,5 +1,6 @@
 use darling::{FromMeta, Result, export::NestedMeta, error::Accumulator};
 use quote::ToTokens;
+use syn::parse::{Parse, ParseStream, discouraged::Speculative};
 
 use super::FixedList;
 
@@ -84,6 +85,24 @@ impl<A: FromMeta, B: FromMeta> FromMeta for Either<A, B> {
 
     fn from_bool(value: bool) -> Result<Self> {
         try_both!(from_bool, value)
+    }
+}
+
+impl<A, B> Parse for Either<A, B>
+where
+    A: Parse,
+    B: Parse
+{
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let fork = input.fork();
+
+        if let Ok(parsed) = fork.parse::<A>() {
+            input.advance_to(&fork);
+
+            Ok(Either::Left(parsed))
+        } else {
+            Ok(Either::Right(input.parse::<B>()?))
+        }
     }
 }
 
