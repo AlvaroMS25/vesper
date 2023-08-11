@@ -2,20 +2,24 @@ use darling::{FromMeta, export::NestedMeta};
 use proc_macro2::TokenStream as TokenStream2;
 use quote::ToTokens;
 use syn::spanned::Spanned;
-use syn::{Token, Meta, parse2, Error};
+use syn::{Token, Meta, parse2, Error, LitStr};
 use syn::parse::Parse;
 use syn::{Attribute, Result};
 use syn::punctuated::Punctuated;
 
-use crate::extractors::{Either, FixedList, FunctionPath, Ident, List};
+use crate::extractors::{Either, FixedList, FunctionPath, Ident, List, Map};
 
 #[derive(Default, FromMeta)]
 /// The details of a given command
 pub struct CommandDetails {
     #[darling(skip, default)]
     pub input_options: InputOptions,
+    #[darling(default)]
+    pub localized_names: Option<Map<LitStr, LitStr>>,
     /// The description of this command
     pub description: Either<String, FixedList<1, String>>,
+    #[darling(default)]
+    pub localized_descriptions: Option<Map<LitStr, LitStr>>,
     #[darling(default)]
     pub required_permissions: Option<List<Ident>>,
     #[darling(default)]
@@ -48,8 +52,18 @@ impl ToTokens for CommandDetails {
         let options = &self.input_options;
         tokens.extend(quote::quote!(#options));
 
+        if let Some(localized_names) = &self.localized_names {
+            let localized_names = localized_names.pairs();
+            tokens.extend(quote::quote!(.localized_names(vec![#(#localized_names),*])))
+        }
+
         let d = self.description.inner();
         tokens.extend(quote::quote!(.description(#d)));
+        
+        if let Some(localized_descriptions) = &self.localized_descriptions {
+            let localized_descriptions = localized_descriptions.pairs();
+            tokens.extend(quote::quote!(.localized_names(vec![#(#localized_descriptions),*])))
+        }
 
         if let Some(permissions) = &self.required_permissions {
             let mut permission_stream = TokenStream2::new();

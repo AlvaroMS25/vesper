@@ -1,13 +1,15 @@
-use crate::extractors::{Either, FixedList, FunctionPath};
+use crate::extractors::{Either, FixedList, FunctionPath, Map};
 use crate::util;
 use darling::FromMeta;
 use darling::export::NestedMeta;
 use proc_macro2::{Ident, TokenStream};
 use quote::ToTokens;
-use syn::{FnArg, Type};
+use syn::{FnArg, Type, LitStr};
 
 #[derive(FromMeta)]
 pub struct ArgumentAttributes {
+    #[darling(default)]
+    pub localized_names: Option<Map<LitStr, LitStr>>,
     /// The description of this argument, this is a required field parsed with `#[description]`
     /// attribute.
     ///
@@ -20,6 +22,8 @@ pub struct ArgumentAttributes {
     /// e.g.: fn a(#[description = "some here"] arg: String), being the fields inside `description`
     /// this field
     pub description: Either<String, FixedList<1, String>>,
+    #[darling(default)]
+    pub localized_descriptions: Option<Map<LitStr, LitStr>>,
     /// The renaming of this argument, if this option is not specified, the original name will be
     /// used to parse the argument and register the command in discord
     #[darling(rename = "rename")]
