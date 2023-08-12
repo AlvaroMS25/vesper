@@ -62,7 +62,7 @@ impl ToTokens for CommandDetails {
         
         if let Some(localized_descriptions) = &self.localized_descriptions {
             let localized_descriptions = localized_descriptions.pairs();
-            tokens.extend(quote::quote!(.localized_names(vec![#(#localized_descriptions),*])))
+            tokens.extend(quote::quote!(.localized_descriptions(vec![#(#localized_descriptions),*])))
         }
 
         if let Some(permissions) = &self.required_permissions {
