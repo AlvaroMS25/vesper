@@ -6,6 +6,7 @@ pub mod argument;
 pub mod builder;
 pub mod command;
 pub mod context;
+pub mod error;
 pub mod framework;
 pub mod group;
 pub mod hook;
@@ -29,6 +30,7 @@ pub mod prelude {
         argument::ArgumentLimits,
         builder::{FrameworkBuilder, WrappedClient},
         context::{AutocompleteContext, Focused, SlashContext},
+        error::*,
         framework::{DefaultCommandResult, Framework},
         modal::*,
         parse::{Parse, ParseError},

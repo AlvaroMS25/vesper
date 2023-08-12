@@ -24,6 +24,7 @@ tracing = "0.1"
 twilight-model = "0.15"
 twilight-http = "0.15"
 twilight-validate = "0.15"
+thiserror = "1"
 
 # feature: bulk
 twilight-util = { version = "0.15", features = ["builder"], optional = true }
