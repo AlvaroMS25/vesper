@@ -5,8 +5,3 @@ members = [
     "zephyrus-macros"
 ]
 resolver = "2"
-
-[workspace.dependencies]
-twilight-model = "0.15"
-twilight-http = "0.15"
-twilight-validate = "0.15"
