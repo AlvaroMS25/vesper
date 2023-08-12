@@ -154,6 +154,36 @@ impl<D, T, E> Command<D, T, E> {
         self
     }
 
+    pub fn localized_names<I, L>(mut self, iterator: I) -> Self 
+    where
+        I: IntoIterator<Item = (L, L)>,
+        L: ToString
+    {
+        if self.localized_names.is_none() {
+            self.localized_names = Some(Default::default());
+        }
+
+        self.localized_names.as_mut()
+            .unwrap()
+            .extend(iterator.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
+        self
+    }
+
+    pub fn localized_descriptions<I, L>(mut self, iterator: I) -> Self 
+    where
+        I: IntoIterator<Item = (L, L)>,
+        L: ToString
+    {
+        if self.localized_descriptions.is_none() {
+            self.localized_descriptions = Some(Default::default());
+        }
+
+        self.localized_descriptions.as_mut()
+            .unwrap()
+            .extend(iterator.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
+        self
+    }
+
     pub async fn run_checks(&self, context: &SlashContext<'_, D>) -> Result<bool, E> {
         debug!("Running command [{}] checks", self.name);
         for check in &self.checks {

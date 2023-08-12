@@ -2,6 +2,7 @@ use crate::hook::AutocompleteHook;
 use crate::twilight_exports::*;
 use twilight_model::application::command::CommandOptionValue;
 use crate::parse::Parse;
+use std::collections::HashMap;
 
 /// The constraints the arguments impose to the user.
 /// This is normally provided by implementing [parse](crate::parse::Parse) into a type.
@@ -15,8 +16,10 @@ pub struct ArgumentLimits {
 pub struct CommandArgument<D> {
     /// Argument name.
     pub name: &'static str,
+    pub localized_names: Option<HashMap<String, String>>,
     /// Description of the argument.
     pub description: &'static str,
+    pub localized_descriptions: Option<HashMap<String, String>>,
     /// Whether the argument is required.
     pub required: bool,
     /// The type this argument has.
@@ -191,12 +194,44 @@ impl<D: Send + Sync> CommandArgument<D> {
     {
         Self {
             name,
+            localized_names: Default::default(),
             description,
+            localized_descriptions: Default::default(),
             required: T::required(),
             kind: T::kind(),
             choices: T::choices(),
             limits: T::limits(),
             autocomplete
         }
+    }
+
+    pub fn localized_names<I, L>(mut self, iterator: I) -> Self 
+    where
+        I: IntoIterator<Item = (L, L)>,
+        L: ToString
+    {
+        if self.localized_names.is_none() {
+            self.localized_names = Some(Default::default());
+        }
+
+        self.localized_names.as_mut()
+            .unwrap()
+            .extend(iterator.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
+        self
+    }
+
+    pub fn localized_descriptions<I, L>(mut self, iterator: I) -> Self 
+    where
+        I: IntoIterator<Item = (L, L)>,
+        L: ToString
+    {
+        if self.localized_descriptions.is_none() {
+            self.localized_descriptions = Some(Default::default());
+        }
+
+        self.localized_descriptions.as_mut()
+            .unwrap()
+            .extend(iterator.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
+        self
     }
 }
