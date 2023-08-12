@@ -1,7 +1,7 @@
 use std::{future::Future, task::{Context, Poll}};
 use std::pin::Pin;
 use tokio::sync::oneshot::{Sender, Receiver, channel, error::RecvError};
-use crate::{twilight_exports::Interaction};
+use crate::twilight_exports::Interaction;
 
 pub(crate) fn new_pair<F>(fun: F) -> (WaiterWaker, InteractionWaiter)
 where
