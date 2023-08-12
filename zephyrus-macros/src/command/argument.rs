@@ -1,4 +1,5 @@
 use crate::extractors::{Either, FixedList, FunctionPath, Map};
+use crate::optional::Optional;
 use crate::util;
 use darling::FromMeta;
 use darling::export::NestedMeta;
@@ -28,7 +29,7 @@ pub struct ArgumentAttributes {
     /// used to parse the argument and register the command in discord
     #[darling(rename = "rename")]
     pub renaming: Option<Either<String, FixedList<1, String>>>,
-    pub autocomplete: Option<Either<FunctionPath, FixedList<1, FunctionPath>>>,
+    pub autocomplete: Optional<Either<FunctionPath, FixedList<1, FunctionPath>>>,
 }
 
 /// A command argument, and all its details, skipping the first one, which must be an `SlashContext`
@@ -80,23 +81,30 @@ impl ToTokens for Argument<'_> {
             None => self.ident.to_string(),
         };
 
-        if let Some(autocomplete) = &self.attributes.autocomplete {
-            let autocomplete = autocomplete.clone().inner();
-            tokens.extend(quote::quote! {
-                .add_argument(#argument_path::<#tt>::new::<#ty>(
-                    #name,
-                    #des,
-                    Some(#autocomplete())
-                ))
-            });
-        } else {
-            tokens.extend(quote::quote! {
-                .add_argument(#argument_path::<#tt>::new::<#ty>(
-                    #name,
-                    #des,
-                    None
-                ))
-            });
-        }
+        let add_localized_names = self.attributes.localized_names.as_ref().map(|map| {
+            let localized_names = map.pairs();
+            quote::quote!(.localized_names(vec![#(#localized_names),*]))
+        });
+
+        let add_localized_descriptions = self.attributes.localized_descriptions.as_ref().map(|map| {
+            let localized_descriptions = map.pairs();
+            quote::quote!(.localized_descriptions(vec![#(#localized_descriptions),*]))
+        });
+
+        let autocomplete = self.attributes.autocomplete.as_ref().map(|either| {
+            let inner = either.inner();
+            quote::quote!(#inner())
+        });
+
+        tokens.extend(quote::quote! {
+            .add_argument(#argument_path::<#tt>::new::<#ty>(
+                #name,
+                #des,
+                #autocomplete
+            )
+            #add_localized_names
+            #add_localized_descriptions
+            )   
+        });
     }
 }
