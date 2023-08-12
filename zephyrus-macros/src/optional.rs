@@ -54,10 +54,22 @@ impl<T: Clone> Clone for Optional<T> {
 }
 
 impl<T> Optional<T> {
+    pub fn as_ref(&self) -> Optional<&T> {
+        Optional(self.0.as_ref())
+    }
+
+    pub fn as_mut(&mut self) -> Optional<&mut T> {
+        Optional(self.0.as_mut())
+    }
+
     pub fn map<F, R>(self, fun: F) -> Optional<R>
     where
         F: FnOnce(T) -> R
     {
         Optional(self.0.map(fun))
+    }
+
+    pub fn into_inner(self) -> Option<T> {
+        self.0
     }
 }
