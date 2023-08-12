@@ -23,12 +23,13 @@ impl<T: ToTokens> From<Option<T>> for Optional<T> {
 }
 
 impl<T: FromMeta> FromMeta for Optional<T> {
-    fn from_nested_meta(item: &darling::export::NestedMeta) -> darling::Result<Self> {
-        Ok(Self(FromMeta::from_nested_meta(item)?))
+    fn from_meta(item: &syn::Meta) -> darling::Result<Self> {
+        FromMeta::from_meta(item)
+            .map(|s| Self(Some(s)))
     }
 
-    fn from_meta(item: &syn::Meta) -> darling::Result<Self> {
-        Ok(Self(FromMeta::from_meta(item)?))
+    fn from_none() -> Option<Self> {
+        Some(Self(None))
     }
 }
 
