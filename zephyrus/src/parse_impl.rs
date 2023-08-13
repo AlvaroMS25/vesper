@@ -74,12 +74,9 @@ impl<T: Send + Sync> Parse<T> for u64 {
         CommandOptionType::Integer
     }
 
-    fn limits() -> Option<ArgumentLimits> {
+    fn modify_option(option: &mut CommandOption) {
         use twilight_model::application::command::CommandOptionValue;
-        Some(ArgumentLimits {
-            min: Some(CommandOptionValue::Integer(0)),
-            max: None
-        })
+        option.min_value = Some(CommandOptionValue::Integer(0));
     }
 }
 
@@ -101,12 +98,10 @@ impl<T: Send + Sync> Parse<T> for f64 {
         CommandOptionType::Number
     }
 
-    fn limits() -> Option<ArgumentLimits> {
+    fn modify_option(option: &mut CommandOption) {
         use twilight_model::application::command::CommandOptionValue;
-        Some(ArgumentLimits {
-            min: Some(CommandOptionValue::Number(f64::MIN)),
-            max: Some(CommandOptionValue::Number(f64::MAX))
-        })
+        option.min_value = Some(CommandOptionValue::Number(f64::MIN));
+        option.max_value = Some(CommandOptionValue::Number(f64::MAX));
     }
 }
 
@@ -131,12 +126,10 @@ impl<T: Send + Sync> Parse<T> for f32 {
         CommandOptionType::Number
     }
 
-    fn limits() -> Option<ArgumentLimits> {
+    fn modify_option(option: &mut CommandOption) {
         use twilight_model::application::command::CommandOptionValue;
-        Some(ArgumentLimits {
-            min: Some(CommandOptionValue::Number(f32::MIN as f64)),
-            max: Some(CommandOptionValue::Number(f32::MAX as f64))
-        })
+        option.max_value = Some(CommandOptionValue::Number(f32::MAX as f64));
+        option.min_value = Some(CommandOptionValue::Number(f32::MIN as f64));
     }
 }
 
@@ -355,8 +348,8 @@ impl<T: Parse<E>, E: Send + Sync> Parse<E> for Option<T> {
         T::choices()
     }
 
-    fn limits() -> Option<ArgumentLimits> {
-        T::limits()
+    fn modify_option(option: &mut CommandOption) {
+        T::modify_option(option)
     }
 }
 
@@ -389,8 +382,8 @@ where
         T::choices()
     }
 
-    fn limits() -> Option<ArgumentLimits> {
-        T::limits()
+    fn modify_option(option: &mut CommandOption) {
+        T::modify_option(option)
     }
 }
 
@@ -442,18 +435,17 @@ macro_rules! impl_derived_parse {
                     <$prim as Parse<T>>::kind()
                 }
 
-                fn limits() -> Option<ArgumentLimits> {
+                fn modify_option(option: &mut CommandOption) {
                     use twilight_model::application::command::CommandOptionValue;
-                    Some(ArgumentLimits {
-                        min: Some(CommandOptionValue::Integer(<$derived>::MIN as i64)),
-                        max: Some(CommandOptionValue::Integer({
-                            if <$derived>::MAX as i64 > NUMBER_MAX_VALUE {
-                                NUMBER_MAX_VALUE
-                            } else {
-                                <$derived>::MAX as i64
-                            }
-                        }))
-                    })
+                    option.max_value = Some(CommandOptionValue::Integer({
+                        if <$derived>::MAX as i64 > NUMBER_MAX_VALUE {
+                            NUMBER_MAX_VALUE
+                        } else {
+                            <$derived>::MAX as i64
+                        }
+                    }));
+
+                    option.min_value = Some(CommandOptionValue::Integer(<$derived>::MIN as i64));
                 }
             }
         )*)*

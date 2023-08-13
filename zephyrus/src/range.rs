@@ -79,12 +79,10 @@ impl<T, E, const START: i64, const END: i64> Parse<T> for Range<E, START, END>
         E::kind()
     }
 
-    fn limits() -> Option<ArgumentLimits> {
+    fn modify_option(option: &mut CommandOption) {
         use twilight_model::application::command::CommandOptionValue;
-        Some(ArgumentLimits {
-            min: Some(CommandOptionValue::Integer(START)),
-            max: Some(CommandOptionValue::Integer(END))
-        })
+        option.max_value = Some(CommandOptionValue::Integer(END));
+        option.min_value = Some(CommandOptionValue::Integer(START));
     }
 }
 

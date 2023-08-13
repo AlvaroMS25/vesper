@@ -1,4 +1,4 @@
-use crate::{argument::ArgumentLimits, builder::WrappedClient, twilight_exports::*};
+use crate::{builder::WrappedClient, twilight_exports::*};
 use async_trait::async_trait;
 use std::error::Error;
 
@@ -27,9 +27,7 @@ pub trait Parse<T: Send + Sync>: Sized {
         None
     }
 
-    fn limits() -> Option<ArgumentLimits> {
-        None
-    }
+    fn modify_option(_option: &mut CommandOption) {}
 }
 
 /// The errors which can be returned from [Parse](self::Parse) [parse](self::Parse::parse) function.

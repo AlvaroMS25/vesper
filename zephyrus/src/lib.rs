@@ -27,7 +27,6 @@ type BoxFuture<'a, T> = std::pin::Pin<Box<dyn std::future::Future<Output = T> + 
 /// Useful exports to get started quickly
 pub mod prelude {
     pub use crate::{
-        argument::ArgumentLimits,
         builder::{FrameworkBuilder, WrappedClient},
         context::{AutocompleteContext, Focused, SlashContext},
         error::*,
