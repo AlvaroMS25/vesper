@@ -58,6 +58,7 @@ impl<T> Optional<T> {
         Optional(self.0.as_ref())
     }
 
+    #[allow(unused)]
     pub fn as_mut(&mut self) -> Optional<&mut T> {
         Optional(self.0.as_mut())
     }
@@ -69,6 +70,7 @@ impl<T> Optional<T> {
         Optional(self.0.map(fun))
     }
 
+    #[allow(unused)]
     pub fn into_inner(self) -> Option<T> {
         self.0
     }
