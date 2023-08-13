@@ -11,7 +11,7 @@ use crate::{
         CommandOptionValue, GuildMarker, Id, Interaction, InteractionData, InteractionType, InteractionClient, InteractionResponse,
         InteractionResponseType,
     },
-    wait::WaiterWaker
+    wait::WaiterWaker, prelude::CreateCommandError
 };
 use tracing::debug;
 use parking_lot::Mutex;
@@ -318,7 +318,7 @@ where
     pub async fn register_guild_commands(
         &self,
         guild_id: Id<GuildMarker>,
-    ) -> Result<Vec<TwilightCommand>, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<Vec<TwilightCommand>, CreateCommandError> {
         let mut commands = Vec::new();
 
         for cmd in self.commands.values() {
@@ -337,7 +337,7 @@ where
     /// Registers the commands provided to the framework globally.
     pub async fn register_global_commands(
         &self,
-    ) -> Result<Vec<TwilightCommand>, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<Vec<TwilightCommand>, CreateCommandError> {
         let mut commands = Vec::new();
 
         for cmd in self.commands.values() {

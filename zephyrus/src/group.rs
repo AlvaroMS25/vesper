@@ -3,7 +3,7 @@ use twilight_model::{id::{marker::GuildMarker, Id}, application::command::{Comma
 
 use crate::{
     command::{CommandMap, Command},
-    twilight_exports::{Command as TwilightCommand, Permissions},
+    twilight_exports::{Command as TwilightCommand, Permissions}, prelude::CreateCommandError,
 };
 use std::collections::HashMap;
 
@@ -80,7 +80,7 @@ impl<D, T, E> GroupParent<D, T, E> {
         &self,
         http: &InteractionClient<'_>,
         guild: Option<Id<GuildMarker>>
-    ) -> Result<TwilightCommand, Box<dyn std::error::Error + Send + Sync>>
+    ) -> Result<TwilightCommand, CreateCommandError>
     {
         let options = self.get_options();
 

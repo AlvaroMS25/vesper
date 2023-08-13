@@ -1,3 +1,4 @@
+use crate::prelude::CreateCommandError;
 use crate::{
     argument::CommandArgument, context::SlashContext, twilight_exports::Permissions, BoxFuture, framework::ProcessResult,
 };
@@ -200,7 +201,7 @@ impl<D, T, E> Command<D, T, E> {
         &self,
         http: &InteractionClient<'_>,
         guild: Option<Id<GuildMarker>>
-    ) -> Result<TwilightCommand, Box<dyn std::error::Error + Send + Sync>>
+    ) -> Result<TwilightCommand, CreateCommandError>
     {
         let options = self.arguments.iter()
             .map(|a| a.as_option())
@@ -238,7 +239,7 @@ impl<D, T, E> Command<D, T, E> {
         &self,
         http: &InteractionClient<'_>,
         guild: Option<Id<GuildMarker>>
-    ) -> Result<TwilightCommand, Box<dyn std::error::Error + Send + Sync>>
+    ) -> Result<TwilightCommand, CreateCommandError>
     {
         let model = if let Some(id) = guild {
             let mut command = http.create_guild_command(id)
@@ -266,7 +267,7 @@ impl<D, T, E> Command<D, T, E> {
         &self,
         http: &InteractionClient<'_>,
         guild: Option<Id<GuildMarker>>
-    ) -> Result<TwilightCommand, Box<dyn std::error::Error + Send + Sync>>
+    ) -> Result<TwilightCommand, CreateCommandError>
     {
         let model = if let Some(id) = guild {
             let mut command = http.create_guild_command(id)
@@ -294,7 +295,7 @@ impl<D, T, E> Command<D, T, E> {
         &self, 
         http: &InteractionClient<'_>, 
         guild: Option<Id<GuildMarker>>
-    ) -> Result<TwilightCommand, Box<dyn std::error::Error + Send + Sync>>
+    ) -> Result<TwilightCommand, CreateCommandError>
     {
         match self.kind {
             CommandType::ChatInput => self.create_chat_command(http, guild).await,
