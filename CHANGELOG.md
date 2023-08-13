@@ -31,15 +31,27 @@ Log of changes for ``zephyrus`` crate, changes in between versions will be docum
 - Now context can send modals directly
 - Created Modal derive macro to create modals directly
 
-## 0.9.0 -- 2023-02-##
+## 0.9.0 -- 2023-02-24
 
 #### Changes:
 - Updated twilight dependencies to 0.15
 - Now modal derive requires to specify attributes inside a modal one: #[modal(...)]
 - Now parse derive requires to specify attributes inside a parse one: #[parse(...)]
 
+## 0.10.0 -- 2023-07-31
+
+#### Changes:
+- Moved to `darling` crate to create macros
+- Added support for `chat` and `message` commands
+- Added `#[only_guilds]` and `#[nsfw]` attribute for commands
+- Deprecated `SlashContext#acknowledge` in favor of `SlashContext#defer`
+- Added `Framework#twilight_commands` to get a serializable representation of registered commands ([carterhimmel] at [#9] & [#10])
+
 <!-- contributors -->
 [sudo-carson]: https://github.com/sudo-carson
+[carterhimmel]: https://github.com/carterhimmel
 
 <!-- Pull requests -->
 [#3]: https://github.com/AlvaroMS25/zephyrus/pull/3
+[#9]: https://github.com/AlvaroMS25/zephyrus/pull/9
+[#10]: https://github.com/AlvaroMS25/zephyrus/pull/10
