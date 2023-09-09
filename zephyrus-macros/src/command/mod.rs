@@ -45,7 +45,7 @@ pub fn command(macro_attrs: TokenStream2, input: TokenStream2) -> Result<TokenSt
     let extract_output = util::get_hook_macro();
     let command_path = util::get_command_path();
 
-    let args = parse_arguments(&mut sig, &mut block, context_ident, &context_type)?;
+    let args = parse_arguments(&mut sig, &mut block, context_ident, &context_type, input_options.chat)?;
     let opts = CommandDetails::parse(input_options, &mut attrs)?;
 
     Ok(quote::quote! {
@@ -67,12 +67,14 @@ pub fn parse_arguments<'a>(
     block: &mut Block,
     ctx_ident: Ident,
     ctx_type: &'a Type,
+    chat_command: bool
 ) -> Result<Vec<Argument<'a>>> {
     let mut arguments = Vec::new();
     while sig.inputs.len() > 1 {
         arguments.push(Argument::new(
             sig.inputs.pop().unwrap().into_value(),
             ctx_type,
+            chat_command
         )?);
     }
 
@@ -84,7 +86,7 @@ pub fn parse_arguments<'a>(
         arguments
             .iter()
             .map(|s| {
-                if let Some(renaming) = &s.attributes.renaming {
+                if let Some(renaming) = s.attributes.as_ref().map(|a| a.renaming.as_ref()).flatten() {
                     renaming.inner().clone()
                 } else {
                     s.ident.to_string()

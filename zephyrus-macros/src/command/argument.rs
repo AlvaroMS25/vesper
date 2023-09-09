@@ -5,7 +5,8 @@ use darling::FromMeta;
 use darling::export::NestedMeta;
 use proc_macro2::{Ident, TokenStream};
 use quote::ToTokens;
-use syn::{FnArg, Type, LitStr};
+use syn::spanned::Spanned;
+use syn::{FnArg, Type, LitStr, Error};
 
 #[derive(FromMeta)]
 pub struct ArgumentAttributes {
@@ -22,7 +23,8 @@ pub struct ArgumentAttributes {
     ///
     /// e.g.: fn a(#[description = "some here"] arg: String), being the fields inside `description`
     /// this field
-    pub description: Either<String, FixedList<1, String>>,
+    #[darling(default)]
+    pub description: Option<Either<String, FixedList<1, String>>>,
     #[darling(default)]
     pub localized_descriptions: Option<Map<LitStr, LitStr>>,
     /// The renaming of this argument, if this option is not specified, the original name will be
@@ -30,6 +32,8 @@ pub struct ArgumentAttributes {
     #[darling(rename = "rename")]
     pub renaming: Option<Either<String, FixedList<1, String>>>,
     pub autocomplete: Optional<Either<FunctionPath, FixedList<1, FunctionPath>>>,
+    #[darling(default)]
+    pub skip: bool
 }
 
 /// A command argument, and all its details, skipping the first one, which must be an `SlashContext`
@@ -43,13 +47,15 @@ pub struct Argument<'a> {
     ///
     /// e.g.: fn a(arg: String), being `String` this field.
     pub ty: Box<Type>,
-    pub attributes: ArgumentAttributes,
+    /// Argument attributes, only present if the command is a `chat` command.
+    pub attributes: Option<ArgumentAttributes>,
     trait_type: &'a Type,
+    pub chat_command: bool
 }
 
 impl<'a> Argument<'a> {
     /// Creates a new [argument](self::Argument) and parses the required fields
-    pub fn new(mut arg: FnArg, trait_type: &'a Type) -> darling::Result<Self> {
+    pub fn new(mut arg: FnArg, trait_type: &'a Type, chat_command: bool) -> darling::Result<Self> {
         let pat = util::get_pat_mut(&mut arg)?;
         let ident = util::get_ident(&pat.pat)?;
         let ty = pat.ty.clone();
@@ -60,38 +66,61 @@ impl<'a> Argument<'a> {
             .map(NestedMeta::Meta)
             .collect::<Vec<_>>();
 
-        Ok(Self {
+        let this = Self {
             ident,
             ty,
-            attributes: ArgumentAttributes::from_list(attributes.as_slice())?,
-            trait_type
-        })
+            attributes: if chat_command {
+                Some(ArgumentAttributes::from_list(attributes.as_slice())?)
+            } else {
+                None
+            },
+            trait_type,
+            chat_command
+        };
+
+        if chat_command 
+            && !this.attributes.as_ref().map(|a| a.skip).unwrap_or(false)
+            && this.attributes.as_ref().unwrap()
+                .description.as_ref().map(|d| d.inner().is_empty()).unwrap_or(true) 
+        {
+            return Err(Error::new(
+                arg.span(),
+                "Missing `description`"
+            )).map_err(From::from);
+        }
+
+        Ok(this)
     }
 }
 
 impl ToTokens for Argument<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let des = self.attributes.description.inner();
+        if self.attributes.as_ref().map(|a| a.skip).unwrap_or(false) || !self.chat_command {
+            return;
+        }
+        let attributes = self.attributes.as_ref().unwrap();
+
+        let des = attributes.description.as_ref().unwrap().inner();
         let ty = &self.ty;
         let tt = &self.trait_type;
         let argument_path = quote::quote!(::zephyrus::argument::CommandArgument);
 
-        let name = match &self.attributes.renaming {
+        let name = match &attributes.renaming {
             Some(rename) => rename.inner().clone(),
             None => self.ident.to_string(),
         };
 
-        let add_localized_names = self.attributes.localized_names.as_ref().map(|map| {
+        let add_localized_names = attributes.localized_names.as_ref().map(|map| {
             let localized_names = map.pairs();
             quote::quote!(.localized_names(vec![#(#localized_names),*]))
         });
 
-        let add_localized_descriptions = self.attributes.localized_descriptions.as_ref().map(|map| {
+        let add_localized_descriptions = attributes.localized_descriptions.as_ref().map(|map| {
             let localized_descriptions = map.pairs();
             quote::quote!(.localized_descriptions(vec![#(#localized_descriptions),*]))
         });
 
-        let autocomplete = self.attributes.autocomplete.as_ref().map(|either| {
+        let autocomplete = attributes.autocomplete.as_ref().map(|either| {
             let inner = either.inner();
             quote::quote!(#inner())
         });
