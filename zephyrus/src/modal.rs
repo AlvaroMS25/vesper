@@ -2,35 +2,26 @@ use std::future::{Future, IntoFuture};
 use std::marker::PhantomData;
 use std::pin::Pin;
 use std::task::{Context, Poll, ready};
+use thiserror::Error;
 use tokio::sync::oneshot::error::RecvError;
 use twilight_model::channel::message::MessageFlags;
 use crate::context::SlashContext;
 use crate::wait::InteractionWaiter;
 use crate::twilight_exports::{Interaction, InteractionClient, InteractionResponse, InteractionResponseType, InteractionResponseData};
-use std::{error::Error as StdError, fmt::{Debug, Display, Formatter, Result as FmtResult}};
+use std::fmt::{Debug, Formatter};
 use twilight_http::response::marker::EmptyBody;
 use twilight_http::response::ResponseFuture;
 
 
 /// Errors that can be returned when awaiting modals.
-#[derive(Debug)]
+#[derive(Debug, Error)]
+#[error(transparent)]
 pub enum ModalError {
     /// An http error occurred.
-    Http(twilight_http::Error),
+    Http(#[from] twilight_http::Error),
     /// Something failed when using a [waiter](InteractionWaiter)
-    Waiter(RecvError)
+    Waiter(#[from] RecvError)
 }
-
-impl Display for ModalError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        match self {
-            Self::Http(error) => write!(f, "Http error: {}", error),
-            Self::Waiter(error) => write!(f, "Waiter error {}", error)
-        }
-    }
-}
-
-impl StdError for ModalError {}
 
 /// The outcome of `.await`ing a [WaitModal](WaitModal).
 ///
