@@ -2,6 +2,7 @@ use crate::hook::AutocompleteHook;
 use crate::twilight_exports::*;
 use crate::parse::Parse;
 use std::collections::HashMap;
+use crate::if_some;
 
 /// A structure representing a command argument.
 pub struct CommandArgument<D> {
@@ -51,6 +52,9 @@ impl<D> CommandArgument<D> {
             },
             _ => ()
         }
+
+        if_some!(&self.localized_names, |n| option.name_localizations = Some(n.clone()));
+        if_some!(&self.localized_descriptions, |n| option.description_localizations = Some(n.clone()));
 
         option
     }
