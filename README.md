@@ -153,7 +153,7 @@ As you can see, the only difference between them is the usage of `#[command({cha
 The `command` macro defaults to a `chat` command, so if none of `{chat, user, message}` specifiers is used, the macro
 will treat it as a `chat` command, so `#[command]` is equivalent to `#[command(chat)]`.
 
-**If a non-chat command takes arguments in it's handler, discord will allow it, but the framework won't receive any argument.**
+**If a non-chat command takes arguments in it's handler, the framework will allow it, but it won't send them to discord.**
 
 The framework also provides a `#[only_guilds]` attribute which will mark the command to only be available on guilds and
 an `#[nsfw]` for nsfw commands.
