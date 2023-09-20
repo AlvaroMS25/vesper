@@ -39,6 +39,7 @@ pub mod prelude {
     pub use zephyrus_macros::*;
 }
 
+#[doc(hidden)]
 pub mod twilight_exports {
     pub use twilight_http::{
         client::{Client, InteractionClient},
