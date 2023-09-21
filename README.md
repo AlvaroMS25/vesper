@@ -224,7 +224,50 @@ in discord by the user when filling up the command argument.
 As shown in the example, a `#[rename]` attribute can also be used, this will change the name of the argument seen in 
 discord. If the attribute is not used, the argument will have the same name as in the function.
 
-**Important: All command functions must have as the first parameter a `&SlashContext<T>`**
+Arguments can also be marked with a `#[skip]` attribute. Arguments marked as `#[skip]` don't allow`#[description]`
+nor`#[rename]` attributes and won't be seen in discord when using the command, but they will be parsed by the framework. This can
+be useful for extracting data that has nothing to do with the command input from the interaction. Let's take a look
+at an example:
+
+```rust
+pub struct ExtractSomething {
+    //...
+}
+
+#[async_trait]
+impl Parse<T> for ExtractSomething
+where T: Send + Sync
+{
+    async fn parse(
+        http_client: &WrappedClient,
+        data: &T,
+        value: Option<&CommandOptionValue>, // <- will be empty since the option was not sent
+        resolved: Option<&mut CommandInteractionDataResolved>
+    ) -> Result<Self, ParseError>
+    {
+        // implement parsing logic
+    }
+
+    fn kind() -> CommandOptionType {
+        // Since the struct will be marked as #[skip] this method won't be used.
+        unreachable!()
+    }
+}
+
+#[command]
+#[description = "Something here"]
+async fn my_command(
+    ctx: &SlashContext<()>,
+    #[skip] my_extractor: ExtractSomething // This won't be seen on discord, but will be parsed
+) -> DefaultCommandResult
+{
+    // Command logic here
+    Ok(())
+}
+
+```
+
+### **Important: All command functions must have as the first parameter a `&SlashContext<T>`**
 
 ## Setting choices as command arguments
 Choices are a very useful feature of slash commands, allowing the developer to set some choices from which the user has
