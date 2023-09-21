@@ -47,6 +47,11 @@ Log of changes for ``zephyrus`` crate, changes in between versions will be docum
 - Deprecated `SlashContext#acknowledge` in favor of `SlashContext#defer`
 - Added `Framework#twilight_commands` to get a serializable representation of registered commands ([carterhimmel] at [#9] & [#10])
 
+## 0.11.0 -- 2023/09/21
+- Use typed errors
+- Added localizations for command both commands and it's attributes
+- Allow a `#[skip]` attribute for chat command arguments
+
 <!-- contributors -->
 [sudo-carson]: https://github.com/sudo-carson
 [carterhimmel]: https://github.com/carterhimmel
