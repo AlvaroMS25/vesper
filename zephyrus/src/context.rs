@@ -110,8 +110,9 @@ impl<'a, D> SlashContext<'a, D> {
     pub fn interaction_mut(&self) -> &mut Interaction {
         // SAFETY: The interaction itself is owned by the context, so only the thread executing
         // the command / hook can access it at a time.
-        #[allow(cast_ref_to_mut)]
-        unsafe { &mut *(&self.interaction as *const Interaction as *mut Interaction) }
+        let ptr_mut = &self.interaction as *const Interaction as *mut Interaction;
+
+        unsafe { &mut *(ptr_mut) }
     }
 
     /// Acknowledges the interaction, allowing to respond later.
