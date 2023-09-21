@@ -204,6 +204,29 @@ async fn command(
 }
 ```
 
+### Using localizations
+The framework allows localizations in commands and its arguments, to do this we have `#[localized_names]` and `#[localized_descriptions]`
+attributes, these attributes accept a comma separated list of items. Let's take a look at them:
+
+***Locales must be valid, to see them, refer to [Discord locales reference](https://discord.com/developers/docs/reference#locales)***
+```rust
+#[command]
+#[localized_names("en-US" = "US name", "en-GB" = "GB name", "es-ES" = "Spanish name")]
+#[localized_descriptions("en-US" = "US description", "en-GB" = "GB description", "es-ES" = "Spanish description")]
+#[description = "My description"]
+async fn my_localized_command(
+    ctx: &SlashContext</* Data type */>,
+    #[localized_names("en-US" = "US name", "en-GB" = "GB name", "es-ES" = "Spanish name")]
+    #[description = "Another description"]
+    #[localized_descriptions("en-US" = "US description", "en-GB" = "GB description", "es-ES" = "Spanish description")]
+    my_argument: String
+) -> DefaultCommandResult
+{
+    // Code here
+    Ok(())
+}
+```
+
 
 ### Command functions
 
@@ -257,7 +280,7 @@ where T: Send + Sync
 #[command]
 #[description = "Something here"]
 async fn my_command(
-    ctx: &SlashContext<()>,
+    ctx: &SlashContext</* Data type */>,
     #[skip] my_extractor: ExtractSomething // This won't be seen on discord, but will be parsed
 ) -> DefaultCommandResult
 {
