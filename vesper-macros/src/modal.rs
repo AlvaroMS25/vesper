@@ -162,7 +162,7 @@ pub fn modal(input: TokenStream2) -> Result<TokenStream2> {
 
     Ok(quote::quote! {
         const _: () = {
-            use ::zephyrus::{
+            use ::vesper::{
                 context::SlashContext,
                 extract::ModalDataOption,
                 twilight_exports::{
@@ -179,7 +179,7 @@ pub fn modal(input: TokenStream2) -> Result<TokenStream2> {
             };
 
             #[automatically_derived]
-            impl<D> ::zephyrus::modal::Modal<D> for #struct_ident {
+            impl<D> ::vesper::modal::Modal<D> for #struct_ident {
                 fn create(ctx: &SlashContext<'_, D>, custom_id: String) -> InteractionResponse {
                     InteractionResponse {
                         kind: InteractionResponseType::Modal,

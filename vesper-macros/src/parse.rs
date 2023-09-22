@@ -88,7 +88,7 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
 
     Ok(quote::quote! {
         const _: () = {
-            use ::zephyrus::{
+            use ::vesper::{
                 builder::WrappedClient,
                 prelude::async_trait,
                 parse::{Parse, ParseError},

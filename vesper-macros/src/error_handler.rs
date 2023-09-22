@@ -37,7 +37,7 @@ pub fn error_handler(input: TokenStream2) -> Result<TokenStream2> {
     let ty = util::get_context_type(&sig, true)?;
     // Get the hook macro so we can fit the function into a normal fn pointer
     let hook = util::get_hook_macro();
-    let path = quote::quote!(::zephyrus::hook::ErrorHandlerHook);
+    let path = quote::quote!(::vesper::hook::ErrorHandlerHook);
 
     Ok(quote::quote! {
         pub fn #ident() -> #path<#ty, #error_type> {

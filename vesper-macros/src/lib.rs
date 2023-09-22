@@ -112,7 +112,7 @@ pub fn autocomplete(_: TokenStream, input: TokenStream) -> TokenStream {
 /// # Examples:
 ///
 /// ```rust
-/// use zephyrus::prelude::*;
+/// use vesper::prelude::*;
 ///
 /// #[derive(Parse)]
 /// enum Choices {
@@ -128,7 +128,7 @@ pub fn autocomplete(_: TokenStream, input: TokenStream) -> TokenStream {
 ///
 /// # Example:
 /// ```rust
-/// use zephyrus::prelude::*;
+/// use vesper::prelude::*;
 ///
 /// #[derive(Parse)]
 /// enum Choices {
@@ -151,7 +151,7 @@ pub fn parse(input: TokenStream) -> TokenStream {
 /// # Examples
 ///
 /// ```rust
-/// use zephyrus::prelude::*;
+/// use vesper::prelude::*;
 ///
 /// #[derive(Modal)]
 /// struct MyModal {
@@ -188,7 +188,7 @@ pub fn parse(input: TokenStream) -> TokenStream {
 /// ## Example
 ///
 /// ```rust
-/// use zephyrus::prelude::*;
+/// use vesper::prelude::*;
 ///
 /// #[derive(Modal)]
 /// struct MyModal {
@@ -204,7 +204,7 @@ pub fn parse(input: TokenStream) -> TokenStream {
 /// ## Example
 ///
 /// ```rust
-/// use zephyrus::prelude::*;
+/// use vesper::prelude::*;
 ///
 /// #[derive(Modal)]
 /// struct MyModal {
@@ -222,7 +222,7 @@ pub fn parse(input: TokenStream) -> TokenStream {
 /// ## Example
 /// 
 /// ```rust
-/// use zephyrus::prelude::*;
+/// use vesper::prelude::*;
 ///
 /// #[derive(Modal)]
 /// struct MyModal {
@@ -238,7 +238,7 @@ pub fn parse(input: TokenStream) -> TokenStream {
 /// ## Example
 ///
 /// ```rust
-/// use zephyrus::prelude::*;
+/// use vesper::prelude::*;
 ///
 /// #[derive(Modal)]
 /// struct MyModal {

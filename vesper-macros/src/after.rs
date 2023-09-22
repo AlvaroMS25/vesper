@@ -37,12 +37,12 @@ pub fn after(input: TokenStream2) -> Result<TokenStream2> {
 
     let result_type = util::get_path(&util::get_pat(sig.inputs.iter().nth(2).unwrap())?.ty, false)?;
     let returnable = util::get_returnable_trait();
-    let optional = parse2::<Path>(quote::quote!(::zephyrus::extract::Optional))?;
+    let optional = parse2::<Path>(quote::quote!(::vesper::extract::Optional))?;
 
     let ty = util::get_context_type(&sig, true)?;
     // Get the hook macro so we can fit the function into a normal fn pointer
     let hook = util::get_hook_macro();
-    let path = quote::quote!(::zephyrus::hook::AfterHook);
+    let path = quote::quote!(::vesper::hook::AfterHook);
 
     Ok(quote::quote! {
         pub fn #ident()

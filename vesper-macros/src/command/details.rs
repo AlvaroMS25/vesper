@@ -71,10 +71,10 @@ impl ToTokens for CommandDetails {
             for (index, permission) in permissions.iter().enumerate() {
                 if index == 0 || permissions.len() == 1 {
                     permission_stream
-                        .extend(quote::quote!(zephyrus::twilight_exports::Permissions::#permission))
+                        .extend(quote::quote!(vesper::twilight_exports::Permissions::#permission))
                 } else {
                     permission_stream.extend(
-                        quote::quote!( | zephyrus::twilight_exports::Permissions::#permission),
+                        quote::quote!( | vesper::twilight_exports::Permissions::#permission),
                     )
                 }
             }
@@ -173,9 +173,9 @@ impl ToTokens for InputOptions {
 
 
         let kind = if self.user {
-            quote::quote!(::zephyrus::twilight_exports::CommandType::User)
+            quote::quote!(::vesper::twilight_exports::CommandType::User)
         } else if self.message {
-            quote::quote!(::zephyrus::twilight_exports::CommandType::Message)
+            quote::quote!(::vesper::twilight_exports::CommandType::Message)
         } else {
             unreachable!()
         };

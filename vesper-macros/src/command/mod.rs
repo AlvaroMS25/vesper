@@ -101,14 +101,14 @@ pub fn parse_arguments<'a>(
     // Modify the block to parse arguments
     *block = parse2(quote::quote! {{
         let (#(#names),*) = {
-            let __options = ::zephyrus::iter::DataIterator::new(#ctx_ident);
+            let __options = ::vesper::iter::DataIterator::new(#ctx_ident);
 
             #(let (#names, __options) =
                 #ctx_ident.named_parse::<#types>(#renames, __options).await?;)*
 
             if __options.len() > 0 {
                 return Err(
-                    ::zephyrus::prelude::ParseError::StructureMismatch("Too many arguments received".to_string()).into()
+                    ::vesper::prelude::ParseError::StructureMismatch("Too many arguments received".to_string()).into()
                 );
             }
 

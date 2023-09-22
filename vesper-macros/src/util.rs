@@ -6,16 +6,16 @@ use crate::util;
 
 /// Gets the path of the futurize macro
 pub fn get_hook_macro() -> Path {
-    parse2(quote::quote!(::zephyrus::macros::hook)).unwrap()
+    parse2(quote::quote!(::vesper::macros::hook)).unwrap()
 }
 
 /// Gets the path of the command struct used internally by vesper
 pub fn get_command_path() -> Path {
-    parse2(quote::quote!(::zephyrus::command::Command)).unwrap()
+    parse2(quote::quote!(::vesper::command::Command)).unwrap()
 }
 
 pub fn get_returnable_trait() -> Path {
-    parse2(quote::quote!(::zephyrus::extract::Returnable)).unwrap()
+    parse2(quote::quote!(::vesper::extract::Returnable)).unwrap()
 }
 
 /// Gets the path of the given type

@@ -103,7 +103,7 @@ impl ToTokens for Argument<'_> {
         let des = attributes.description.as_ref().unwrap().inner();
         let ty = &self.ty;
         let tt = &self.trait_type;
-        let argument_path = quote::quote!(::zephyrus::argument::CommandArgument);
+        let argument_path = quote::quote!(::vesper::argument::CommandArgument);
 
         let name = match &attributes.renaming {
             Some(rename) => rename.inner().clone(),
