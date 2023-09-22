@@ -20,7 +20,7 @@ pub mod wait;
 #[doc(hidden)]
 pub mod extract;
 
-pub use zephyrus_macros as macros;
+pub use vesper_macros as macros;
 
 type BoxFuture<'a, T> = std::pin::Pin<Box<dyn std::future::Future<Output = T> + Send + 'a>>;
 
