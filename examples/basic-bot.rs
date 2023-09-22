@@ -7,7 +7,7 @@ use twilight_model::gateway::event::Event;
 use twilight_model::gateway::Intents;
 use twilight_model::http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType};
 use twilight_model::id::Id;
-use zephyrus::prelude::*;
+use vesper::prelude::*;
 
 #[tokio::main]
 async fn main() {
