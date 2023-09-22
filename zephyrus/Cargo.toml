@@ -1,5 +1,5 @@
 [package]
-name = "zephyrus"
+name = "vesper"
 version = "0.11.0"
 authors = ["Alvaro <62391364+AlvaroMS25@users.noreply.github.com>"]
 edition = "2018"
