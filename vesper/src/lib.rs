@@ -36,7 +36,7 @@ pub mod prelude {
         range::Range,
     };
     pub use async_trait::async_trait;
-    pub use zephyrus_macros::*;
+    pub use vesper_macros::*;
 }
 
 #[doc(hidden)]
