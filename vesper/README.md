@@ -1,8 +1,6 @@
-# 🎉🎉 We're changing names! 0.11.0 Will be the last release under the name `zephyrus`, next releases (including 0.11.0) will be available under the name `vesper` in crates.io 🎉🎉
+# Vesper Framework [![Crate](https://img.shields.io/crates/v/vesper)](https://crates.io/crates/vesper)
 
-# Zephyrus Framework [![Crate](https://img.shields.io/crates/v/zephyrus)](https://crates.io/crates/zephyrus)
-
-`Zephyrus` is a slash command framework meant to be used by [twilight](https://twilight.rs/)
+`vesper` is a slash command framework meant to be used by [twilight](https://twilight.rs/)
 
 **Note**: The framework is new and might have some problems, all contributions are appreciated
 
@@ -10,7 +8,7 @@
 
 ***
 
-`Zephyrus` is a command framework which uses slash commands, it mainly offers variable argument parsing.
+`vesper` is a command framework which uses slash commands, it mainly offers variable argument parsing.
 
 Parsing is done with the `Parse` trait, so users can implement the parsing of their own types.
 
@@ -33,7 +31,7 @@ use twilight_model::gateway::Intents;
 use twilight_model::http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType};
 use twilight_model::id::Id;
 use twilight_model::id::marker::{ApplicationMarker, GuildMarker};
-use zephyrus::prelude::*;
+use vesper::prelude::*;
 
 #[command]
 #[description = "Says hello"]
@@ -58,7 +56,7 @@ async fn handle_events(http_client: Arc<Client>, mut events: ShardEventStream, a
         .command(hello)
         .build());
 
-    // Zephyrus can register commands in guilds or globally.
+    // vesper can register commands in guilds or globally.
     framework.register_guild_commands(Id::<GuildMarker>::new("<GUILD_ID>")).await.unwrap();
 
     while let Some((_, event)) = events.next().await {
@@ -298,7 +296,7 @@ async fn my_command(
 Choices are a very useful feature of slash commands, allowing the developer to set some choices from which the user has
 to choose.
 
-Zephyrus allows doing this in an easy way, to allow this, a derive macro is provided by the framework. This macro is
+vesper allows doing this in an easy way, to allow this, a derive macro is provided by the framework. This macro is
 named the same way as `Parse` trait and can only be used in enums to define the options. Renaming is also allowed here
 by using the `#[parse(rename)]` attribute and allows to change the option name seen in discord.
 
@@ -325,7 +323,7 @@ async fn choices(
 ```
 
 ## Autocompleting commands
-Autocomplete user input is made easy with `Zephyrus`, just use the `autocomplete` macro provided by the framework.
+Autocomplete user input is made easy with `vesper`, just use the `autocomplete` macro provided by the framework.
 
 Here, take a look at this example. We'll use as the base an empty command like this
 
@@ -378,7 +376,7 @@ async fn super_cool_command(ctx: &SlashContext</* Your type */>) -> DefaultComma
 
 # Command Groups
 
-`Zephyrus` supports both `SubCommands` and `SubCommandGroups` by default.
+`vesper` supports both `SubCommands` and `SubCommandGroups` by default.
 
 To give examples, let's say we have created the following command:
 
@@ -575,7 +573,7 @@ Since version 0.8.0, the framework provides a derive macro to make modals as eas
 an example:
 
 ```rust
-use zephyrus::prelude::*;
+use vesper::prelude::*;
 
 #[derive(Modal, Debug)]
 #[modal(title = "Test modal")]
@@ -606,7 +604,7 @@ shown to the user using the `#[modal(..)}` attributes. To see the full list of a
 
 Currently, only `String` and `Option<String>` fields are allowed.
 
-[macro declaration]: https://github.com/AlvaroMS25/zephyrus/blob/master/zephyrus-macros/src/lib.rs#L150-L236
+[macro declaration]: https://github.com/AlvaroMS25/vesper/blob/master/vesper-macros/src/lib.rs#L150-L236
 
 # Bulk Commands Overwrite
 If you'd like to use Discord's [Bulk Overwrite Global Application Commands](https://discord.com/developers/docs/interactions/application-commands#bulk-overwrite-global-application-commands) enpoint, perhaps in tandem with a [commands lockfile](https://github.com/carterhimmel/thoth/tree/28c3855b1c55c9ed839bbbcbf9e9c704bf2bd81a/.github/workflows/cd_commands.yml), you'll want to use `Framework#twilight_commands`.
