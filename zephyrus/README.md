@@ -1,3 +1,5 @@
+# 🎉🎉 We're changing names! 0.11.0 Will be the last release under the name `zephyrus`, next releases (including 0.11.0) will be available under the name `vesper` in crates.io 🎉🎉
+
 # Zephyrus Framework [![Crate](https://img.shields.io/crates/v/zephyrus)](https://crates.io/crates/zephyrus)
 
 `Zephyrus` is a slash command framework meant to be used by [twilight](https://twilight.rs/)
