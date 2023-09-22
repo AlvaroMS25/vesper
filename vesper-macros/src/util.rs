@@ -9,7 +9,7 @@ pub fn get_hook_macro() -> Path {
     parse2(quote::quote!(::zephyrus::macros::hook)).unwrap()
 }
 
-/// Gets the path of the command struct used internally by zephyrus
+/// Gets the path of the command struct used internally by vesper
 pub fn get_command_path() -> Path {
     parse2(quote::quote!(::zephyrus::command::Command)).unwrap()
 }

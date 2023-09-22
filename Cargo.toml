@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "examples",
-    "zephyrus",
-    "zephyrus-macros"
+    "vesper",
+    "vesper-macros"
 ]
 resolver = "2"
