@@ -113,6 +113,7 @@ impl<'a, D> SlashContext<'a, D> {
         #[allow(invalid_reference_casting)]
         let ptr_mut = &self.interaction as *const Interaction as *mut Interaction;
 
+        #[allow(invalid_reference_casting)]
         unsafe { &mut *(ptr_mut) }
     }
 
