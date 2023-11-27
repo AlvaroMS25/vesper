@@ -8,6 +8,7 @@ use syn::{Attribute, Result};
 use syn::punctuated::Punctuated;
 
 use crate::extractors::{Either, FixedList, FunctionPath, Ident, List, Map};
+use crate::extractors::function_closure::FunctionOrClosure;
 
 #[derive(Default, FromMeta)]
 /// The details of a given command
@@ -19,7 +20,7 @@ pub struct CommandDetails {
     /// The description of this command
     pub description: Either<String, FixedList<1, String>>,
     #[darling(default)]
-    pub localized_descriptions: Option<Map<LitStr, LitStr>>,
+    pub localized_descriptions: Option<Either<FunctionOrClosure, Map<LitStr, LitStr>>>,
     #[darling(default)]
     pub required_permissions: Option<List<Ident>>,
     #[darling(default)]
@@ -61,8 +62,15 @@ impl ToTokens for CommandDetails {
         tokens.extend(quote::quote!(.description(#d)));
         
         if let Some(localized_descriptions) = &self.localized_descriptions {
-            let localized_descriptions = localized_descriptions.pairs();
-            tokens.extend(quote::quote!(.localized_descriptions(vec![#(#localized_descriptions),*])))
+            match localized_descriptions {
+                Either::Right(map) => {
+                    let localized_descriptions = map.pairs();
+                    tokens.extend(quote::quote!(.localized_descriptions(vec![#(#localized_descriptions),*])))
+                },
+                Either::Left(function) => {
+
+                }
+            }
         }
 
         if let Some(permissions) = &self.required_permissions {
