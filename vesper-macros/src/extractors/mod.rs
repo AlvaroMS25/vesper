@@ -1,4 +1,6 @@
+pub mod closure;
 pub mod either;
+pub mod function_closure;
 pub mod function_path;
 pub mod ident;
 pub mod list;
