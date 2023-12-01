@@ -324,11 +324,11 @@ where
         for cmd in self.commands.values() {
             debug!("Registering command [{}]", cmd.name);
 
-            commands.push(cmd.create(&self.interaction_client(), Some(guild_id)).await?);
+            commands.push(cmd.create(&self, &self.interaction_client(), Some(guild_id)).await?);
         }
 
         for group in self.groups.values() {
-            commands.push(group.create(&self.interaction_client(), Some(guild_id)).await?);
+            commands.push(group.create(&self, &self.interaction_client(), Some(guild_id)).await?);
         }
 
         Ok(commands)
@@ -341,11 +341,11 @@ where
         let mut commands = Vec::new();
 
         for cmd in self.commands.values() {
-            commands.push(cmd.create(&self.interaction_client(), None).await?);
+            commands.push(cmd.create(&self, &self.interaction_client(), None).await?);
         }
 
         for group in self.groups.values() {
-            commands.push(group.create(&self.interaction_client(), None).await?);
+            commands.push(group.create(&self, &self.interaction_client(), None).await?);
         }
 
         Ok(commands)
