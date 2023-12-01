@@ -2,9 +2,11 @@ use std::collections::HashMap;
 
 use crate::{prelude::Framework, command::Command, if_some};
 
+type LocalizationsProvider<D, T, E> = fn(&Framework<D, T, E>, &Command<D, T, E>) -> HashMap<String, String>;
+
 pub struct Localizations<D, T, E> {
-    pub map: HashMap<String, String>,
-    pub provider: Option<fn(&Framework<D, T, E>, &Command<D, T, E>) -> HashMap<String, String>>,
+    map: HashMap<String, String>,
+    provider: Option<LocalizationsProvider<D, T, E>>,
 }
 
 impl<D, T, E> Default for Localizations<D, T, E> {
@@ -21,10 +23,15 @@ impl<D, T, E> Localizations<D, T, E> {
         &self,
         framework: &Framework<D, T, E>,
         command: &Command<D, T, E>
-    ) -> HashMap<String, String> {
+    ) -> Option<HashMap<String, String>> {
         let mut localizations = self.map.clone();
         if_some!(&self.provider, |fun| localizations.extend(fun(framework, command)));
-        localizations
+        
+        if localizations.is_empty() {
+            None
+        } else {
+            Some(localizations)
+        }
     }
 
     pub fn extend<Iter, K, V>(&mut self, iter: Iter) 
@@ -34,5 +41,9 @@ impl<D, T, E> Localizations<D, T, E> {
         V: ToString
     {
         self.map.extend(iter.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
+    }
+
+    pub fn set_provider(&mut self, provider: LocalizationsProvider<D, T, E>) {
+        self.provider = Some(provider);
     }
 }
