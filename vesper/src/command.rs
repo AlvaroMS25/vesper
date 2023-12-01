@@ -1,4 +1,5 @@
-use crate::prelude::CreateCommandError;
+use crate::localizations::Localizations;
+use crate::prelude::{CreateCommandError, Framework};
 use crate::{
     argument::CommandArgument, context::SlashContext, twilight_exports::Permissions, BoxFuture, framework::ProcessResult,
 };
@@ -71,10 +72,10 @@ impl<T, E> From<ExecutionResult<T, E>> for ProcessResult<T, E> {
 pub struct Command<D, T, E> {
     /// The name of the command.
     pub name: &'static str,
-    pub localized_names: Option<HashMap<String, String>>,
+    pub localized_names: Localizations<D, T, E>,
     /// The description of the commands.
     pub description: &'static str,
-    pub localized_descriptions: Option<HashMap<String, String>>,
+    pub localized_descriptions: Localizations<D, T, E>,
     pub kind: CommandType,
     /// All the arguments the command requires.
     pub arguments: Vec<CommandArgument<D>>,
@@ -155,32 +156,24 @@ impl<D, T, E> Command<D, T, E> {
         self
     }
 
-    pub fn localized_names<I, L>(mut self, iterator: I) -> Self 
+    pub fn localized_names<I, K, V>(mut self, iterator: I) -> Self 
     where
-        I: IntoIterator<Item = (L, L)>,
-        L: ToString
+        I: IntoIterator<Item = (K, V)>,
+        K: ToString,
+        V: ToString
     {
-        if self.localized_names.is_none() {
-            self.localized_names = Some(Default::default());
-        }
-
-        self.localized_names.as_mut()
-            .unwrap()
+        self.localized_names
             .extend(iterator.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
         self
     }
 
-    pub fn localized_descriptions<I, L>(mut self, iterator: I) -> Self 
+    pub fn localized_descriptions<I, K, V>(mut self, iterator: I) -> Self 
     where
-        I: IntoIterator<Item = (L, L)>,
-        L: ToString
+        I: IntoIterator<Item = (K, V)>,
+        K: ToString,
+        V: ToString
     {
-        if self.localized_descriptions.is_none() {
-            self.localized_descriptions = Some(Default::default());
-        }
-
-        self.localized_descriptions.as_mut()
-            .unwrap()
+        self.localized_descriptions
             .extend(iterator.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
         self
     }
@@ -199,6 +192,7 @@ impl<D, T, E> Command<D, T, E> {
 
     async fn create_chat_command(
         &self,
+        framework: &Framework<D, T, E>,
         http: &InteractionClient<'_>,
         guild: Option<Id<GuildMarker>>
     ) -> Result<TwilightCommand, CreateCommandError>
@@ -207,6 +201,9 @@ impl<D, T, E> Command<D, T, E> {
             .map(|a| a.as_option())
             .collect::<Vec<_>>();
 
+        let name_localizations = self.localized_names.get_localizations(framework, &self);
+        let description_localizations = self.localized_descriptions.get_localizations(framework, &self);
+
         let model = if let Some(id) = guild {
             let mut command = http.create_guild_command(id)
                 .chat_input(self.name, self.description)?
@@ -214,8 +211,8 @@ impl<D, T, E> Command<D, T, E> {
                 .nsfw(self.nsfw);
 
             if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
-            if_some!(&self.localized_names, |n| command = command.name_localizations(n)?);
-            if_some!(&self.localized_descriptions, |d| command = command.description_localizations(d)?);
+            if_some!(&name_localizations, |n| command = command.name_localizations(n)?);
+            if_some!(&description_localizations, |d| command = command.description_localizations(d)?);
 
             command.await?.model().await?
         } else {
@@ -226,8 +223,8 @@ impl<D, T, E> Command<D, T, E> {
                 .dm_permission(!self.only_guilds);
 
             if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
-            if_some!(&self.localized_names, |n| command = command.name_localizations(n)?);
-            if_some!(&self.localized_descriptions, |d| command = command.description_localizations(d)?);
+            if_some!(&name_localizations, |n| command = command.name_localizations(n)?);
+            if_some!(&description_localizations, |d| command = command.description_localizations(d)?);
 
             command.await?.model().await?
         };
@@ -292,13 +289,14 @@ impl<D, T, E> Command<D, T, E> {
     }
 
     pub async fn create(
-        &self, 
+        &self,
+        framework: &Framework<D, T, E>,
         http: &InteractionClient<'_>, 
         guild: Option<Id<GuildMarker>>
     ) -> Result<TwilightCommand, CreateCommandError>
     {
         match self.kind {
-            CommandType::ChatInput => self.create_chat_command(http, guild).await,
+            CommandType::ChatInput => self.create_chat_command(framework, http, guild).await,
             CommandType::Message => self.create_message_command(http, guild).await,
             CommandType::User => self.create_user_command(http, guild).await,
             _ => panic!("Invalid command type")
