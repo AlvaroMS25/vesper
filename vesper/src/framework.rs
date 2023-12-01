@@ -387,7 +387,7 @@ where
         }
 
         for group in self.groups.values() {
-            let options = group.get_options();
+            let options = group.get_options(self);
             // groups are only supported by chat input
             let mut command = CommandBuilder::new(group.name, group.description, CommandType::ChatInput);
 
