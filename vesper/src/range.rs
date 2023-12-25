@@ -10,12 +10,18 @@ mod sealed {
     use super::*;
 
     /// A trait used to specify the values [range](super::Range) can take.
-    pub trait Number: Copy + Debug + Display {}
+    pub trait Number: Copy + Debug + Display {
+        fn as_i64(&self) -> i64;
+    }
 
     macro_rules! number {
         ($($t:ty),* $(,)?) => {
             $(
-                impl Number for $t {}
+                impl Number for $t {
+                    fn as_i64(&self) -> i64 {
+                        *self as i64
+                    }
+                }
             )*
         };
     }
@@ -60,9 +66,7 @@ impl<T, E, const START: i64, const END: i64> Parse<T> for Range<E, START, END>
     ) -> Result<Self, ParseError> {
         let value = E::parse(http_client, data, value, resolved).await?;
 
-        // SAFETY: Both the upper and lower values must be i64's and the Number trait is implemented
-        // only for integer numbers, so casting the value to an i64 is safe to do.
-        let v = unsafe { *(&value as *const E as *const i64) };
+        let v = value.as_i64();
 
         if v < START || v > END {
             return Err(error(
