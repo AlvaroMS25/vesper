@@ -157,7 +157,7 @@ impl<D, T, E> GroupParent<D, T, E> {
             kind: CommandOptionType::SubCommand,
             name: cmd.name.to_string(),
             description: cmd.description.to_string(),
-            options: Some(cmd.arguments.iter().map(|a| a.as_option()).collect()),
+            options: Some(cmd.arguments.iter().map(|a| a.as_option(f, cmd)).collect()),
             autocomplete: None,
             choices: None,
             required: None,

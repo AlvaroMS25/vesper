@@ -1,4 +1,4 @@
-use crate::localizations::Localizations;
+use crate::localizations::{Localizations, LocalizationsProvider};
 use crate::prelude::{CreateCommandError, Framework};
 use crate::{
     argument::CommandArgument, context::SlashContext, twilight_exports::Permissions, BoxFuture, framework::ProcessResult,
@@ -78,7 +78,7 @@ pub struct Command<D, T, E> {
     pub localized_descriptions: Localizations<D, T, E>,
     pub kind: CommandType,
     /// All the arguments the command requires.
-    pub arguments: Vec<CommandArgument<D>>,
+    pub arguments: Vec<CommandArgument<D, T, E>>,
     /// A pointer to this command function.
     pub fun: CommandFn<D, T, E>,
     /// The required permissions to use this command
@@ -126,7 +126,7 @@ impl<D, T, E> Command<D, T, E> {
     }
 
     /// Adds an argument to the command.
-    pub fn add_argument(mut self, arg: CommandArgument<D>) -> Self {
+    pub fn add_argument(mut self, arg: CommandArgument<D, T, E>) -> Self {
         self.arguments.push(arg);
         self
     }
@@ -167,6 +167,11 @@ impl<D, T, E> Command<D, T, E> {
         self
     }
 
+    pub fn localized_names_fn(mut self, fun: LocalizationsProvider<D, T, E>) -> Self {
+        self.localized_names.set_provider(fun);
+        self
+    }
+
     pub fn localized_descriptions<I, K, V>(mut self, iterator: I) -> Self 
     where
         I: IntoIterator<Item = (K, V)>,
@@ -175,6 +180,11 @@ impl<D, T, E> Command<D, T, E> {
     {
         self.localized_descriptions
             .extend(iterator.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
+        self
+    }
+
+    pub fn localized_descriptions_fn(mut self, fun: LocalizationsProvider<D, T, E>) -> Self {
+        self.localized_descriptions.set_provider(fun);
         self
     }
 
@@ -198,7 +208,7 @@ impl<D, T, E> Command<D, T, E> {
     ) -> Result<TwilightCommand, CreateCommandError>
     {
         let options = self.arguments.iter()
-            .map(|a| a.as_option())
+            .map(|a| a.as_option(framework, self))
             .collect::<Vec<_>>();
 
         let name_localizations = self.localized_names.get_localizations(framework, &self);

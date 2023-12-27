@@ -7,11 +7,14 @@ use proc_macro2::{Ident, TokenStream};
 use quote::ToTokens;
 use syn::spanned::Spanned;
 use syn::{FnArg, Type, LitStr, Error};
+use crate::extractors::function_closure::FunctionOrClosure;
 
 #[derive(FromMeta)]
 pub struct ArgumentAttributes {
     #[darling(default)]
     pub localized_names: Option<Map<LitStr, LitStr>>,
+    #[darling(default)]
+    pub localized_names_fn: Option<Either<FunctionOrClosure, FixedList<1, FunctionOrClosure>>>,
     /// The description of this argument, this is a required field parsed with `#[description]`
     /// attribute.
     ///
@@ -27,6 +30,8 @@ pub struct ArgumentAttributes {
     pub description: Option<Either<String, FixedList<1, String>>>,
     #[darling(default)]
     pub localized_descriptions: Option<Map<LitStr, LitStr>>,
+    #[darling(default)]
+    pub localized_descriptions_fn: Option<Either<FunctionOrClosure, FixedList<1, FunctionOrClosure>>>,
     /// The renaming of this argument, if this option is not specified, the original name will be
     /// used to parse the argument and register the command in discord
     #[darling(rename = "rename")]
@@ -49,6 +54,7 @@ pub struct Argument<'a> {
     pub ty: Box<Type>,
     /// Argument attributes, only present if the command is a `chat` command.
     pub attributes: Option<ArgumentAttributes>,
+    #[allow(unused)]
     trait_type: &'a Type,
     pub chat_command: bool
 }
@@ -102,7 +108,6 @@ impl ToTokens for Argument<'_> {
 
         let des = attributes.description.as_ref().unwrap().inner();
         let ty = &self.ty;
-        let tt = &self.trait_type;
         let argument_path = quote::quote!(::vesper::argument::CommandArgument);
 
         let name = match &attributes.renaming {
@@ -115,9 +120,19 @@ impl ToTokens for Argument<'_> {
             quote::quote!(.localized_names(vec![#(#localized_names),*]))
         });
 
+        let add_localized_names_fn = attributes.localized_names_fn.as_ref().map(|fun| {
+            let fun = fun.inner();
+            quote::quote!(.localized_names_fn(#fun))
+        });
+
         let add_localized_descriptions = attributes.localized_descriptions.as_ref().map(|map| {
             let localized_descriptions = map.pairs();
             quote::quote!(.localized_descriptions(vec![#(#localized_descriptions),*]))
+        });
+
+        let add_localized_descriptions_fn = attributes.localized_descriptions_fn.as_ref().map(|fun| {
+            let fun = fun.inner();
+            quote::quote!(.localized_descriptions_fn(#fun))
         });
 
         let autocomplete = attributes.autocomplete.as_ref().map(|either| {
@@ -126,13 +141,15 @@ impl ToTokens for Argument<'_> {
         });
 
         tokens.extend(quote::quote! {
-            .add_argument(#argument_path::<#tt>::new::<#ty>(
+            .add_argument(#argument_path::<_, _, _>::new::<#ty>(
                 #name,
                 #des,
                 #autocomplete
             )
             #add_localized_names
+            #add_localized_names_fn
             #add_localized_descriptions
+            #add_localized_descriptions_fn
             )   
         });
     }

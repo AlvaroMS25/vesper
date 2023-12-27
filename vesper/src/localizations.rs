@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{prelude::Framework, command::Command, if_some};
 
-type LocalizationsProvider<D, T, E> = fn(&Framework<D, T, E>, &Command<D, T, E>) -> HashMap<String, String>;
+pub(crate) type LocalizationsProvider<D, T, E> = fn(&Framework<D, T, E>, &Command<D, T, E>) -> HashMap<String, String>;
 
 pub struct Localizations<D, T, E> {
     map: HashMap<String, String>,

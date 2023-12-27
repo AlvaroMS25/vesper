@@ -5,7 +5,7 @@ use syn::{Expr, ExprClosure};
 use syn::parse::{Parse, ParseStream};
 
 #[derive(Clone)]
-pub struct Closure(ExprClosure);
+pub struct Closure(pub ExprClosure);
 
 impl FromMeta for Closure {
     fn from_expr(expr: &Expr) -> darling::Result<Self> {

@@ -174,7 +174,7 @@ where
     fn get_autocomplete_argument(
         &self,
         interaction: &Interaction,
-    ) -> Option<(&str, &CommandArgument<D>, Focused)> {
+    ) -> Option<(&str, &CommandArgument<D, T, E>, Focused)> {
         let data = extract!(interaction.data.as_ref().unwrap() => ApplicationCommand);
         if !data.options.is_empty() {
             let outer = data.options.get(0)?;
@@ -374,13 +374,19 @@ where
             // only chat input commands can have options and descriptions
             if cmd.kind == CommandType::ChatInput {
                 for i in &cmd.arguments {
-                    command = command.option(i.as_option());
+                    command = command.option(i.as_option(self, cmd));
                 }
-                if_some!(&cmd.localized_descriptions, |d| command = command.name_localizations(d));
+                //if_some!(&cmd.localized_descriptions, |d| command = command.name_localizations(d));
+                if let Some(localizations) = cmd.localized_descriptions.get_localizations(self, cmd) {
+                    command = command.description_localizations(localizations);
+                }
             }
 
             if_some!(cmd.required_permissions, |p| command = command.default_member_permissions(p));
-            if_some!(&cmd.localized_names, |n| command = command.name_localizations(n));
+            //if_some!(&cmd.localized_names, |n| command = command.name_localizations(n));
+            if let Some(localizations) = cmd.localized_names.get_localizations(self, cmd) {
+                command = command.name_localizations(localizations);
+            }
             
 
             commands.push(command.build());

@@ -17,10 +17,14 @@ pub struct CommandDetails {
     pub input_options: InputOptions,
     #[darling(default)]
     pub localized_names: Option<Map<LitStr, LitStr>>,
+    #[darling(default)]
+    pub localized_names_fn: Option<Either<FunctionOrClosure, FixedList<1, FunctionOrClosure>>>,
     /// The description of this command
     pub description: Either<String, FixedList<1, String>>,
     #[darling(default)]
-    pub localized_descriptions: Option<Either<FunctionOrClosure, Map<LitStr, LitStr>>>,
+    pub localized_descriptions: Option<Map<LitStr, LitStr>>,
+    #[darling(default)]
+    pub localized_descriptions_fn: Option<Either<FunctionOrClosure, FixedList<1, FunctionOrClosure>>>,
     #[darling(default)]
     pub required_permissions: Option<List<Ident>>,
     #[darling(default)]
@@ -58,19 +62,22 @@ impl ToTokens for CommandDetails {
             tokens.extend(quote::quote!(.localized_names(vec![#(#localized_names),*])))
         }
 
+        if let Some(fun) = &self.localized_names_fn {
+            let fun = fun.inner();
+            tokens.extend(quote::quote!(.localized_names_fn(#fun)));
+        }
+
         let d = self.description.inner();
         tokens.extend(quote::quote!(.description(#d)));
         
         if let Some(localized_descriptions) = &self.localized_descriptions {
-            match localized_descriptions {
-                Either::Right(map) => {
-                    let localized_descriptions = map.pairs();
-                    tokens.extend(quote::quote!(.localized_descriptions(vec![#(#localized_descriptions),*])))
-                },
-                Either::Left(function) => {
+            let localized_descriptions = localized_descriptions.pairs();
+            tokens.extend(quote::quote!(.localized_descriptions(vec![#(#localized_descriptions),*])));
+        }
 
-                }
-            }
+        if let Some(fun) = &self.localized_descriptions_fn {
+            let fun = fun.inner();
+            tokens.extend(quote::quote!(.localized_descriptions_fn(#fun)));
         }
 
         if let Some(permissions) = &self.required_permissions {
