@@ -1,17 +1,17 @@
 use crate::hook::AutocompleteHook;
 use crate::twilight_exports::*;
 use crate::parse::Parse;
-use std::collections::HashMap;
-use crate::if_some;
+use crate::localizations::{Localizations, LocalizationsProvider};
+use crate::prelude::Framework;
 
 /// A structure representing a command argument.
-pub struct CommandArgument<D> {
+pub struct CommandArgument<D, T, E> {
     /// Argument name.
     pub name: &'static str,
-    pub localized_names: Option<HashMap<String, String>>,
+    pub localized_names: Localizations<D, T, E>,
     /// Description of the argument.
     pub description: &'static str,
-    pub localized_descriptions: Option<HashMap<String, String>>,
+    pub localized_descriptions: Localizations<D, T, E>,
     /// Whether the argument is required.
     pub required: bool,
     /// The type this argument has.
@@ -23,22 +23,22 @@ pub struct CommandArgument<D> {
     pub modify_fn: fn(&mut CommandOption)
 }
 
-impl<D> CommandArgument<D> {
+impl<D, T, E> CommandArgument<D, T, E> {
     /// Converts the argument into a twilight's [command option](CommandOption)
-    pub fn as_option(&self) -> CommandOption {
+    pub fn as_option(&self, f: &Framework<D, T, E>, c: &crate::command::Command<D, T, E>) -> CommandOption {
         let mut option = CommandOption {
             autocomplete: None,
             channel_types: None,
             choices: None,
             description: self.description.to_string(),
-            description_localizations: None,
+            description_localizations: self.localized_descriptions.get_localizations(f, c),
             kind: self.kind,
             max_length: None,
             max_value: None,
             min_length: None,
             min_value: None,
             name: self.name.to_string(),
-            name_localizations: None,
+            name_localizations: self.localized_names.get_localizations(f, c),
             options: None,
             required: Some(self.required)
         };
@@ -53,15 +53,12 @@ impl<D> CommandArgument<D> {
             _ => ()
         }
 
-        if_some!(&self.localized_names, |n| option.name_localizations = Some(n.clone()));
-        if_some!(&self.localized_descriptions, |n| option.description_localizations = Some(n.clone()));
-
         option
     }
 }
 
-impl<D: Send + Sync> CommandArgument<D> {
-    pub fn new<T: Parse<D>>(
+impl<D: Send + Sync, T, E> CommandArgument<D, T, E> {
+    pub fn new<Arg: Parse<D>>(
         name: &'static str,
         description: &'static str,
         autocomplete: Option<AutocompleteHook<D>>
@@ -72,41 +69,43 @@ impl<D: Send + Sync> CommandArgument<D> {
             localized_names: Default::default(),
             description,
             localized_descriptions: Default::default(),
-            required: T::required(),
-            kind: T::kind(),
-            choices: T::choices(),
+            required: Arg::required(),
+            kind: Arg::kind(),
+            choices: Arg::choices(),
             autocomplete,
-            modify_fn: T::modify_option
+            modify_fn: Arg::modify_option
         }
     }
 
-    pub fn localized_names<I, L>(mut self, iterator: I) -> Self 
+    pub fn localized_names<I, K, V>(mut self, iterator: I) -> Self
     where
-        I: IntoIterator<Item = (L, L)>,
-        L: ToString
+        I: IntoIterator<Item = (K, V)>,
+        K: ToString,
+        V: ToString
     {
-        if self.localized_names.is_none() {
-            self.localized_names = Some(Default::default());
-        }
-
-        self.localized_names.as_mut()
-            .unwrap()
+        self.localized_names
             .extend(iterator.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
         self
     }
 
-    pub fn localized_descriptions<I, L>(mut self, iterator: I) -> Self 
-    where
-        I: IntoIterator<Item = (L, L)>,
-        L: ToString
-    {
-        if self.localized_descriptions.is_none() {
-            self.localized_descriptions = Some(Default::default());
-        }
+    pub fn localized_names_fn(mut self, fun: LocalizationsProvider<D, T, E>) -> Self {
+        self.localized_names.set_provider(fun);
+        self
+    }
 
-        self.localized_descriptions.as_mut()
-            .unwrap()
+    pub fn localized_descriptions<I, K, V>(mut self, iterator: I) -> Self
+    where
+        I: IntoIterator<Item = (K, V)>,
+        K: ToString,
+        V: ToString
+    {
+        self.localized_descriptions
             .extend(iterator.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
+        self
+    }
+
+    pub fn localized_descriptions_fn(mut self, fun: LocalizationsProvider<D, T, E>) -> Self {
+        self.localized_descriptions.set_provider(fun);
         self
     }
 }

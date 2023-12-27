@@ -3,7 +3,7 @@ use twilight_model::{id::{marker::GuildMarker, Id}, application::command::{Comma
 
 use crate::{
     command::{CommandMap, Command},
-    twilight_exports::{Command as TwilightCommand, Permissions}, prelude::CreateCommandError,
+    twilight_exports::{Command as TwilightCommand, Permissions}, prelude::{CreateCommandError, Framework},
 };
 use std::collections::HashMap;
 
@@ -78,11 +78,12 @@ pub struct CommandGroup<D, T, E> {
 impl<D, T, E> GroupParent<D, T, E> {
     pub async fn create(
         &self,
+        framework: &Framework<D, T, E>,
         http: &InteractionClient<'_>,
         guild: Option<Id<GuildMarker>>
     ) -> Result<TwilightCommand, CreateCommandError>
     {
-        let options = self.get_options();
+        let options = self.get_options(framework);
 
         let model = if let Some(id) = guild {
             let mut command = http.create_guild_command(id)
@@ -108,7 +109,7 @@ impl<D, T, E> GroupParent<D, T, E> {
         Ok(model)
     }
 
-    pub fn get_options(&self) -> Vec<CommandOption> {
+    pub fn get_options(&self, f: &Framework<D, T, E>) -> Vec<CommandOption> {
         if let ParentType::Group(groups) = &self.kind {
             let mut subgroups = Vec::new();
 
@@ -116,7 +117,7 @@ impl<D, T, E> GroupParent<D, T, E> {
                 let mut subcommands = Vec::new();
 
                 for cmd in group.subcommands.values() {
-                    subcommands.push(self.create_subcommand(cmd));
+                    subcommands.push(self.create_subcommand(f, cmd));
                 }
 
                 subgroups.push(CommandOption {
@@ -141,7 +142,7 @@ impl<D, T, E> GroupParent<D, T, E> {
         } else if let ParentType::Simple(commands) = &self.kind {
             let mut subcommands = Vec::new();
             for sub in commands.values() {
-                subcommands.push(self.create_subcommand(sub));
+                subcommands.push(self.create_subcommand(f, sub));
             }
 
             subcommands
@@ -151,22 +152,22 @@ impl<D, T, E> GroupParent<D, T, E> {
     }
 
     /// Creates a subcommand at the given scope.
-    fn create_subcommand(&self, cmd: &Command<D, T, E>) -> CommandOption {
+    fn create_subcommand(&self, f: &Framework<D, T, E>, cmd: &Command<D, T, E>) -> CommandOption {
         CommandOption {
             kind: CommandOptionType::SubCommand,
             name: cmd.name.to_string(),
             description: cmd.description.to_string(),
-            options: Some(cmd.arguments.iter().map(|a| a.as_option()).collect()),
+            options: Some(cmd.arguments.iter().map(|a| a.as_option(f, cmd)).collect()),
             autocomplete: None,
             choices: None,
             required: None,
             channel_types: None,
-            description_localizations: None,
+            description_localizations: cmd.localized_descriptions.get_localizations(f, cmd),
             max_length: None,
             max_value: None,
             min_length: None,
             min_value: None,
-            name_localizations: None,
+            name_localizations: cmd.localized_names.get_localizations(f, cmd),
         }
     }
 }

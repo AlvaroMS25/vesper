@@ -174,7 +174,7 @@ where
     fn get_autocomplete_argument(
         &self,
         interaction: &Interaction,
-    ) -> Option<(&str, &CommandArgument<D>, Focused)> {
+    ) -> Option<(&str, &CommandArgument<D, T, E>, Focused)> {
         let data = extract!(interaction.data.as_ref().unwrap() => ApplicationCommand);
         if !data.options.is_empty() {
             let outer = data.options.get(0)?;
@@ -324,11 +324,11 @@ where
         for cmd in self.commands.values() {
             debug!("Registering command [{}]", cmd.name);
 
-            commands.push(cmd.create(&self.interaction_client(), Some(guild_id)).await?);
+            commands.push(cmd.create(&self, &self.interaction_client(), Some(guild_id)).await?);
         }
 
         for group in self.groups.values() {
-            commands.push(group.create(&self.interaction_client(), Some(guild_id)).await?);
+            commands.push(group.create(&self, &self.interaction_client(), Some(guild_id)).await?);
         }
 
         Ok(commands)
@@ -341,11 +341,11 @@ where
         let mut commands = Vec::new();
 
         for cmd in self.commands.values() {
-            commands.push(cmd.create(&self.interaction_client(), None).await?);
+            commands.push(cmd.create(&self, &self.interaction_client(), None).await?);
         }
 
         for group in self.groups.values() {
-            commands.push(group.create(&self.interaction_client(), None).await?);
+            commands.push(group.create(&self, &self.interaction_client(), None).await?);
         }
 
         Ok(commands)
@@ -374,20 +374,26 @@ where
             // only chat input commands can have options and descriptions
             if cmd.kind == CommandType::ChatInput {
                 for i in &cmd.arguments {
-                    command = command.option(i.as_option());
+                    command = command.option(i.as_option(self, cmd));
                 }
-                if_some!(&cmd.localized_descriptions, |d| command = command.name_localizations(d));
+                //if_some!(&cmd.localized_descriptions, |d| command = command.name_localizations(d));
+                if let Some(localizations) = cmd.localized_descriptions.get_localizations(self, cmd) {
+                    command = command.description_localizations(localizations);
+                }
             }
 
             if_some!(cmd.required_permissions, |p| command = command.default_member_permissions(p));
-            if_some!(&cmd.localized_names, |n| command = command.name_localizations(n));
+            //if_some!(&cmd.localized_names, |n| command = command.name_localizations(n));
+            if let Some(localizations) = cmd.localized_names.get_localizations(self, cmd) {
+                command = command.name_localizations(localizations);
+            }
             
 
             commands.push(command.build());
         }
 
         for group in self.groups.values() {
-            let options = group.get_options();
+            let options = group.get_options(self);
             // groups are only supported by chat input
             let mut command = CommandBuilder::new(group.name, group.description, CommandType::ChatInput);
 

@@ -11,6 +11,7 @@ pub mod framework;
 pub mod group;
 pub mod hook;
 pub mod iter;
+pub mod localizations;
 pub mod modal;
 pub mod parse;
 pub mod range;
