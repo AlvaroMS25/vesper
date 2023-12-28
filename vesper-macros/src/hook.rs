@@ -1,5 +1,5 @@
 use proc_macro2::{Span, TokenStream as TokenStream2};
-use syn::{parse2, spanned::Spanned, Error, FnArg, GenericParam, ItemFn, Lifetime, LifetimeParam, Result, ReturnType, Type, Token};
+use syn::{parse2, spanned::Spanned, Error, FnArg, GenericParam, ItemFn, Lifetime, LifetimeParam, Result, ReturnType, Type};
 
 /// The implementation of the hook macro, this macro takes the given function and changes
 /// it's output and body to fit into a `Pin<Box<dyn Future>>`
