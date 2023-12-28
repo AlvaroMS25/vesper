@@ -112,35 +112,6 @@ impl<'a, D> SlashContext<'a, D> {
         &mut self.interaction
     }
 
-    /// Acknowledges the interaction, allowing to respond later.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use vesper::prelude::*;
-    ///
-    /// #[command]
-    /// #[description = "My command description"]
-    /// async fn my_command(ctx: &mut SlashContext<()>) -> DefaultCommandResult {
-    ///     // Acknowledge the interaction, this way we can respond to it later.
-    ///     ctx.defer(false).await?;
-    ///
-    ///     // Do something here
-    ///
-    ///     // Now edit the interaction
-    ///     ctx.interaction_client.update_response(&ctx.interaction.token)
-    ///         .content(Some("Hello world"))
-    ///         .unwrap()
-    ///         .await?;
-    ///
-    ///     Ok(())
-    /// }
-    /// ```
-    #[deprecated(since = "0.10.0", note = "Use `.defer` instead")]
-    pub async fn acknowledge(&self) -> Result<(), twilight_http::Error> {
-        self.defer(false).await
-    }
-
     /// Defers the interaction, allowing to respond later.
     ///
     /// # Examples
