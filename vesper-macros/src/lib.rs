@@ -34,8 +34,8 @@ pub fn hook(_: TokenStream, input: TokenStream) -> TokenStream {
 ///
 /// This macro can be used two ways:
 ///
-///     - Without arguments, as #[command], which takes the caller function name as the name of the command.
-///     - Providing the name, as #[command("command name")] which takes the provided name as the command name.
+///     - Without arguments, as #[command], which takes the caller function name as the name of the command, and the type will be chat.
+///     - Providing the type and name, as #[command({chat, user, message}, name = "command name")] which takes the provided name as the command name.
 ///
 /// When marking a function with this attribute macro, you **must** provide a description of the
 /// command that will be seen on discord when using the command, this is made by adding a
@@ -61,6 +61,31 @@ pub fn hook(_: TokenStream, input: TokenStream) -> TokenStream {
 /// Adding an `autocomplete` attribute is also optional, but it allows the developer to complete
 /// the user's input for an argument. This attribute is used the same way as the description one,
 /// but it *must* point to a function marked with the `#[autocomplete]` attribute macro.
+///
+/// ### Localizations:
+/// Localizations can be applied in both commands and their arguments, for that, the `#[localized_names]` and
+/// `#[localized_descriptions]` attributes can be used, these accept a comma separated list of key-value items:
+/// ```
+/// #[command]
+/// #[localized_names("en-US" = "US name", "en-GB" = "GB name", "es-ES" = "Spanish name")]
+/// #[description("My description")]
+/// #[localized_descriptions("en-US" = "US description", "en-GB" = "GB description", "es-ES" = "Spanish description")]
+/// async fn my_command(context: &mut SlashContext</* Context type */>) -> DefaultCommandResult {
+///     // code here...
+/// }
+/// ```
+/// Localizations can also be provided using closures or function pointers, to do that we have the `#[localized_names_fn]`
+/// and `#[localized_descriptions_fn]`
+///
+/// These functions must have the following signature:
+/// ```
+/// fn(&Framework<D, T, E>, &Command<D, T, E>) -> HashMap<String, String>
+/// ```
+///
+/// To use a closure directly, the attribute has to be used like `#[localized_{names/descriptions}_fn = |f, c| ...]`
+///
+/// To use a function pointer, the attribute accepts both `#[localized_{names/descriptions}_fn = myfn]` and
+/// `#[localized_{names/descriptions}_fn(myfn)]`
 ///
 /// ## Specifying required permissions
 ///
