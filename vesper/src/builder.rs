@@ -6,16 +6,13 @@ use crate::{
     twilight_exports::{ApplicationMarker, Client, CommandType, Id, Permissions},
     parse::ParseError
 };
-#[cfg(feature = "rc")]
-use std::rc::Rc;
+
 use std::{ops::Deref, sync::Arc};
 
 /// A wrapper around twilight's http client allowing the user to decide how to provide it to the framework.
 #[allow(clippy::large_enum_variant)]
 pub enum WrappedClient {
     Arc(Arc<Client>),
-    #[cfg(feature = "rc")]
-    Rc(Rc<Client>),
     Raw(Client),
     Boxed(Box<dyn Deref<Target = Client> + Send + Sync>),
 }
@@ -25,8 +22,6 @@ impl WrappedClient {
     pub fn inner(&self) -> &Client {
         match self {
             Self::Arc(c) => c,
-            #[cfg(feature = "rc")]
-            Self::Rc(c) => &c,
             Self::Raw(c) => c,
             Self::Boxed(b) => b,
         }
@@ -65,13 +60,6 @@ impl From<Arc<Client>> for WrappedClient {
 impl From<Box<dyn Deref<Target = Client> + Send + Sync>> for WrappedClient {
     fn from(c: Box<dyn Deref<Target = Client> + Send + Sync>) -> Self {
         Self::Boxed(c)
-    }
-}
-
-#[cfg(feature = "rc")]
-impl From<Rc<Client>> for WrappedClient {
-    fn from(c: Rc<Client>) -> Self {
-        WrappedClient::Rc(c)
     }
 }
 

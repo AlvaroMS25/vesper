@@ -35,7 +35,6 @@ default-features = false
 features = ["sync"]
 
 [features]
-rc = []
 bulk = ["dep:twilight-util"]
 
 [dev-dependencies]
