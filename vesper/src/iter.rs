@@ -9,8 +9,8 @@ pub struct DataIterator<'a> {
 
 impl<'a> DataIterator<'a> {
     /// Creates a new [iterator](self::DataIterator) at the given source.
-    pub fn new<T>(ctx: &'a SlashContext<'a, T>) -> Self {
-        let data = match ctx.interaction_mut().data.as_mut().unwrap() {
+    pub fn new<T>(ctx: &'a mut SlashContext<'a, T>) -> Self {
+        let data = match ctx.interaction.data.as_mut().unwrap() {
             InteractionData::ApplicationCommand(data) => data,
             _ => unreachable!()
         };
