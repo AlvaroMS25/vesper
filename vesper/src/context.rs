@@ -107,14 +107,9 @@ impl<'a, D> SlashContext<'a, D> {
     }
 
     /// Gets a mutable reference to the [interaction](Interaction) owned by the context.
-    pub fn interaction_mut(&self) -> &mut Interaction {
-        // SAFETY: The interaction itself is owned by the context, so only the thread executing
-        // the command / hook can access it at a time.
-        #[allow(invalid_reference_casting)]
-        let ptr_mut = &self.interaction as *const Interaction as *mut Interaction;
-
-        #[allow(invalid_reference_casting)]
-        unsafe { &mut *(ptr_mut) }
+    #[deprecated(since = "0.12.0", note = "Use the `interaction` field directly with a mutable context")]
+    pub fn interaction_mut(&mut self) -> &mut Interaction {
+        &mut self.interaction
     }
 
     /// Acknowledges the interaction, allowing to respond later.
