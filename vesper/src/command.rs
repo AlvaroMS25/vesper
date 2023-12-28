@@ -11,7 +11,7 @@ use crate::hook::{CheckHook, ErrorHandlerHook};
 use crate::twilight_exports::{Command as TwilightCommand, CommandType};
 
 /// A pointer to a command function.
-pub(crate) type CommandFn<D, T, E> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, Result<T, E>>;
+pub(crate) type CommandFn<D, T, E> = for<'cx, 'data> fn(&'cx mut SlashContext<'data, D>) -> BoxFuture<'cx, Result<T, E>>;
 /// A map of [commands](self::Command).
 pub type CommandMap<D, T, E> = HashMap<&'static str, Command<D, T, E>>;
 
@@ -188,7 +188,7 @@ impl<D, T, E> Command<D, T, E> {
         self
     }
 
-    pub async fn run_checks(&self, context: &SlashContext<'_, D>) -> Result<bool, E> {
+    pub async fn run_checks<'cx, 'data: 'cx>(&self, context: &'cx mut SlashContext<'data, D>) -> Result<bool, E> {
         debug!("Running command [{}] checks", self.name);
         for check in &self.checks {
             if !(check.0)(context).await? {
@@ -313,7 +313,7 @@ impl<D, T, E> Command<D, T, E> {
         }
     }
 
-    pub async fn execute(&self, context: &SlashContext<'_, D>) -> ExecutionResult<T, E> {
+    pub async fn execute<'cx, 'data: 'cx>(&self, context: &'cx mut SlashContext<'data, D>) -> ExecutionResult<T, E> {
         let state;
         let location;
 

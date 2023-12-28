@@ -1,8 +1,5 @@
 use proc_macro2::{Span, TokenStream as TokenStream2};
-use syn::{
-    parse2, spanned::Spanned, Error, FnArg, GenericParam, ItemFn, Lifetime, LifetimeParam, Result,
-    ReturnType, Type,
-};
+use syn::{parse2, spanned::Spanned, Error, FnArg, GenericParam, ItemFn, Lifetime, LifetimeParam, Result, ReturnType, Type, Token};
 
 /// The implementation of the hook macro, this macro takes the given function and changes
 /// it's output and body to fit into a `Pin<Box<dyn Future>>`
@@ -54,11 +51,15 @@ pub fn hook(input: TokenStream2) -> Result<TokenStream2> {
         }),
     );
 
-    for i in sig.inputs.iter_mut() {
+    for (idx, i) in sig.inputs.iter_mut().enumerate() {
         if let FnArg::Typed(kind) = i {
             // If the argument is a reference, assign the previous defined lifetime to it
             if let Type::Reference(ty) = &mut *kind.ty {
                 ty.lifetime = Some(Lifetime::new("'future", Span::call_site()));
+
+                if idx == 0 && ty.mutability.is_none() { // The first context must be a mutable reference.
+                    ty.mutability = Some(parse2(quote::quote!(mut))?);
+                }
             }
         }
     }

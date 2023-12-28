@@ -265,7 +265,7 @@ where
 
     /// Executes the given [command](crate::command::Command) and the hooks.
     async fn execute(&self, cmd: &Command<D, T, E>, interaction: Interaction) -> ExecutionResult<T, E> {
-        let context = SlashContext::new(
+        let mut context = SlashContext::new(
             &self.http_client,
             self.application_id,
             &self.data,
@@ -274,13 +274,13 @@ where
         );
 
         let execute = if let Some(before) = &self.before {
-            (before.0)(&context, cmd.name).await
+            (before.0)(&mut context, cmd.name).await
         } else {
             true
         };
 
         if execute {
-            let mut result = cmd.execute(&context).await;
+            let mut result = cmd.execute(&mut context).await;
 
             match (&self.after, result.state) {
                 // The after hook should not execute if any check returned false or a check errored.
@@ -300,7 +300,7 @@ where
                         None
                     };
 
-                    (after.0)(&context, cmd.name, output).await;
+                    (after.0)(&mut context, cmd.name, output).await;
                 },
                 _ => ()
             }

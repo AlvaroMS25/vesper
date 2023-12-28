@@ -5,7 +5,7 @@ use crate::{
 };
 
 /// A pointer to a function used by [before hook](BeforeHook).
-pub(crate) type BeforeFn<D> = for<'a> fn(&'a SlashContext<'a, D>, &'a str) -> BoxFuture<'a, bool>;
+pub(crate) type BeforeFn<D> = for<'cx, 'data> fn(&'cx mut SlashContext<'data, D>, &'cx str) -> BoxFuture<'cx, bool>;
 /// A hook executed before a command execution.
 ///
 /// The function must have as parameters a [slash context] reference and a `&str`
@@ -16,7 +16,7 @@ pub struct BeforeHook<D>(pub BeforeFn<D>);
 
 /// A pointer to a function used by [after hook](AfterHook).
 pub(crate) type AfterFn<D, T, E> =
-    for<'a> fn(&'a SlashContext<'a, D>, &'a str, Option<Result<T, E>>) -> BoxFuture<'a, ()>;
+    for<'cx, 'data> fn(&'cx mut SlashContext<'data, D>, &'cx str, Option<Result<T, E>>) -> BoxFuture<'cx, ()>;
 
 /// A hook executed after a command execution.
 ///
@@ -33,7 +33,7 @@ pub struct AfterHook<D, T, E>(pub AfterFn<D, T, E>);
 
 /// A pointer to a function used by [autocomplete hook](AutocompleteHook).
 pub(crate) type AutocompleteFn<D> =
-    for<'a> fn(AutocompleteContext<'a, D>) -> BoxFuture<'a, Option<InteractionResponseData>>;
+    for<'data> fn(AutocompleteContext<'data, D>) -> BoxFuture<'data, Option<InteractionResponseData>>;
 
 /// A hook used to suggest inputs to the command caller.
 ///
@@ -41,14 +41,14 @@ pub(crate) type AutocompleteFn<D> =
 pub struct AutocompleteHook<D>(pub AutocompleteFn<D>);
 
 /// A pointer to a function used by the [check hook](CheckHook).
-pub(crate) type CheckFn<D, E> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, Result<bool, E>>;
+pub(crate) type CheckFn<D, E> = for<'cx, 'data> fn(&'cx mut SlashContext<'data, D>) -> BoxFuture<'cx, Result<bool, E>>;
 
 /// A hook that can be used to determine if a command should execute or not depending
 /// on the given function.
 pub struct CheckHook<D, E>(pub CheckFn<D, E>);
 
 /// A pointer to a function used by the [error handler hook](ErrorHandlerHook).
-pub(crate) type ErrorHandlerFn<D, E> = for<'a> fn(&'a SlashContext<'a, D>, E) -> BoxFuture<'a, ()>;
+pub(crate) type ErrorHandlerFn<D, E> = for<'cx, 'data> fn(&'cx mut SlashContext<'data, D>, E) -> BoxFuture<'cx, ()>;
 
 /// A hook that can be used to handle errors of an specific command and its checks.
 ///
