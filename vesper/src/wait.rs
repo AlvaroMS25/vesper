@@ -27,11 +27,11 @@ where
 /// # Examples:
 ///
 /// ```rust
-/// use zephyrus::prelude::{command, SlashContext, DefaultCommandResult};
+/// use vesper::prelude::{command, SlashContext, DefaultCommandResult};
 ///
 /// #[command]
 /// #[description = "My Command"]
-/// async fn my_command(ctx: &SlashContext<()>) -> DefaultCommandResult {
+/// async fn my_command(ctx: &mut SlashContext<()>) -> DefaultCommandResult {
 ///     ctx.defer(false).await?;
 ///     let interaction = ctx.wait_interaction(|interaction| {
 ///         // predicate here

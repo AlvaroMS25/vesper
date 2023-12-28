@@ -117,13 +117,13 @@ impl<'a, D> SlashContext<'a, D> {
     /// # Examples
     ///
     /// ```rust
-    /// use zephyrus::prelude::*;
+    /// use vesper::prelude::*;
     ///
     /// #[command]
     /// #[description = "My command description"]
-    /// async fn my_command(ctx: &SlashContext<()>) -> DefaultCommandResult {
+    /// async fn my_command(ctx: &mut SlashContext<()>) -> DefaultCommandResult {
     ///     // Acknowledge the interaction, this way we can respond to it later.
-    ///     ctx.acknowledge().await?;
+    ///     ctx.defer(false).await?;
     ///
     ///     // Do something here
     ///
@@ -146,7 +146,7 @@ impl<'a, D> SlashContext<'a, D> {
     /// # Examples
     ///
     /// ```rust
-    /// use zephyrus::prelude::*;
+    /// use vesper::prelude::*;
     ///
     /// #[command]
     /// #[description = "My command description"]
@@ -194,7 +194,7 @@ impl<'a, D> SlashContext<'a, D> {
     /// # Examples
     ///
     /// ```rust
-    /// use zephyrus::prelude::*;
+    /// use vesper::prelude::*;
     ///
     /// #[derive(Debug, Modal)]
     /// struct MyModal {

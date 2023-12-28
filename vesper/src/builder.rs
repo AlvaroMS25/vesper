@@ -122,12 +122,12 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use zephyrus::prelude::*;
+    /// use vesper::prelude::*;
     /// use twilight_http::Client;
     /// use twilight_model::id::Id;
     ///
     /// #[before]
-    /// async fn before_hook(ctx: &SlashContext<()>, command_name: &str) -> bool {
+    /// async fn before_hook(ctx: &mut SlashContext<()>, command_name: &str) -> bool {
     ///     println!("Executing command {command_name}");
     ///     true
     /// }
@@ -153,12 +153,12 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use zephyrus::prelude::*;
+    /// use vesper::prelude::*;
     /// use twilight_http::Client;
     /// use twilight_model::id::Id;
     ///
     /// #[after]
-    /// async fn after_hook(ctx: &SlashContext<()>, command_name: &str, _: Option<DefaultCommandResult>) {
+    /// async fn after_hook(ctx: &mut SlashContext<()>, command_name: &str, _: Option<DefaultCommandResult>) {
     ///     println!("Command {command_name} finished execution");
     /// }
     ///
@@ -183,13 +183,13 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use zephyrus::prelude::*;
+    /// use vesper::prelude::*;
     /// use twilight_http::Client;
     /// use twilight_model::id::Id;
     ///
     ///#[command]
     ///#[description = "Says Hello world!"]
-    ///async fn hello_world(ctx: &SlashContext<()>) -> DefaultCommandResult {
+    ///async fn hello_world(ctx: &mut SlashContext<()>) -> DefaultCommandResult {
     ///     ctx.defer(false).await?;
     ///     ctx.interaction_client.update_response(&ctx.interaction.token)
     ///         .content(Some("Hello world!"))
