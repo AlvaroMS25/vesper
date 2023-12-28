@@ -251,33 +251,3 @@ impl<'a, D> SlashContext<'a, D> {
         waiter
     }
 }
-
-impl<'a, D: Send + Sync> SlashContext<'a, D> {
-    #[doc(hidden)]
-    pub async fn named_parse<T>(
-        &self,
-        name: &str,
-        mut iterator: DataIterator<'a>
-    ) -> Result<(T, DataIterator<'a>), ParseError>
-    where
-        T: Parse<D>
-    {
-        let value = iterator.get(|s| s.name == name);
-        if value.is_none() && <T as Parse<D>>::required() {
-            Err(ParseError::StructureMismatch(format!("{} not found", name)).into())
-        } else {
-            Ok((T::parse(
-                self.http_client,
-                self.data,
-                value.map(|it| &it.value),
-                iterator.resolved())
-                .await
-                .map_err(|mut err| {
-                    if let ParseError::Parsing { argument_name, .. } = &mut err {
-                        *argument_name = name.to_string();
-                    }
-                    err
-                })?, iterator))
-        }
-    }
-}

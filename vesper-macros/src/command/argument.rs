@@ -43,7 +43,7 @@ pub struct ArgumentAttributes {
 
 /// A command argument, and all its details, skipping the first one, which must be an `SlashContext`
 /// reference.
-pub struct Argument<'a> {
+pub struct Argument {
     /// The name of this argument at function definition.
     ///
     /// e.g.: fn a(arg: String), being `arg` this field.
@@ -54,14 +54,15 @@ pub struct Argument<'a> {
     pub ty: Box<Type>,
     /// Argument attributes, only present if the command is a `chat` command.
     pub attributes: Option<ArgumentAttributes>,
-    #[allow(unused)]
-    trait_type: &'a Type,
     pub chat_command: bool
 }
 
-impl<'a> Argument<'a> {
+impl Argument {
     /// Creates a new [argument](self::Argument) and parses the required fields
-    pub fn new(mut arg: FnArg, trait_type: &'a Type, chat_command: bool) -> darling::Result<Self> {
+    pub fn new(
+        mut arg: FnArg,
+        chat_command: bool
+    ) -> darling::Result<Self> {
         let pat = util::get_pat_mut(&mut arg)?;
         let ident = util::get_ident(&pat.pat)?;
         let ty = pat.ty.clone();
@@ -80,7 +81,6 @@ impl<'a> Argument<'a> {
             } else {
                 None
             },
-            trait_type,
             chat_command
         };
 
@@ -99,7 +99,7 @@ impl<'a> Argument<'a> {
     }
 }
 
-impl ToTokens for Argument<'_> {
+impl ToTokens for Argument {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         if self.attributes.as_ref().map(|a| a.skip).unwrap_or(false) || !self.chat_command {
             return;
@@ -141,7 +141,7 @@ impl ToTokens for Argument<'_> {
         });
 
         tokens.extend(quote::quote! {
-            .add_argument(#argument_path::<_, _, _>::new::<#ty>(
+            .add_argument(#argument_path::new::<#ty>(
                 #name,
                 #des,
                 #autocomplete

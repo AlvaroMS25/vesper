@@ -45,7 +45,12 @@ pub fn command(macro_attrs: TokenStream2, input: TokenStream2) -> Result<TokenSt
     let extract_output = util::get_hook_macro();
     let command_path = util::get_command_path();
 
-    let args = parse_arguments(&mut sig, &mut block, context_ident, &context_type, input_options.chat)?;
+    let args = parse_arguments(
+        &mut sig,
+        &mut block,
+        context_ident,
+        input_options.chat
+    )?;
     let opts = CommandDetails::parse(input_options, &mut attrs)?;
 
     Ok(quote::quote! {
@@ -62,18 +67,16 @@ pub fn command(macro_attrs: TokenStream2, input: TokenStream2) -> Result<TokenSt
 }
 
 /// Prepares the given function to parse the required arguments
-pub fn parse_arguments<'a>(
+pub fn parse_arguments(
     sig: &mut Signature,
     block: &mut Block,
     ctx_ident: Ident,
-    ctx_type: &'a Type,
     chat_command: bool
-) -> Result<Vec<Argument<'a>>> {
+) -> Result<Vec<Argument>> {
     let mut arguments = Vec::new();
     while sig.inputs.len() > 1 {
         arguments.push(Argument::new(
             sig.inputs.pop().unwrap().into_value(),
-            ctx_type,
             chat_command
         )?);
     }
@@ -101,10 +104,10 @@ pub fn parse_arguments<'a>(
     // Modify the block to parse arguments
     *block = parse2(quote::quote! {{
         let (#(#names),*) = {
-            let __options = ::vesper::iter::DataIterator::new(#ctx_ident);
+            let mut __options = ::vesper::iter::DataIterator::new(#ctx_ident);
 
-            #(let (#names, __options) =
-                #ctx_ident.named_parse::<#types>(#renames, __options).await?;)*
+            #(let #names =
+                __options.named_parse::<#types>(#renames).await?;)*
 
             if __options.len() > 0 {
                 return Err(
