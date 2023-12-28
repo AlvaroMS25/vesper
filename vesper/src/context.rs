@@ -6,9 +6,7 @@ use crate::{
     wait::{InteractionWaiter, WaiterWaker}
 };
 
-use crate::iter::DataIterator;
 use crate::modal::{Modal, WaitModal};
-use crate::parse::{Parse, ParseError};
 use crate::wait::new_pair;
 
 /// The value the user is providing to the argument.
