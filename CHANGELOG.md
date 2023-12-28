@@ -52,11 +52,17 @@ Log of changes for ``zephyrus`` crate, changes in between versions will be docum
 - Added localizations for command both commands and it's attributes
 - Allow a `#[skip]` attribute for chat command arguments
 
+## 0.12.0 -- 2023/12/28
+- Fixed an error when dereferencing a misaligned pointer on `Range` type ([iciivy] at [#13])
+- Allow providing localizations using closures and function pointers
+
 <!-- contributors -->
 [sudo-carson]: https://github.com/sudo-carson
 [carterhimmel]: https://github.com/carterhimmel
+[iciivy]: https://github.com/iciivy
 
 <!-- Pull requests -->
 [#3]: https://github.com/AlvaroMS25/zephyrus/pull/3
 [#9]: https://github.com/AlvaroMS25/zephyrus/pull/9
 [#10]: https://github.com/AlvaroMS25/zephyrus/pull/10
+[#13]: https://github.com/AlvaroMS25/vesper/pull/13
