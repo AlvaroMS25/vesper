@@ -35,7 +35,7 @@ use vesper::prelude::*;
 
 #[command]
 #[description = "Says hello"]
-async fn hello(ctx: &SlashContext<()>) -> DefaultCommandResult {
+async fn hello(ctx: &mut SlashContext<()>) -> DefaultCommandResult {
     ctx.interaction_client.create_response(
         ctx.interaction.id,
         &ctx.interaction.token,
@@ -99,7 +99,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
 # Creating commands
 
-Every command is an ``async`` function, having always as the first parameter a `&SlashContext<T>`
+Every command is an ``async`` function, having always as the first parameter a `&mut SlashContext<T>` 
+
+**Non mutable references can also be used, but the framework will convert them to mutable under the hood.**
 
 The framework supports `chat`, `message` and `user` commands, let's take a look at each of them
 
@@ -108,7 +110,7 @@ The framework supports `chat`, `message` and `user` commands, let's take a look 
 #[command(chat)] // or #[command]
 #[description = "This is the description of the command"]
 async fn command(
-    ctx: &SlashContext</* Your type of context*/>, // The context must always be the first parameter.
+    ctx: &mut SlashContext</* Your type of context*/>, // The context must always be the first parameter.
     #[description = "A description for the argument"] some_arg: String,
     #[rename = "other_arg"] #[description = "other description"] other: Option<Id<UserMarker>>
 ) -> DefaultCommandResult 
@@ -124,7 +126,7 @@ async fn command(
 #[command(user)]
 #[description = "This is the description of the command"]
 async fn command(
-    ctx: &SlashContext</* Your type of context*/>, // The context must always be the first parameter.
+    ctx: &mut SlashContext</* Your type of context*/>, // The context must always be the first parameter.
 ) -> DefaultCommandResult 
 {
     // Command body
@@ -138,7 +140,7 @@ async fn command(
 #[command(message)]
 #[description = "This is the description of the command"]
 async fn command(
-    ctx: &SlashContext</* Your type of context*/>, // The context must always be the first parameter.
+    ctx: &mut SlashContext</* Your type of context*/>, // The context must always be the first parameter.
 ) -> DefaultCommandResult 
 {
     // Command body
@@ -164,7 +166,7 @@ The same command used before as an example could be marked only for guilds/nsfw 
 #[nsfw] // This command is now marked as nsfw
 #[description = "This is the description of the command"]
 async fn command(
-    ctx: &SlashContext</* Your type of context*/>,
+    ctx: &mut SlashContext</* Your type of context*/>,
     #[description = "A description for the argument"] some_arg: String,
     #[rename = "other_arg"] #[description = "other description"] other: Option<Id<UserMarker>>
 ) -> DefaultCommandResult 
@@ -178,7 +180,7 @@ async fn command(
 #[only_guilds] // This command is now only marked as only available inside of guilds
 #[description = "This is the description of the command"]
 async fn command(
-    ctx: &SlashContext</* Your type of context*/>,
+    ctx: &mut SlashContext</* Your type of context*/>,
     #[description = "A description for the argument"] some_arg: String,
     #[rename = "other_arg"] #[description = "other description"] other: Option<Id<UserMarker>>
 ) -> DefaultCommandResult
@@ -193,7 +195,7 @@ async fn command(
 #[nsfw]
 #[description = "This is the description of the command"]
 async fn command(
-    ctx: &SlashContext</* Your type of context*/>, // The context must always be the first parameter.
+    ctx: &mut SlashContext</* Your type of context*/>, // The context must always be the first parameter.
     #[description = "A description for the argument"] some_arg: String,
     #[rename = "other_arg"] #[description = "other description"] other: Option<Id<UserMarker>>
 ) -> DefaultCommandResult
@@ -215,7 +217,7 @@ attributes, these attributes accept a comma separated list of items. Let's take 
 #[localized_descriptions("en-US" = "US description", "en-GB" = "GB description", "es-ES" = "Spanish description")]
 #[description = "My description"]
 async fn my_localized_command(
-    ctx: &SlashContext</* Data type */>,
+    ctx: &mut SlashContext</* Data type */>,
     #[localized_names("en-US" = "US name", "en-GB" = "GB name", "es-ES" = "Spanish name")]
     #[description = "Another description"]
     #[localized_descriptions("en-US" = "US description", "en-GB" = "GB description", "es-ES" = "Spanish description")]
@@ -226,6 +228,20 @@ async fn my_localized_command(
     Ok(())
 }
 ```
+### Using functions to provide localizations
+
+Localizations can also be set by using a closure or function pointer, for this we have the `#[localized_names_fn]` and
+`#[localized_descriptions_fn]`.
+
+These functions must have the following signature:
+```rust
+fn(&Framework<D, T, E>, &Command<D, T, E>) -> HashMap<String, String>
+```
+
+To use a closure directly, the attribute has to be used like `#[localized_{names/descriptions}_fn = |f, c| ...]`
+
+To use a function pointer, the attribute accepts both `#[localized_{names/descriptions}_fn = myfn]` and
+`#[localized_{names/descriptions}_fn(myfn)]`
 
 
 ### Command functions
@@ -280,7 +296,7 @@ where T: Send + Sync
 #[command]
 #[description = "Something here"]
 async fn my_command(
-    ctx: &SlashContext</* Data type */>,
+    ctx: &mut SlashContext</* Data type */>,
     #[skip] my_extractor: ExtractSomething // This won't be seen on discord, but will be parsed
 ) -> DefaultCommandResult
 {
@@ -290,7 +306,7 @@ async fn my_command(
 
 ```
 
-### **Important: All command functions must have as the first parameter a `&SlashContext<T>`**
+### **Important: All command functions must have as the first parameter a `&mut SlashContext<T>`**
 
 ## Setting choices as command arguments
 Choices are a very useful feature of slash commands, allowing the developer to set some choices from which the user has
@@ -313,7 +329,7 @@ enum Choices {
 #[command]
 #[description = "Some description"]
 async fn choices(
-    ctx: &SlashContext<()>,
+    ctx: &mut SlashContext<()>,
     #[description = "Some description"] choice: Choices
 ) -> DefaultCommandResult
 {
@@ -331,7 +347,7 @@ Here, take a look at this example. We'll use as the base an empty command like t
 #[command]
 #[description = "Some description"]
 async fn some_command(
-    ctx: &SlashCommand</* Some type */>,
+    ctx: &mut SlashCommand</* Some type */>,
     #[autocomplete = "autocomplete_arg"] #[description = "Some description"] arg: String
 ) -> DefaultCommandResult
 {
@@ -366,7 +382,7 @@ a look at what it would look like to create a command needing `MANAGE_CHANNELS` 
 #[command]
 #[description = "Super cool command"]
 #[required_permissions(MANAGE_CHANNELS, MANAGE_MESSAGES)]
-async fn super_cool_command(ctx: &SlashContext</* Your type */>) -> DefaultCommandResult {
+async fn super_cool_command(ctx: &mut SlashContext</* Your type */>) -> DefaultCommandResult {
     // Body
     Ok(())
 }
@@ -383,7 +399,7 @@ To give examples, let's say we have created the following command:
 ```rust
 #[command]
 #[description = "Something"]
-async fn something(ctx: &SlashContext</* Your type */>) -> DefaultCommandResult {
+async fn something(ctx: &mut SlashContext</* Your type */>) -> DefaultCommandResult {
     // Command block
     Ok(())
 }
@@ -445,7 +461,7 @@ The before hook is triggered before the command and has to return a `bool` indic
 
 ```rust
 #[before]
-async fn before_hook(ctx: &SlashContext</*Your type*/>, command_name: &str) -> bool {
+async fn before_hook(ctx: &mut SlashContext</*Your type*/>, command_name: &str) -> bool {
     // Do something
     
     true // <- if we return true, the command will be executed normally.
@@ -459,7 +475,7 @@ The after hook is triggered after the command execution, and it provides the res
 
 ```rust
 #[after]
-async fn after_hook(ctx: &SlashContext</* Your type */>, command_name: &str, result: Option<DefaultCommandResult>) {
+async fn after_hook(ctx: &mut SlashContext</* Your type */>, command_name: &str, result: Option<DefaultCommandResult>) {
     // Do something with the result.
 }
 ```
@@ -474,7 +490,7 @@ Let's take a look at a simple implementation:
 
 ```rust
 #[error_handler]
-async fn handle_ban_error(_ctx: &SlashContext</* Some type */>, error: DefaultError) {
+async fn handle_ban_error(_ctx: &mut SlashContext</* Some type */>, error: DefaultError) {
     println!("The ban command had an error");
     
     // Handle the error
@@ -484,7 +500,7 @@ async fn handle_ban_error(_ctx: &SlashContext</* Some type */>, error: DefaultEr
 #[command]
 #[description = "Tries to ban the bot itself, raising an error"]
 #[error_handler(handle_ban_error)]
-async fn ban_itself(ctx: &SlashContext</* Some type */>) -> DefaultCommandResult {
+async fn ban_itself(ctx: &mut SlashContext</* Some type */>) -> DefaultCommandResult {
     // A bot cannot ban itself, so this will result in an error.
     ctx.http_client().ban(ctx.interaction.guild_id.unwrap(), Id::new(ctx.application_id.get()))
         .await?;
@@ -509,13 +525,13 @@ Let's create some checks like this:
 
 ```rust
 #[check]
-async fn only_guilds(ctx: &SlashContext</* Some type */>) -> Result<bool, DefaultError> {
+async fn only_guilds(ctx: &mut SlashContext</* Some type */>) -> Result<bool, DefaultError> {
     // Only execute the command if we are inside a guild.
     Ok(ctx.interaction.guild_id.is_some())
 }
 
 #[check]
-async fn other_check(_ctx: &SlashContext</* Some type */>) -> Result<bool, DefaultError> {
+async fn other_check(_ctx: &mut SlashContext</* Some type */>) -> Result<bool, DefaultError> {
     // Some other check here.
     Ok(true)
 }
@@ -526,7 +542,7 @@ Then we can assign them to our command using the ``check`` attribute, which acce
 #[command]
 #[description = "Some description"]
 #[checks(only_guilds, other_check)]
-async fn my_command(ctx: &SlashContext</* Some type */>) -> DefaultCommandResult {
+async fn my_command(ctx: &mut SlashContext</* Some type */>) -> DefaultCommandResult {
     // Do something
     Ok(())
 }
@@ -552,17 +568,17 @@ the framework, so their signatures could be interpreted like this:
 
 After hook:
 ```rust
-async fn(&SlashContext</* Some type */>, &str, Option<Result<T, E>>)
+async fn(&mut SlashContext</* Some type */>, &str, Option<Result<T, E>>)
 ```
 
 Error handler hook:
 ```rust
-async fn(&SlashContext</* Some type */>, E)
+async fn(&mut SlashContext</* Some type */>, E)
 ```
 
 Command checks:
 ```rust
-async fn(&SlashContext</* Some type */>) -> Result<bool, E>
+async fn(&mut SlashContext</* Some type */>) -> Result<bool, E>
 ```
 
 Note that those are not the real signatures, since the functions return `Box`ed futures.
@@ -587,7 +603,7 @@ struct MyModal {
 
 #[command]
 #[description = "My command description"]
-async fn my_command(ctx: &SlashContext</* Some type */>) -> DefaultCommandResult {
+async fn my_command(ctx: &mut SlashContext</* Some type */>) -> DefaultCommandResult {
     let modal_waiter = ctx.create_modal::<MyModal>().await?;
     let output = modal_waiter.await?;
     
