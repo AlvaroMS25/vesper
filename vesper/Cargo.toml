@@ -22,7 +22,7 @@ vesper-macros = { path = "../vesper-macros", version = "0.12" }
 parking_lot = "0.12"
 tracing = "0.1"
 twilight-model = "0.15"
-twilight-http = "0.15"
+twilight-http = { version = "0.15", default-features = false }
 twilight-validate = "0.15"
 thiserror = "1"
 
