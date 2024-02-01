@@ -98,28 +98,30 @@ pub fn parse_arguments(
             .collect::<Vec<_>>(),
     );
 
-    // The original block of the function
-    let b = &block;
+    if !names.is_empty() {
+        // The original block of the function
+        let b = &block;
 
-    // Modify the block to parse arguments
-    *block = parse2(quote::quote! {{
-        let (#(#names),*) = {
-            let mut __options = ::vesper::iter::DataIterator::new(#ctx_ident);
+        // Modify the block to parse arguments
+        *block = parse2(quote::quote! {{
+            let (#(#names),*) = {
+                let mut __options = ::vesper::iter::DataIterator::new(#ctx_ident);
 
-            #(let #names =
-                __options.named_parse::<#types>(#renames).await?;)*
+                #(let #names =
+                    __options.named_parse::<#types>(#renames).await?;)*
 
-            if __options.len() > 0 {
-                return Err(
-                    ::vesper::prelude::ParseError::StructureMismatch("Too many arguments received".to_string()).into()
-                );
-            }
+                if __options.len() > 0 {
+                    return Err(
+                        ::vesper::prelude::ParseError::StructureMismatch("Too many arguments received".to_string()).into()
+                    );
+                }
 
-            (#(#names),*)
-        };
+                (#(#names),*)
+            };
 
-        #b
-    }})?;
+            #b
+        }})?;
+    }
 
     Ok(arguments)
 }
