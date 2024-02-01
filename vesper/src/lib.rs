@@ -20,6 +20,7 @@ pub mod wait;
 // Items used to extract generics from functions, not public API.
 #[doc(hidden)]
 pub mod extract;
+mod extractors;
 
 pub use vesper_macros as macros;
 
