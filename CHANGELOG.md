@@ -7,7 +7,7 @@ Log of changes for ``zephyrus`` crate, changes in between versions will be docum
 ## 0.5.0 - 2022-11-23
 
 #### Changes:
-- Updated twilight to version 0.14 ([sudo-carson] at [#3])
+- Updated twilight to version 0.14 ([Carson M] at [#3])
 
 
 ## 0.6.0 -- 2022-12-28
@@ -45,7 +45,7 @@ Log of changes for ``zephyrus`` crate, changes in between versions will be docum
 - Added support for `chat` and `message` commands
 - Added `#[only_guilds]` and `#[nsfw]` attribute for commands
 - Deprecated `SlashContext#acknowledge` in favor of `SlashContext#defer`
-- Added `Framework#twilight_commands` to get a serializable representation of registered commands ([carterhimmel] at [#9] & [#10])
+- Added `Framework#twilight_commands` to get a serializable representation of registered commands ([Carter] at [#9] & [#10])
 
 ## 0.11.0 -- 2023/09/21
 - Use typed errors
@@ -56,9 +56,13 @@ Log of changes for ``zephyrus`` crate, changes in between versions will be docum
 - Fixed an error when dereferencing a misaligned pointer on `Range` type ([iciivy] at [#13])
 - Allow providing localizations using closures and function pointers
 
+## 0.13.0 -- 2024/x/x
+- Omit emitting argument parsing code on commands without arguments ([Carson M] at [#16])
+- Disabled ``twilight-http`` default features ([Carson M] at [#17])
+
 <!-- contributors -->
-[sudo-carson]: https://github.com/sudo-carson
-[carterhimmel]: https://github.com/carterhimmel
+[Carson M]: https://github.com/decahedron1
+[Carter]: https://github.com/Fyko
 [iciivy]: https://github.com/iciivy
 
 <!-- Pull requests -->
@@ -66,3 +70,5 @@ Log of changes for ``zephyrus`` crate, changes in between versions will be docum
 [#9]: https://github.com/AlvaroMS25/zephyrus/pull/9
 [#10]: https://github.com/AlvaroMS25/zephyrus/pull/10
 [#13]: https://github.com/AlvaroMS25/vesper/pull/13
+[#16]: https://github.com/AlvaroMS25/vesper/pull/16
+[#17]: https://github.com/AlvaroMS25/vesper/pull/17
