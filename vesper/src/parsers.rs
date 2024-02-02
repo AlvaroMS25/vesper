@@ -123,10 +123,10 @@ newtype_struct! {
 
 parse_id! {
     TextChannelId, CommandOptionType::Channel, [ChannelType::GuildText],
-    VoiceChannelId, CommandOptionType::Channel, [ChannelType::GuildVoice, ChannelType::GuildStageVoice],
+    VoiceChannelId, CommandOptionType::Channel, [ChannelType::GuildVoice],
     PublicThreadId, CommandOptionType::Channel, [ChannelType::PublicThread],
     PrivateThreadId, CommandOptionType::Channel, [ChannelType::PrivateThread],
-    ThreadId, CommandOptionType::Channel, [ChannelType::PublicThread, ChannelType::PublicThread, ChannelType::AnnouncementThread],
+    ThreadId, CommandOptionType::Channel, [ChannelType::PublicThread, ChannelType::PublicThread],
 }
 
 parse_derived_channel! {
