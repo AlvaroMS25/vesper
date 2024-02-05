@@ -56,9 +56,10 @@ Log of changes for ``zephyrus`` crate, changes in between versions will be docum
 - Fixed an error when dereferencing a misaligned pointer on `Range` type ([iciivy] at [#13])
 - Allow providing localizations using closures and function pointers
 
-## 0.13.0 -- 2024/x/x
+## 0.13.0 -- 2024/2/5
 - Omit emitting argument parsing code on commands without arguments ([Carson M] at [#16])
 - Disabled ``twilight-http`` default features ([Carson M] at [#17])
+- Add Channel & Thread related parsers
 
 <!-- contributors -->
 [Carson M]: https://github.com/decahedron1
