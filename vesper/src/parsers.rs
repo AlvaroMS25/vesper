@@ -105,7 +105,7 @@ newtype_struct! {
     pub struct TextChannelId(Id<ChannelMarker>),
     /// An object that parses into a discord only **voice** channel.
     pub struct VoiceChannel(InteractionChannel),
-    /// An object that parses into a discord only **voice** channel.
+    /// An object that parses into a discord only **voice** channel id.
     pub struct VoiceChannelId(Id<ChannelMarker>),
     /// An object that parses into a discord **only public** thread.
     pub struct PublicThread(InteractionChannel),
@@ -126,7 +126,7 @@ parse_id! {
     VoiceChannelId, CommandOptionType::Channel, [ChannelType::GuildVoice],
     PublicThreadId, CommandOptionType::Channel, [ChannelType::PublicThread],
     PrivateThreadId, CommandOptionType::Channel, [ChannelType::PrivateThread],
-    ThreadId, CommandOptionType::Channel, [ChannelType::PublicThread, ChannelType::PublicThread],
+    ThreadId, CommandOptionType::Channel, [ChannelType::PublicThread, ChannelType::PrivateThread],
 }
 
 parse_derived_channel! {
