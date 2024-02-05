@@ -14,13 +14,13 @@ pub mod iter;
 pub mod localizations;
 pub mod modal;
 pub mod parse;
+pub mod parsers;
 pub mod range;
 pub mod wait;
 
 // Items used to extract generics from functions, not public API.
 #[doc(hidden)]
 pub mod extract;
-pub mod parsers;
 
 pub use vesper_macros as macros;
 
@@ -35,6 +35,7 @@ pub mod prelude {
         framework::{DefaultCommandResult, Framework},
         modal::*,
         parse::{Parse, ParseError},
+        parsers,
         range::Range,
     };
     pub use async_trait::async_trait;
