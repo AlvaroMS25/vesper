@@ -216,25 +216,25 @@ impl<D, T, E> Command<D, T, E> {
 
         let model = if let Some(id) = guild {
             let mut command = http.create_guild_command(id)
-                .chat_input(self.name, self.description)?
-                .command_options(&options)?
+                .chat_input(self.name, self.description)
+                .command_options(&options)
                 .nsfw(self.nsfw);
 
             if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
-            if_some!(&name_localizations, |n| command = command.name_localizations(n)?);
-            if_some!(&description_localizations, |d| command = command.description_localizations(d)?);
+            if_some!(&name_localizations, |n| command = command.name_localizations(n));
+            if_some!(&description_localizations, |d| command = command.description_localizations(d));
 
             command.await?.model().await?
         } else {
             let mut command = http.create_global_command()
-                .chat_input(self.name, self.description)?
-                .command_options(&options)?
+                .chat_input(self.name, self.description)
+                .command_options(&options)
                 .nsfw(self.nsfw)
                 .dm_permission(!self.only_guilds);
 
             if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
-            if_some!(&name_localizations, |n| command = command.name_localizations(n)?);
-            if_some!(&description_localizations, |d| command = command.description_localizations(d)?);
+            if_some!(&name_localizations, |n| command = command.name_localizations(n));
+            if_some!(&description_localizations, |d| command = command.description_localizations(d));
 
             command.await?.model().await?
         };
@@ -250,7 +250,7 @@ impl<D, T, E> Command<D, T, E> {
     {
         let model = if let Some(id) = guild {
             let mut command = http.create_guild_command(id)
-                .user(self.name)?
+                .user(self.name)
                 .nsfw(self.nsfw);
 
             if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
@@ -258,7 +258,7 @@ impl<D, T, E> Command<D, T, E> {
             command.await?.model().await?
         } else {
             let mut command = http.create_global_command()
-                .user(self.name)?
+                .user(self.name)
                 .nsfw(self.nsfw)
                 .dm_permission(!self.only_guilds);
 
@@ -278,7 +278,7 @@ impl<D, T, E> Command<D, T, E> {
     {
         let model = if let Some(id) = guild {
             let mut command = http.create_guild_command(id)
-                .message(self.name)?
+                .message(self.name)
                 .nsfw(self.nsfw);
 
             if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
@@ -286,7 +286,7 @@ impl<D, T, E> Command<D, T, E> {
             command.await?.model().await?
         } else {
             let mut command = http.create_global_command()
-                .message(self.name)?
+                .message(self.name)
                 .nsfw(self.nsfw)
                 .dm_permission(!self.only_guilds);
 

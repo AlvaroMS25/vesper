@@ -24,7 +24,8 @@ The framework itself ***doesn't*** spawn any tasks by itself, so you might want 
 ```rust
 use std::sync::Arc;
 use futures_util::StreamExt;
-use twilight_gateway::{stream::{self, ShardEventStream}, Config};
+use tokio::task::JoinSet;
+use twilight_gateway::{create_recommended, Config, EventTypeFlags, Shard, StreamExt};
 use twilight_http::Client;
 use twilight_model::gateway::event::Event;
 use twilight_model::gateway::Intents;
@@ -51,7 +52,7 @@ async fn hello(ctx: &mut SlashContext<()>) -> DefaultCommandResult {
     Ok(())
 }
 
-async fn handle_events(http_client: Arc<Client>, mut events: ShardEventStream, app_id: Id<ApplicationMarker>) {
+async fn handle_events(http_client: Arc<Client>, shards: Vec<Shard>, app_id: Id<ApplicationMarker>) {
     let framework = Arc::new(Framework::builder(http_client, app_id, ())
         .command(hello)
         .build());
@@ -59,18 +60,30 @@ async fn handle_events(http_client: Arc<Client>, mut events: ShardEventStream, a
     // vesper can register commands in guilds or globally.
     framework.register_guild_commands(Id::<GuildMarker>::new("<GUILD_ID>")).await.unwrap();
 
-    while let Some((_, event)) = events.next().await {
-        match event {
-            Event::InteractionCreate(i) => {
-                let clone = Arc::clone(&framework);
-                tokio::spawn(async move {
-                    let inner = i.0;
-                    clone.process(inner).await;
-                });
-            },
-            _ => (),
-        }
+    let mut set = JoinSet::new();
+    for mut shard in shards {
+        let framework = Arc::clone(&framework);
+        set.spawn(async move {
+            while let Some(item) = shard.next_event(EventTypeFlags::all()).await {
+                let Ok(event) = item else {
+                    eprintln!("error receiving event: {:?}", item.unwrap_err());
+                    continue;
+                };
+                match event {
+                    Event::InteractionCreate(interaction) => {
+                        let clone = Arc::clone(&framework);
+                        tokio::spawn(async move {
+                            let inner = i.0;
+                            clone.process(inner).await;
+                        });
+                    },
+                    _ => ()
+                }
+            }
+        });
     }
+
+    while set.join_next().await.is_some() {}
 }
 
 #[tokio::main]
@@ -80,14 +93,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = Arc::new(Client::new(token.clone()));
 
     let config = Config::new(token, Intents::empty());
-    let mut shards = stream::create_recommended(
+    let shards = create_recommended(
         &client,
         config,
         |_, builder| builder.build()
     ).await.unwrap().collect::<Vec<_>>();
-    let mut shard_stream = ShardEventStream::new(shards.iter_mut());
 
-    handle_events(client, shard_stream, app_id).await;
+    handle_events(client, shards, app_id).await;
 
     Ok(())
 }

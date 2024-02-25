@@ -87,8 +87,8 @@ impl<D, T, E> GroupParent<D, T, E> {
 
         let model = if let Some(id) = guild {
             let mut command = http.create_guild_command(id)
-                .chat_input(self.name, self.description)?
-                .command_options(&options)?
+                .chat_input(self.name, self.description)
+                .command_options(&options)
                 .nsfw(self.nsfw);
 
             crate::if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
@@ -96,8 +96,8 @@ impl<D, T, E> GroupParent<D, T, E> {
             command.await?.model().await?
         } else {
             let mut command = http.create_global_command()
-                .chat_input(self.name, self.description)?
-                .command_options(&options)?
+                .chat_input(self.name, self.description)
+                .command_options(&options)
                 .nsfw(self.nsfw)
                 .dm_permission(!self.only_guilds);
 

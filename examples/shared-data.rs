@@ -1,8 +1,8 @@
 use std::env;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use futures_util::StreamExt;
-use twilight_gateway::{stream::{self, ShardEventStream}, Config};
+use tokio::task::JoinSet;
+use twilight_gateway::{create_recommended, Config, EventTypeFlags, StreamExt};
 use twilight_http::Client;
 use twilight_model::gateway::event::Event;
 use twilight_model::gateway::Intents;
@@ -22,13 +22,11 @@ async fn main() {
     let http_client = Arc::new(Client::new(token.clone()));
 
     let config = Config::new(token.clone(), Intents::empty());
-    let mut shards = stream::create_recommended(
+    let shards = create_recommended(
         &http_client,
         config,
         |_, builder| builder.build()
     ).await.unwrap().collect::<Vec<_>>();
-
-    let mut stream = ShardEventStream::new(shards.iter_mut());
 
     let shared = Shared {
         count: AtomicUsize::new(0)
@@ -36,7 +34,7 @@ async fn main() {
 
     // The builder function accepts data as the third argument, this data will then be passed to
     // every command and hook.
-    let framework = Framework::builder(http_client, Id::new(application_id), shared)
+    let framework = Arc::new(Framework::builder(http_client, Id::new(application_id), shared)
         .group(|g| {
             g.name("count")
                 .description("Shared state count related commands")
@@ -44,28 +42,32 @@ async fn main() {
                 .command(increment_one)
                 .command(increment_many)
         })
-        .build();
+        .build());
 
-    while let Some((_, event)) = stream.next().await {
-        match event {
-            Err(error) => {
-                if error.is_fatal() {
-                    eprintln!("Gateway connection fatally closed, error: {error:?}");
-                    break;
+    let mut set = JoinSet::new();
+    for mut shard in shards {
+        let framework = Arc::clone(&framework);
+        set.spawn(async move {
+            while let Some(item) = shard.next_event(EventTypeFlags::all()).await {
+                let Ok(event) = item else {
+                    eprintln!("error receiving event: {:?}", item.unwrap_err());
+                    continue;
+                };
+                match event {
+                    Event::Ready(_) => {
+                        // We have to register the commands for them to show in discord.
+                        framework.register_global_commands().await.unwrap();
+                    },
+                    Event::InteractionCreate(interaction) => {
+                        framework.process(interaction.0).await;
+                    },
+                    _ => ()
                 }
-            },
-            Ok(event) => match event {
-                Event::Ready(_) => {
-                    // We have to register the commands for them to show in discord.
-                    framework.register_global_commands().await.unwrap();
-                },
-                Event::InteractionCreate(interaction) => {
-                    framework.process(interaction.0).await;
-                },
-                _ => ()
             }
-        }
+        });
     }
+
+    while set.join_next().await.is_some() {}
 }
 
 #[command]

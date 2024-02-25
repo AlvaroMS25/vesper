@@ -53,10 +53,10 @@ pub mod twilight_exports {
         application::{
             command::{Command, CommandOption, CommandOptionChoice, CommandOptionChoiceValue, CommandOptionType, CommandType},
             interaction::{
-                application_command::{CommandData, CommandDataOption, CommandOptionValue, CommandInteractionDataResolved},
+                application_command::{CommandData, CommandDataOption, CommandOptionValue},
                 modal::ModalInteractionData,
                 message_component::MessageComponentInteractionData,
-                Interaction, InteractionData, InteractionType,
+                Interaction, InteractionData, InteractionDataResolved, InteractionType,
             },
         },
         channel::{Message, message::{Component, component::{ActionRow, TextInput, TextInputStyle}}},

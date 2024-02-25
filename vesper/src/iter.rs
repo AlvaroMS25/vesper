@@ -1,12 +1,12 @@
 use crate::builder::WrappedClient;
 use crate::context::SlashContext;
 use crate::parse::{Parse, ParseError};
-use crate::twilight_exports::{InteractionData, CommandDataOption, CommandOptionType, CommandOptionValue, CommandInteractionDataResolved};
+use crate::twilight_exports::{InteractionData, InteractionDataResolved, CommandDataOption, CommandOptionType, CommandOptionValue};
 
 /// An iterator used to iterate through slash command options.
 pub struct DataIterator<'a, D> {
     src: Vec<&'a CommandDataOption>,
-    resolved: &'a mut Option<CommandInteractionDataResolved>,
+    resolved: &'a mut Option<InteractionDataResolved>,
     http: &'a WrappedClient,
     data: &'a D
 }
@@ -62,7 +62,7 @@ impl<'a, D: 'a> DataIterator<'a, D> {
         }
     }
 
-    pub fn resolved(&mut self) -> Option<&mut CommandInteractionDataResolved> {
+    pub fn resolved(&mut self) -> Option<&mut InteractionDataResolved> {
         self.resolved.as_mut()
     }
 

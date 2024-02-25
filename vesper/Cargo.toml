@@ -21,13 +21,13 @@ async-trait = "0.1"
 vesper-macros = { path = "../vesper-macros", version = "0.13" }
 parking_lot = "0.12"
 tracing = "0.1"
-twilight-model = "0.15"
-twilight-http = { version = "0.15", default-features = false }
-twilight-validate = "0.15"
+twilight-model = "0.16.0-rc.1"
+twilight-http = { version = "0.16.0-rc.1", default-features = false }
+twilight-validate = "0.16.0-rc.1"
 thiserror = "1"
 
 # feature: bulk
-twilight-util = { version = "0.15", features = ["builder"], optional = true }
+twilight-util = { version = "0.16.0-rc.1", features = ["builder"], optional = true }
 
 [dependencies.tokio]
 version = "1"
