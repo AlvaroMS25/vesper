@@ -93,7 +93,7 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
                 prelude::async_trait,
                 parse::{Parse, ParseError},
                 twilight_exports::{
-                    CommandInteractionDataResolved,
+                    InteractionDataResolved,
                     CommandOptionChoice,
                     CommandOptionChoiceValue,
                     CommandOptionType,
@@ -109,7 +109,7 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
                     http_client: &WrappedClient,
                     data: &T,
                     value: Option<&CommandOptionValue>,
-                    resolved: Option<&mut CommandInteractionDataResolved>
+                    resolved: Option<&mut InteractionDataResolved>
                 ) -> Result<Self, ParseError>
                 {
                     let num = usize::parse(http_client, data, value, resolved).await?;
