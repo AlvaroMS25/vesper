@@ -623,7 +623,7 @@ Currently, only `String` and `Option<String>` fields are allowed.
 [macro declaration]: https://github.com/AlvaroMS25/vesper/blob/master/vesper-macros/src/lib.rs#L150-L236
 
 # Bulk Commands Overwrite
-If you'd like to use Discord's [Bulk Overwrite Global Application Commands](https://discord.com/developers/docs/interactions/application-commands#bulk-overwrite-global-application-commands) enpoint, perhaps in tandem with a [commands lockfile](https://github.com/carterhimmel/thoth/tree/28c3855b1c55c9ed839bbbcbf9e9c704bf2bd81a/.github/workflows/cd_commands.yml), you'll want to use `Framework#twilight_commands`.
+If you'd like to use Discord's [Bulk Overwrite Global Application Commands](https://discord.com/developers/docs/interactions/application-commands#bulk-overwrite-global-application-commands) endpoint, perhaps in tandem with a [commands lockfile](https://github.com/carterhimmel/thoth/tree/28c3855b1c55c9ed839bbbcbf9e9c704bf2bd81a/.github/workflows/cd_commands.yml), you'll want to use `Framework#twilight_commands`.
 
 > **Note**
 > This requires the `bulk` feature.
