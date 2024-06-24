@@ -10,7 +10,7 @@ pub trait Parse<T: Send + Sync>: Sized {
         _http_client: &WrappedClient,
         _data: &T,
         _value: Option<&CommandOptionValue>,
-        _resolved: Option<&mut CommandInteractionDataResolved>
+        _resolved: Option<&mut InteractionDataResolved>
     ) -> Result<Self, ParseError>;
 
     /// Returns the option type this argument has.

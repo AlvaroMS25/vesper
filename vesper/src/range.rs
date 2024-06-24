@@ -62,7 +62,7 @@ impl<T, E, const START: i64, const END: i64> Parse<T> for Range<E, START, END>
         http_client: &WrappedClient,
         data: &T,
         value: Option<&CommandOptionValue>,
-        resolved: Option<&mut CommandInteractionDataResolved>
+        resolved: Option<&mut InteractionDataResolved>
     ) -> Result<Self, ParseError> {
         let value = E::parse(http_client, data, value, resolved).await?;
 
