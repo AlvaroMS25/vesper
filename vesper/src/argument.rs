@@ -1,17 +1,17 @@
 use crate::hook::AutocompleteHook;
 use crate::twilight_exports::*;
 use crate::parse::Parse;
-use crate::localizations::{Localizations, LocalizationsProvider};
+use crate::localizations::{CommandMarker, Localizations, LocalizationsProvider};
 use crate::prelude::Framework;
 
 /// A structure representing a command argument.
 pub struct CommandArgument<D, T, E> {
     /// Argument name.
     pub name: &'static str,
-    pub localized_names: Localizations<D, T, E>,
+    pub localized_names: Localizations<CommandMarker<D, T, E>>,
     /// Description of the argument.
     pub description: &'static str,
-    pub localized_descriptions: Localizations<D, T, E>,
+    pub localized_descriptions: Localizations<CommandMarker<D, T, E>>,
     /// Whether the argument is required.
     pub required: bool,
     /// The type this argument has.
@@ -88,7 +88,7 @@ impl<D: Send + Sync, T, E> CommandArgument<D, T, E> {
         self
     }
 
-    pub fn localized_names_fn(mut self, fun: LocalizationsProvider<D, T, E>) -> Self {
+    pub fn localized_names_fn(mut self, fun: CommandMarker<D, T, E>) -> Self {
         self.localized_names.set_provider(fun);
         self
     }
@@ -104,7 +104,7 @@ impl<D: Send + Sync, T, E> CommandArgument<D, T, E> {
         self
     }
 
-    pub fn localized_descriptions_fn(mut self, fun: LocalizationsProvider<D, T, E>) -> Self {
+    pub fn localized_descriptions_fn(mut self, fun: CommandMarker<D, T, E>) -> Self {
         self.localized_descriptions.set_provider(fun);
         self
     }
