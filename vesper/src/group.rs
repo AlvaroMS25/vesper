@@ -100,8 +100,8 @@ impl<D, T, E> GroupParent<D, T, E> {
 
             crate::if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
 
-            crate::if_some!(&name_localizations, |n| command = command.name_localizations(n)?);
-            crate::if_some!(&description_localizations, |d| command = command.description_localizations(d)?);
+            crate::if_some!(&name_localizations, |n| command = command.name_localizations(n));
+            crate::if_some!(&description_localizations, |d| command = command.description_localizations(d));
 
             command.await?.model().await?
         } else {
@@ -112,8 +112,8 @@ impl<D, T, E> GroupParent<D, T, E> {
                 .dm_permission(!self.only_guilds);
 
             crate::if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
-            crate::if_some!(&name_localizations, |n| command = command.name_localizations(n)?);
-            crate::if_some!(&description_localizations, |d| command = command.description_localizations(d)?);
+            crate::if_some!(&name_localizations, |n| command = command.name_localizations(n));
+            crate::if_some!(&description_localizations, |d| command = command.description_localizations(d));
 
             command.await?.model().await?
         };
