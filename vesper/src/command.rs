@@ -1,4 +1,4 @@
-use crate::localizations::{Localizations, LocalizationsProvider};
+use crate::localizations::{CommandMarker, Localizable, Localizations};
 use crate::prelude::{CreateCommandError, Framework};
 use crate::{
     argument::CommandArgument, context::SlashContext, twilight_exports::Permissions, BoxFuture, framework::ProcessResult,
@@ -72,10 +72,10 @@ impl<T, E> From<ExecutionResult<T, E>> for ProcessResult<T, E> {
 pub struct Command<D, T, E> {
     /// The name of the command.
     pub name: &'static str,
-    pub localized_names: Localizations<D, T, E>,
+    pub localized_names: Localizations<CommandMarker<D, T, E>>,
     /// The description of the commands.
     pub description: &'static str,
-    pub localized_descriptions: Localizations<D, T, E>,
+    pub localized_descriptions: Localizations<CommandMarker<D, T, E>>,
     pub kind: CommandType,
     /// All the arguments the command requires.
     pub arguments: Vec<CommandArgument<D, T, E>>,
@@ -162,13 +162,12 @@ impl<D, T, E> Command<D, T, E> {
         K: ToString,
         V: ToString
     {
-        self.localized_names
-            .extend(iterator.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
+        <Self as Localizable<CommandMarker<D, T, E>>>::localized_names(&mut self, iterator);
         self
     }
 
-    pub fn localized_names_fn(mut self, fun: LocalizationsProvider<D, T, E>) -> Self {
-        self.localized_names.set_provider(fun);
+    pub fn localized_names_fn(mut self, fun: CommandMarker<D, T, E>) -> Self {
+        <Self as Localizable<CommandMarker<D, T, E>>>::localized_names_fn(&mut self, fun);
         self
     }
 
@@ -178,13 +177,12 @@ impl<D, T, E> Command<D, T, E> {
         K: ToString,
         V: ToString
     {
-        self.localized_descriptions
-            .extend(iterator.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
+        <Self as Localizable<CommandMarker<D, T, E>>>::localized_descriptions(&mut self, iterator);
         self
     }
 
-    pub fn localized_descriptions_fn(mut self, fun: LocalizationsProvider<D, T, E>) -> Self {
-        self.localized_descriptions.set_provider(fun);
+    pub fn localized_descriptions_fn(mut self, fun: CommandMarker<D, T, E>) -> Self {
+        <Self as Localizable<CommandMarker<D, T, E>>>::localized_descriptions_fn(&mut self, fun);
         self
     }
 
@@ -364,5 +362,15 @@ impl<D, T, E> Command<D, T, E> {
             state,
             output: location
         }
+    }
+}
+
+impl<D, T, E> Localizable<CommandMarker<D, T, E>> for Command<D, T, E> {
+    fn name_localizations(&mut self) -> &mut Localizations<CommandMarker<D, T, E>> {
+        &mut self.localized_names
+    }
+
+    fn description_localizations(&mut self) -> &mut Localizations<CommandMarker<D, T, E>> {
+        &mut self.localized_descriptions
     }
 }

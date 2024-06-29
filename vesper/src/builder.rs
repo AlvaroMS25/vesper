@@ -8,6 +8,7 @@ use crate::{
 };
 
 use std::{ops::Deref, sync::Arc};
+use crate::localizations::{CommandGroupMarker, GroupParentMarker, Localizable, Localizations};
 
 /// A wrapper around twilight's http client allowing the user to decide how to provide it to the framework.
 #[allow(clippy::large_enum_variant)]
@@ -253,7 +254,9 @@ pub struct GroupParentBuilder<D, T, E> {
     kind: ParentType<D, T, E>,
     required_permissions: Option<Permissions>,
     nsfw: bool,
-    only_guilds: bool
+    only_guilds: bool,
+    localized_names: Localizations<GroupParentMarker<D, T, E>>,
+    localized_descriptions: Localizations<GroupParentMarker<D, T, E>>
 }
 
 impl<D, T, E> GroupParentBuilder<D, T, E> {
@@ -265,7 +268,9 @@ impl<D, T, E> GroupParentBuilder<D, T, E> {
             kind: ParentType::Group(Default::default()),
             required_permissions: None,
             nsfw: false,
-            only_guilds: false
+            only_guilds: false,
+            localized_names: Default::default(),
+            localized_descriptions: Default::default()
         }
     }
 
@@ -340,8 +345,20 @@ impl<D, T, E> GroupParentBuilder<D, T, E> {
             kind: self.kind,
             required_permissions: self.required_permissions,
             nsfw: self.nsfw,
-            only_guilds: self.only_guilds
+            only_guilds: self.only_guilds,
+            localized_names: self.localized_names,
+            localized_descriptions: self.localized_descriptions
         }
+    }
+}
+
+impl<D, T, E> Localizable<GroupParentMarker<D, T, E>> for GroupParentBuilder<D, T, E> {
+    fn name_localizations(&mut self) -> &mut Localizations<GroupParentMarker<D, T, E>> {
+        &mut self.localized_names
+    }
+
+    fn description_localizations(&mut self) -> &mut Localizations<GroupParentMarker<D, T, E>> {
+        &mut self.localized_descriptions
     }
 }
 
@@ -350,6 +367,8 @@ pub struct CommandGroupBuilder<D, T, E> {
     name: Option<&'static str>,
     description: Option<&'static str>,
     subcommands: CommandMap<D, T, E>,
+    localized_names: Localizations<CommandGroupMarker<D, T, E>>,
+    localized_descriptions: Localizations<CommandGroupMarker<D, T, E>>
 }
 
 impl<D, T, E> CommandGroupBuilder<D, T, E> {
@@ -381,6 +400,8 @@ impl<D, T, E> CommandGroupBuilder<D, T, E> {
             name: self.name.unwrap(),
             description: self.description.unwrap(),
             subcommands: self.subcommands,
+            localized_names: self.localized_names,
+            localized_descriptions: self.localized_descriptions
         }
     }
 
@@ -390,6 +411,18 @@ impl<D, T, E> CommandGroupBuilder<D, T, E> {
             name: None,
             description: None,
             subcommands: Default::default(),
+            localized_names: Default::default(),
+            localized_descriptions: Default::default()
         }
+    }
+}
+
+impl<D, T, E> Localizable<CommandGroupMarker<D, T, E>> for CommandGroupBuilder<D, T, E> {
+    fn name_localizations(&mut self) -> &mut Localizations<CommandGroupMarker<D, T, E>> {
+        &mut self.localized_names
+    }
+
+    fn description_localizations(&mut self) -> &mut Localizations<CommandGroupMarker<D, T, E>> {
+        &mut self.localized_descriptions
     }
 }

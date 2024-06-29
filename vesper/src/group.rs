@@ -6,6 +6,7 @@ use crate::{
     twilight_exports::{Command as TwilightCommand, Permissions}, prelude::{CreateCommandError, Framework},
 };
 use std::collections::HashMap;
+use crate::localizations::{CommandGroupMarker, GroupParentMarker, Localizations};
 
 /// A map of [parent groups](self::GroupParent).
 pub type GroupParentMap<D, T, E> = HashMap<&'static str, GroupParent<D, T, E>>;
@@ -58,7 +59,9 @@ pub struct GroupParent<D, T, E> {
     /// The required permissions to execute commands inside this group
     pub required_permissions: Option<Permissions>,
     pub nsfw: bool,
-    pub only_guilds: bool
+    pub only_guilds: bool,
+    pub localized_names: Localizations<GroupParentMarker<D, T, E>>,
+    pub localized_descriptions: Localizations<GroupParentMarker<D, T, E>>
 }
 
 /// A group of commands, referred by discord as `SubCommandGroup`.
@@ -73,6 +76,8 @@ pub struct CommandGroup<D, T, E> {
     pub description: &'static str,
     /// The commands this group has as children.
     pub subcommands: CommandMap<D, T, E>,
+    pub localized_names: Localizations<CommandGroupMarker<D, T, E>>,
+    pub localized_descriptions: Localizations<CommandGroupMarker<D, T, E>>
 }
 
 impl<D, T, E> GroupParent<D, T, E> {
@@ -84,6 +89,8 @@ impl<D, T, E> GroupParent<D, T, E> {
     ) -> Result<TwilightCommand, CreateCommandError>
     {
         let options = self.get_options(framework);
+        let name_localizations = self.localized_names.get_localizations(framework, &self);
+        let description_localizations = self.localized_descriptions.get_localizations(framework, &self);
 
         let model = if let Some(id) = guild {
             let mut command = http.create_guild_command(id)
@@ -92,6 +99,9 @@ impl<D, T, E> GroupParent<D, T, E> {
                 .nsfw(self.nsfw);
 
             crate::if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
+
+            crate::if_some!(&name_localizations, |n| command = command.name_localizations(n));
+            crate::if_some!(&description_localizations, |d| command = command.description_localizations(d));
 
             command.await?.model().await?
         } else {
@@ -102,6 +112,8 @@ impl<D, T, E> GroupParent<D, T, E> {
                 .dm_permission(!self.only_guilds);
 
             crate::if_some!(self.required_permissions, |p| command = command.default_member_permissions(p));
+            crate::if_some!(&name_localizations, |n| command = command.name_localizations(n));
+            crate::if_some!(&description_localizations, |d| command = command.description_localizations(d));
 
             command.await?.model().await?
         };
@@ -129,12 +141,12 @@ impl<D, T, E> GroupParent<D, T, E> {
                     choices: None,
                     required: None,
                     channel_types: None,
-                    description_localizations: None,
+                    description_localizations: group.localized_descriptions.get_localizations(f, group),
                     max_length: None,
                     max_value: None,
                     min_length: None,
                     min_value: None,
-                    name_localizations: None,
+                    name_localizations: group.localized_names.get_localizations(f, group),
                 });
             }
 
