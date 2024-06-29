@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::{prelude::Framework, command::Command, if_some};
-use crate::argument::CommandArgument;
 use crate::group::{CommandGroup, GroupParent};
 
 pub type CommandMarker<D, T, E> = LocalizationsProvider<D, T, E, Command<D, T, E>>;

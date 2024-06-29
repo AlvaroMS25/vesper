@@ -6,7 +6,7 @@ use crate::{
     twilight_exports::{Command as TwilightCommand, Permissions}, prelude::{CreateCommandError, Framework},
 };
 use std::collections::HashMap;
-use crate::localizations::{CommandGroupMarker, GroupParentMarker, Localizable, Localizations};
+use crate::localizations::{CommandGroupMarker, GroupParentMarker, Localizations};
 
 /// A map of [parent groups](self::GroupParent).
 pub type GroupParentMap<D, T, E> = HashMap<&'static str, GroupParent<D, T, E>>;

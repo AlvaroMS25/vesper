@@ -1,4 +1,4 @@
-use crate::localizations::{CommandMarker, Localizable, Localizations, LocalizationsProvider};
+use crate::localizations::{CommandMarker, Localizable, Localizations};
 use crate::prelude::{CreateCommandError, Framework};
 use crate::{
     argument::CommandArgument, context::SlashContext, twilight_exports::Permissions, BoxFuture, framework::ProcessResult,

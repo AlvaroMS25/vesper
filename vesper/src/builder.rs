@@ -8,7 +8,7 @@ use crate::{
 };
 
 use std::{ops::Deref, sync::Arc};
-use crate::localizations::{CommandGroupMarker, GroupParentMarker, Localizable, Localizations, LocalizationsProvider};
+use crate::localizations::{CommandGroupMarker, GroupParentMarker, Localizable, Localizations};
 
 /// A wrapper around twilight's http client allowing the user to decide how to provide it to the framework.
 #[allow(clippy::large_enum_variant)]

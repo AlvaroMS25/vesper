@@ -1,7 +1,7 @@
 use crate::hook::AutocompleteHook;
 use crate::twilight_exports::*;
 use crate::parse::Parse;
-use crate::localizations::{CommandMarker, Localizations, LocalizationsProvider};
+use crate::localizations::{CommandMarker, Localizations};
 use crate::prelude::Framework;
 
 /// A structure representing a command argument.
